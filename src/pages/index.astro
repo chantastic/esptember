@@ -1,0 +1,81 @@
+---
+import { getCollection } from "astro:content";
+import Layout from "../layouts/Layout.astro";
+import { youtubeId } from "../lib/youtube";
+
+const days = (await getCollection("days")).sort(
+  (a, b) => a.data.day - b.data.day,
+);
+---
+
+<Layout>
+  <main>
+    <h1>esptember</h1>
+    <p>
+      30 days of individually flashable projects for the
+      <a href="https://www.waveshare.com/esp32-s3-touch-amoled-1.8.htm"
+        >Waveshare ESP32-S3-Touch-AMOLED-1.8</a
+      >.
+    </p>
+    <ol class="days">
+      {
+        days.map((entry) => (
+          <li>
+            <a href={`/day/${entry.id}/`} class="day-card">
+              <span class="day-num">
+                day {String(entry.data.day).padStart(2, "0")}
+              </span>
+              <span class="day-title">{entry.data.title}</span>
+              <span class="day-toolchain">{entry.data.toolchain}</span>
+            </a>
+            {entry.data.video && (
+              <iframe
+                class="video"
+                src={`https://www.youtube-nocookie.com/embed/${youtubeId(entry.data.video)}`}
+                title={entry.data.title}
+                allowfullscreen
+                loading="lazy"
+              />
+            )}
+          </li>
+        ))
+      }
+    </ol>
+  </main>
+  <style>
+    .days {
+      list-style: none;
+      padding: 0;
+      display: grid;
+      gap: 1rem;
+    }
+    .day-card {
+      display: flex;
+      gap: 1rem;
+      align-items: baseline;
+      padding: 1rem;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      text-decoration: none;
+      color: var(--fg);
+    }
+    .day-card:hover {
+      border-color: var(--accent);
+    }
+    .day-num {
+      color: var(--accent);
+      white-space: nowrap;
+    }
+    .day-title {
+      flex: 1;
+    }
+    .day-toolchain {
+      color: var(--muted);
+      font-size: 0.85em;
+    }
+    li iframe {
+      margin-top: 0.5rem;
+    }
+  </style>
+</Layout>

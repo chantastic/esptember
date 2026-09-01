@@ -1,0 +1,72 @@
+---
+interface Props {
+  title?: string;
+}
+const { title } = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title ? `${title} · esptember` : "esptember"}</title>
+    <meta
+      name="description"
+      content="30 days of individually flashable ESP32-S3 projects."
+    />
+  </head>
+  <body>
+    <slot />
+    <style is:global>
+      :root {
+        color-scheme: dark;
+        --bg: #0d1117;
+        --fg: #e6edf3;
+        --muted: #8b949e;
+        --accent: #ff5b04;
+        --card: #161b22;
+        --border: #30363d;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--fg);
+        font-family: ui-monospace, "SF Mono", Menlo, monospace;
+        line-height: 1.6;
+      }
+      main {
+        max-width: 48rem;
+        margin: 0 auto;
+        padding: 2rem 1rem 4rem;
+      }
+      a {
+        color: var(--accent);
+      }
+      h1,
+      h2,
+      h3 {
+        line-height: 1.2;
+      }
+      pre {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        padding: 1rem;
+        overflow-x: auto;
+      }
+      code {
+        font-size: 0.9em;
+      }
+      .video {
+        aspect-ratio: 16 / 9;
+        width: 100%;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+      }
+    </style>
+  </body>
+</html>

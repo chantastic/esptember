@@ -1,0 +1,11 @@
+# ESPtember Day 01 — minimal flash footprint
+CONFIG_IDF_TARGET="esp32s3"
+
+# Board: Waveshare ESP32-S3-Touch-AMOLED-1.8 (16MB quad flash, 8MB PSRAM)
+CONFIG_ESPTOOLPY_FLASHSIZE_16MB=y
+
+# Console over the board's USB-C port (USB-Serial/JTAG peripheral)
+CONFIG_ESP_CONSOLE_USB_SERIAL_JTAG=y
+
+# Optimize for size
+CONFIG_COMPILER_OPTIMIZATION_SIZE=y

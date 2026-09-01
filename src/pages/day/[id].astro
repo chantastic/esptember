@@ -1,0 +1,57 @@
+---
+import { getCollection, render } from "astro:content";
+import Layout from "../../layouts/Layout.astro";
+import { youtubeId } from "../../lib/youtube";
+
+export async function getStaticPaths() {
+  const days = await getCollection("days");
+  return days.map((entry) => ({ params: { id: entry.id }, props: { entry } }));
+}
+
+const { entry } = Astro.props;
+const { Content } = await render(entry);
+---
+
+<Layout title={`day ${String(entry.data.day).padStart(2, "0")} · ${entry.data.title}`}>
+  <main>
+    <nav><a href="/">← esptember</a></nav>
+    <header>
+      <h1>
+        <span class="day-num">day {String(entry.data.day).padStart(2, "0")}</span>
+        {entry.data.title}
+      </h1>
+      <p class="meta">
+        toolchain: {entry.data.toolchain}
+        {
+          entry.data.firmware && (
+            <>
+              {" · "}
+              <a href={entry.data.firmware}>download firmware</a>
+            </>
+          )
+        }
+      </p>
+    </header>
+    {
+      entry.data.video && (
+        <iframe
+          class="video"
+          src={`https://www.youtube-nocookie.com/embed/${youtubeId(entry.data.video)}`}
+          title={entry.data.title}
+          allowfullscreen
+        />
+      )
+    }
+    <article>
+      <Content />
+    </article>
+  </main>
+  <style>
+    .day-num {
+      color: var(--accent);
+    }
+    .meta {
+      color: var(--muted);
+    }
+  </style>
+</Layout>

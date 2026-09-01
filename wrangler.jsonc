@@ -1,0 +1,12 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "esptember",
+  "compatibility_date": "2025-09-01",
+  "assets": {
+    "directory": "./dist"
+  },
+  "routes": [
+    { "pattern": "esptember.com", "custom_domain": true },
+    { "pattern": "www.esptember.com", "custom_domain": true }
+  ]
+}

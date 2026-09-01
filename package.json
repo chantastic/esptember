@@ -1,0 +1,17 @@
+{
+  "name": "esptember",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "./scripts/collect-firmware.sh && astro build",
+    "preview": "astro preview",
+    "deploy": "pnpm build && wrangler deploy"
+  },
+  "dependencies": {
+    "astro": "^5.13.0"
+  },
+  "devDependencies": {
+    "wrangler": "^4.33.0"
+  }
+}

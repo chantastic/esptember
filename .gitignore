@@ -1,0 +1,11 @@
+node_modules/
+dist/
+.astro/
+.wrangler/
+
+# ESP-IDF build output (public/firmware holds the shipped bins)
+days/*/firmware/build/
+days/*/firmware/sdkconfig
+days/*/firmware/sdkconfig.old
+days/*/firmware/managed_components/
+days/*/firmware/dependencies.lock
