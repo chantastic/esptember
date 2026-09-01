@@ -1,4 +1,4 @@
-# notes & lesson ideas
+# ESPtember — notes & lesson ideas
 
 - **Browser flashing with ESP Web Tools** — devote a later day to adding
   one-click flashing from the site via Web Serial + a `manifest.json` per

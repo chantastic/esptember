@@ -1,4 +1,4 @@
-# esptember
+# ESPtember
 
 30 days of individually flashable projects for the
 [Waveshare ESP32-S3-Touch-AMOLED-1.8](https://www.waveshare.com/esp32-s3-touch-amoled-1.8.htm).

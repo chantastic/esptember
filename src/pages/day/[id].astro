@@ -2,6 +2,7 @@
 import { getCollection, render } from "astro:content";
 import Layout from "../../layouts/Layout.astro";
 import { youtubeId } from "../../lib/youtube";
+import { GITHUB_REPO } from "../../lib/site";
 
 export async function getStaticPaths() {
   const days = await getCollection("days");
@@ -10,11 +11,34 @@ export async function getStaticPaths() {
 
 const { entry } = Astro.props;
 const { Content } = await render(entry);
+
+// Firmware source files, rendered on the page (build output excluded).
+const allSources = import.meta.glob(
+  [
+    "../../../days/*/firmware/**/*.{c,h,cpp,hpp}",
+    "../../../days/*/firmware/**/CMakeLists.txt",
+    "../../../days/*/firmware/sdkconfig.defaults",
+    "!**/build/**",
+    "!**/managed_components/**",
+  ],
+  { query: "?raw", import: "default", eager: true },
+) as Record<string, string>;
+
+const prefix = `/firmware/`;
+const sources = Object.entries(allSources)
+  .filter(([path]) => path.includes(`/days/${entry.id}/firmware/`))
+  .map(([path, content]) => ({
+    path: path.slice(path.indexOf(prefix) + prefix.length),
+    content,
+  }))
+  .sort((a, b) => a.path.localeCompare(b.path));
+
+const githubDir = `${GITHUB_REPO}/tree/main/days/${entry.id}/firmware`;
 ---
 
 <Layout title={`day ${String(entry.data.day).padStart(2, "0")} · ${entry.data.title}`}>
   <main>
-    <nav><a href="/">← esptember</a></nav>
+    <nav><a href="/">← ESPtember</a></nav>
     <header>
       <h1>
         <span class="day-num">day {String(entry.data.day).padStart(2, "0")}</span>
@@ -30,6 +54,8 @@ const { Content } = await render(entry);
             </>
           )
         }
+        {" · "}
+        <a href={githubDir}>source on GitHub</a>
       </p>
     </header>
     {
@@ -45,6 +71,21 @@ const { Content } = await render(entry);
     <article>
       <Content />
     </article>
+    {
+      sources.length > 0 && (
+        <section class="sources">
+          <h2>Firmware source</h2>
+          {sources.map((file) => (
+            <details open={file.path.endsWith("main.c")}>
+              <summary>
+                <code>firmware/{file.path}</code>
+              </summary>
+              <pre><code>{file.content}</code></pre>
+            </details>
+          ))}
+        </section>
+      )
+    }
   </main>
   <style>
     .day-num {
@@ -52,6 +93,16 @@ const { Content } = await render(entry);
     }
     .meta {
       color: var(--muted);
+    }
+    .sources details {
+      margin-bottom: 0.5rem;
+    }
+    .sources summary {
+      cursor: pointer;
+      color: var(--muted);
+    }
+    .sources summary:hover {
+      color: var(--accent);
     }
   </style>
 </Layout>

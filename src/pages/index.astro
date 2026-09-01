@@ -2,6 +2,7 @@
 import { getCollection } from "astro:content";
 import Layout from "../layouts/Layout.astro";
 import { youtubeId } from "../lib/youtube";
+import { GITHUB_REPO } from "../lib/site";
 
 const days = (await getCollection("days")).sort(
   (a, b) => a.data.day - b.data.day,
@@ -10,12 +11,12 @@ const days = (await getCollection("days")).sort(
 
 <Layout>
   <main>
-    <h1>esptember</h1>
+    <h1>ESPtember</h1>
     <p>
       30 days of individually flashable projects for the
       <a href="https://www.waveshare.com/esp32-s3-touch-amoled-1.8.htm"
         >Waveshare ESP32-S3-Touch-AMOLED-1.8</a
-      >.
+      >. Code on <a href={GITHUB_REPO}>GitHub</a>.
     </p>
     <ol class="days">
       {
