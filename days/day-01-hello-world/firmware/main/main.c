@@ -9,6 +9,8 @@
 void app_main(void)
 {
     bsp_display_start();
+    // AMOLEDs have no backlight — this sends the panel its brightness
+    // command. Required: the one sent during init doesn't stick.
     bsp_display_backlight_on();
 
     bsp_display_lock(0);

@@ -10,6 +10,14 @@ Waveshare ESP32-S3-Touch-AMOLED-1.8's display — the most naive way
 possible. One label, default everything, then we're done. (Making it
 big and pretty is a later lesson.)
 
+Every remaining line is load-bearing. `bsp_display_start()` hides the
+real work (AXP2101 power, SH8601 panel init over QSPI, LVGL and its
+render task). The lock/unlock pair exists because that render task is
+already running — LVGL isn't thread-safe. And `bsp_display_backlight_on()`
+looks removable (init already sets brightness to 100%) but isn't: the
+brightness command sent during init doesn't stick, so without this line
+the panel stays dark. We checked.
+
 The display is an SH8601 AMOLED driven over QSPI, powered through an
 AXP2101 PMU — none of which you have to touch, because Waveshare ships a
 [board support package](https://components.espressif.com/components/waveshare/esp32_s3_touch_amoled_1_8)
@@ -19,6 +27,8 @@ that brings the panel up and hands you LVGL:
 void app_main(void)
 {
     bsp_display_start();
+    // AMOLEDs have no backlight — this sends the panel its brightness
+    // command. Required: the one sent during init doesn't stick.
     bsp_display_backlight_on();
 
     bsp_display_lock(0);
