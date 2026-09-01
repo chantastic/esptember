@@ -50,7 +50,7 @@ idf.py build merge-bin   # merge-bin produces build/merged-binary.bin
 ## Deploy
 
 ```sh
-pnpm deploy
+pnpm run deploy
 ```
 
 Deploys `dist/` to Cloudflare Workers (static assets) with custom domains
