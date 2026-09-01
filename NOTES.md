@@ -5,6 +5,10 @@
   day pointing at the hosted merged binaries. The site already hosts
   `public/firmware/<day>.bin`, so this is mostly a manifest + a
   `<esp-web-install-button>` per day page.
+- **Styling lesson** — day 01 is deliberately unstyled (default LVGL
+  theme). A later day covers LVGL styling: colors, fonts
+  (CONFIG_LV_FONT_MONTSERRAT_*), alignment, wrapping. ESPtember orange is
+  #ff5b04.
 - **Day 02: stopwatch** — print elapsed time on screen. This is where the
   FreeRTOS pacing conversation lives (`vTaskDelay` vs `esp_timer` vs LVGL
   timers), deliberately kept out of day 01's naive hello world.
