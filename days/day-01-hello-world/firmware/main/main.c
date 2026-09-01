@@ -1,10 +1,8 @@
 // ESPtember Day 01 — Hello World
-// Put text on the Waveshare ESP32-S3-Touch-AMOLED-1.8's screen
-// (SH8601 AMOLED over QSPI, powered by the AXP2101 PMU — all
-// handled by the board support package), and say hello over USB too.
-#include <stdio.h>
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
+// Print text on the Waveshare ESP32-S3-Touch-AMOLED-1.8's screen,
+// the most naive way possible. The board support package brings up
+// the display (SH8601 AMOLED over QSPI, AXP2101 PMU) and hands us
+// LVGL; we put one label on it and we're done.
 #include "bsp/esp-bsp.h"
 #include "lvgl.h"
 
@@ -24,8 +22,6 @@ void app_main(void)
     lv_obj_center(label);
     bsp_display_unlock();
 
-    while (true) {
-        printf("Hello, ESPtember!\n");
-        vTaskDelay(pdMS_TO_TICKS(1000));
-    }
+    // app_main can simply return — the BSP's LVGL task keeps the
+    // screen alive without us.
 }

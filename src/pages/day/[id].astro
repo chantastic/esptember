@@ -68,9 +68,32 @@ const githubDir = `${GITHUB_REPO}/tree/main/days/${entry.id}/firmware`;
         />
       )
     }
+    {
+      entry.data.firmware && (
+        <details class="web-flash">
+          <summary>Flash from your browser (experimental)</summary>
+          <p>
+            This flashes over Web Serial — Chromium-based desktop browsers
+            only. It <strong>only works with the Waveshare
+            ESP32-S3-Touch-AMOLED-1.8</strong>; other boards may misbehave or
+            be damaged. Flashing firmware is inherently risky and
+            <strong>overwrites whatever is on the device</strong>. Proceed at
+            your own risk — I take no responsibility for damage to your
+            device.
+          </p>
+          <esp-web-install-button
+            manifest={`/day/${entry.id}/manifest.json`}
+          />
+        </details>
+      )
+    }
     <article>
       <Content />
     </article>
+
+    <script>
+      import "esp-web-tools/dist/web/install-button.js";
+    </script>
     {
       sources.length > 0 && (
         <section class="sources">
@@ -103,6 +126,24 @@ const githubDir = `${GITHUB_REPO}/tree/main/days/${entry.id}/firmware`;
     }
     .sources summary:hover {
       color: var(--accent);
+    }
+    .web-flash {
+      margin: 1rem 0;
+      padding: 0.75rem 1rem;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+    }
+    .web-flash summary {
+      cursor: pointer;
+      color: var(--muted);
+    }
+    .web-flash summary:hover {
+      color: var(--accent);
+    }
+    .web-flash p {
+      color: var(--muted);
+      font-size: 0.9em;
     }
   </style>
 </Layout>

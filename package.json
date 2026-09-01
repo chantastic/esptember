@@ -9,7 +9,8 @@
     "deploy": "pnpm build && wrangler deploy"
   },
   "dependencies": {
-    "astro": "^5.13.0"
+    "astro": "^5.13.0",
+    "esp-web-tools": "^10.4.0"
   },
   "devDependencies": {
     "wrangler": "^4.33.0"

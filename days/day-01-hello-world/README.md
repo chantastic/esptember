@@ -6,8 +6,8 @@ firmware: /firmware/day-01-hello-world.bin
 ---
 
 Hello world, on the screen where it belongs: `Hello, ESPtember!` in big
-orange type on the Waveshare ESP32-S3-Touch-AMOLED-1.8's display, and
-over USB serial once a second for good measure.
+orange type on the Waveshare ESP32-S3-Touch-AMOLED-1.8's display — the
+most naive way possible. One label, then we're done.
 
 The display is an SH8601 AMOLED driven over QSPI, powered through an
 AXP2101 PMU — none of which you have to touch, because Waveshare ships a
@@ -31,10 +31,8 @@ void app_main(void)
     lv_obj_center(label);
     bsp_display_unlock();
 
-    while (true) {
-        printf("Hello, ESPtember!\n");
-        vTaskDelay(pdMS_TO_TICKS(1000));
-    }
+    // app_main can simply return — the BSP's LVGL task keeps the
+    // screen alive without us.
 }
 ```
 
@@ -61,13 +59,7 @@ esptool --chip esp32s3 --port /dev/cu.usbmodem1101 \
   write-flash 0x0 day-01-hello-world.bin
 ```
 
-4. The screen says hello. So does serial:
-
-```sh
-screen /dev/cu.usbmodem1101 115200
-```
-
-(exit `screen` with `ctrl-a` then `k`, then `y`)
+4. The screen says hello.
 
 ## Build from source
 
