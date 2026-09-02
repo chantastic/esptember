@@ -5,16 +5,14 @@ toolchain: ESP-IDF v5.5 + Waveshare BSP (LVGL)
 firmware: /firmware/day-01-hello-world.bin
 ---
 
-Hello world, on the screen where it belongs: `Hello, ESPtember!` on the
-Waveshare ESP32-S3-Touch-AMOLED-1.8's display — the most naive way
-possible. One label, default everything, then we're done. (Making it
-big and pretty is a later lesson.)
+Put text on the screen.
 
-The display is an AMOLED driven over QSPI, powered through an AXP2101
-PMU. Waveshare ships a
-[board support package](https://components.espressif.com/components/waveshare/esp32_s3_touch_amoled_1_8)
-that brings up the panel and hands you LVGL — so the hello-world part
-is genuinely six lines:
+One label.
+Default everything.
+Big and pretty comes later.
+
+Waveshare ships a [BSP](https://components.espressif.com/components/waveshare/esp32_s3_touch_amoled_1_8) that powers the panel and hands you LVGL.
+The hello world is six lines:
 
 ```c
 bsp_display_start();
@@ -35,62 +33,72 @@ lv_obj_center(label);
 bsp_display_unlock();
 ```
 
-Every line is load-bearing — three of them because we deleted them,
-watched the screen go wrong, and put them back.
+Every line pulls weight.
+We deleted three of them.
+The screen punished us.
+We put them back.
 
-## The part nobody tells you: the board dies in minutes
+## The board dies in minutes
 
-Flash just the code above and the board runs for one to four minutes,
-then goes dark. Two separate bugs, both missing from the BSP:
+Flash only the code above and the board runs one to four minutes.
+Then it goes dark.
 
-**1. The PMU starves the board.** The AXP2101 power chip defaults to a
-500 mA USB input limit. ESP32-S3 + AMOLED + lithium battery charging
-exceeds that once the charger ramps up — and the PMU cuts power to the
-*entire system*. USB disconnects; the screen freezes on its last frame
-(AMOLED memory holds the image, which makes it look like a software
-hang — it isn't). The fix is two register writes: raise the input limit
-to 900 mA, cap charging at 300 mA. See `pmu_init()` in the source.
+Two bugs.
+Both missing from the BSP.
 
-**2. The panel's reset line is floating (V2 boards).** Waveshare
-quietly revised this board: current units ship a CO5300 panel driver
-and CST816-family touch instead of the V1's SH8601/FT3168. On V2, the
-panel reset sits behind a TCA9554 I/O expander that the BSP never
-drives. Floating reset means the panel *usually* comes up — then drops
-dark at random while every `esp_lcd` call still returns `ESP_OK`. The
-fix is the factory firmware's reset pulse, sent before display init.
-Known issue:
-[waveshareteam/ESP32-S3-Touch-AMOLED-1.8#12](https://github.com/waveshareteam/ESP32-S3-Touch-AMOLED-1.8/issues/12).
-See `panel_reset_release()` in the source.
+### The PMU starves the board
 
-With both fixes: 15+ minute soak test, rock solid. Your board is a V2
-if the boot log says `CST816S` and `co5300`.
+The AXP2101 limits USB input to 500 mA by default.
+ESP32-S3 + AMOLED + battery charging wants more.
+When the charger ramps up, the PMU cuts power to everything.
 
-## Flash it (prebuilt binary)
+USB disconnects.
+The screen freezes on its last frame.
+It looks like a software hang.
+It isn't — AMOLED memory holds the image after death.
 
-You need [esptool](https://docs.espressif.com/projects/esptool/) and the
-board connected over USB-C.
+Two register writes fix it: raise input to 900 mA, cap charging at 300 mA.
+See `pmu_init()` in the source.
 
-1. Download [day-01-hello-world.bin](https://esptember.com/firmware/day-01-hello-world.bin)
-2. Find your serial port (macOS: `ls /dev/cu.usbmodem*`, Linux: `ls /dev/ttyACM*`)
-3. Flash:
+### The panel reset floats
+
+Waveshare revised this board.
+Current units ship a CO5300 panel and CST816 touch — not the wiki's SH8601 and FT3168.
+Your board is a V2 if the boot log says `co5300` and `CST816S`.
+
+On V2, panel reset hides behind a TCA9554 I/O expander.
+The BSP never drives it.
+The floating reset usually comes up.
+Then it drops dark at random — while every `esp_lcd` call returns `ESP_OK`.
+
+Pulse reset the way the factory firmware does, before display init.
+See `panel_reset_release()` in the source, and [waveshareteam issue #12](https://github.com/waveshareteam/ESP32-S3-Touch-AMOLED-1.8/issues/12).
+
+With both fixes the board ran a 15-minute soak without a flicker.
+
+## Flash it
+
+You need [esptool](https://docs.espressif.com/projects/esptool/) and the board on USB-C.
+
+Download [day-01-hello-world.bin](https://esptember.com/firmware/day-01-hello-world.bin).
+
+Find your port.
+macOS: `ls /dev/cu.usbmodem*`.
+Linux: `ls /dev/ttyACM*`.
+
+Flash:
 
 ```sh
-# with uv (no install)
 uvx esptool --chip esp32s3 --port /dev/cu.usbmodem1101 \
-  write-flash 0x0 day-01-hello-world.bin
-
-# or with pip-installed esptool
-esptool --chip esp32s3 --port /dev/cu.usbmodem1101 \
   write-flash 0x0 day-01-hello-world.bin
 ```
 
-4. The screen says hello.
+The screen says hello.
 
 ## Build from source
 
 Requires [ESP-IDF](https://docs.espressif.com/projects/esp-idf/en/stable/esp32s3/get-started/) v5.5+.
-Dependencies (the BSP and the TCA9554 I/O expander driver) are fetched
-automatically from the component registry on first build.
+Dependencies fetch automatically on first build.
 
 ```sh
 cd firmware
@@ -98,15 +106,16 @@ idf.py set-target esp32s3
 idf.py -p /dev/cu.usbmodem1101 flash monitor
 ```
 
-(exit the monitor with `ctrl-]`)
+Exit the monitor with `ctrl-]`.
 
 ## What's in the image
 
-| offset  | file                | what                                     |
-| ------- | ------------------- | ---------------------------------------- |
-| 0x0     | bootloader.bin      | second-stage bootloader                   |
-| 0x8000  | partition-table.bin | where the app lives in flash              |
-| 0x10000 | app                 | hello world + display stack (BSP + LVGL)  |
+| offset  | file                | what                          |
+| ------- | ------------------- | ----------------------------- |
+| 0x0     | bootloader.bin      | second-stage bootloader       |
+| 0x8000  | partition-table.bin | where the app lives           |
+| 0x10000 | app                 | hello world + display stack   |
 
-The downloadable `.bin` is all three merged into one image flashed at
-offset `0x0` — that's why the flash command is a single line.
+The download merges all three into one image flashed at `0x0`.
+One command.
+No offsets.
