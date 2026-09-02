@@ -30,10 +30,6 @@ lv_obj_center(label);
 bsp_display_unlock();
 ```
 
-Six lines looks padded.
-It isn't.
-We deleted three of them, watched the screen go wrong three different ways, and put them back with comments that say why.
-
 ## The board dies in minutes
 
 The code above works.
