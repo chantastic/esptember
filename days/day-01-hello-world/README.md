@@ -76,6 +76,27 @@ See `panel_reset_release()` in the source, and [waveshareteam issue #12](https:/
 
 With both fixes the board ran a 15-minute soak without a flicker.
 
+## What we learned
+
+`printf` is one line because someone built the plumbing before you arrived.
+A screen has no plumbing.
+Six lines is naive — for a display.
+
+Delete a line and watch what breaks.
+The screen teaches faster than the docs.
+
+Hardware lies politely.
+Every call returned `ESP_OK` while the panel sat in reset.
+A dead AMOLED holds its last frame — a crash that looks like a freeze.
+
+Defaults are decisions someone else made.
+500 mA starved this board.
+
+Read your boot log.
+Ours said `co5300`, not `SH8601` — a hardware revision the wiki doesn't mention.
+Someone already hit your bug.
+Search the issues before you burn an afternoon.
+
 ## Flash it
 
 You need [esptool](https://docs.espressif.com/projects/esptool/) and the board on USB-C.
