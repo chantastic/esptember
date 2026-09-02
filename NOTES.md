@@ -24,7 +24,9 @@
   theme). A later day covers LVGL styling: colors, fonts
   (CONFIG_LV_FONT_MONTSERRAT_*), alignment, wrapping. ESPtember orange is
   #ff5b04.
-- **Day 02: stopwatch** — print elapsed time on screen. This is where the
+- **Day 02 became the styling lesson** (customized text, escalating:
+  color → size → custom font → effects). Stopwatch moves later.
+- **Stopwatch day (was day 02)** — print elapsed time on screen. This is where the
   FreeRTOS pacing conversation lives (`vTaskDelay` vs `esp_timer` vs LVGL
   timers), deliberately kept out of day 01's naive hello world.
 - Planned early days: hello world text → stopwatch → single image →
