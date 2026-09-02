@@ -5,6 +5,16 @@
   day pointing at the hosted merged binaries. The site already hosts
   `public/firmware/<day>.bin`, so this is mostly a manifest + a
   `<esp-web-install-button>` per day page.
+- **"Why did my screen die?" lesson** — the day-01 debugging saga is
+  strong episode material: AXP2101 input-current starvation (USB drops,
+  AMOLED GRAM freezes the last frame so it looks like a hang), and the
+  V2 TCA9554 floating panel reset (waveshareteam issue #12). Method:
+  serial heartbeat + on-screen counter to distinguish dead chip / dead
+  panel / flush starvation.
+- **V2 hardware note** — user's board (and current retail units) are V2:
+  CO5300 panel + CST816-family touch, not the wiki's SH8601/FT3168.
+  Every future day inherits pmu_init() + panel_reset_release() —
+  consider extracting a tiny shared component once day 02 needs it.
 - **Styling lesson** — day 01 is deliberately unstyled (default LVGL
   theme). A later day covers LVGL styling: colors, fonts
   (CONFIG_LV_FONT_MONTSERRAT_*), alignment, wrapping. ESPtember orange is

@@ -12,3 +12,7 @@ CONFIG_ESP_CONSOLE_USB_SERIAL_JTAG=y
 
 # Optimize for size
 CONFIG_COMPILER_OPTIMIZATION_SIZE=y
+
+# LVGL dark theme: white text, black background — zero styling code,
+# and on an AMOLED, black pixels are simply off.
+CONFIG_LV_THEME_DEFAULT_DARK=y

@@ -10,41 +10,60 @@ Waveshare ESP32-S3-Touch-AMOLED-1.8's display — the most naive way
 possible. One label, default everything, then we're done. (Making it
 big and pretty is a later lesson.)
 
-Every remaining line is load-bearing. `bsp_display_start()` hides the
-real work (AXP2101 power, SH8601 panel init over QSPI, LVGL and its
-render task). The lock/unlock pair exists because that render task is
-already running — LVGL isn't thread-safe. And `bsp_display_backlight_on()`
-looks removable (init already sets brightness to 100%) but isn't: the
-brightness command sent during init doesn't stick, so without this line
-the panel stays dark. We checked.
-
-The display is an SH8601 AMOLED driven over QSPI, powered through an
-AXP2101 PMU — none of which you have to touch, because Waveshare ships a
+The display is an AMOLED driven over QSPI, powered through an AXP2101
+PMU. Waveshare ships a
 [board support package](https://components.espressif.com/components/waveshare/esp32_s3_touch_amoled_1_8)
-that brings the panel up and hands you LVGL:
+that brings up the panel and hands you LVGL — so the hello-world part
+is genuinely six lines:
 
 ```c
-void app_main(void)
-{
-    bsp_display_start();
-    // AMOLEDs have no backlight — this sends the panel its brightness
-    // command. Required: the one sent during init doesn't stick.
-    bsp_display_backlight_on();
+bsp_display_start();
+// AMOLEDs have no backlight — this sends the panel its brightness
+// command. Required: the one sent during init doesn't stick.
+bsp_display_backlight_on();
 
-    bsp_display_lock(0);
-    lv_obj_t *label = lv_label_create(lv_screen_active());
-    lv_label_set_text(label, "Hello, ESPtember!");
-    lv_obj_center(label);
-    bsp_display_unlock();
-
-    // app_main can simply return — the BSP's LVGL task keeps the
-    // screen alive without us.
-}
+bsp_display_lock(0);
+// Not styling — physics: the dark theme's background is dark grey,
+// which keeps every AMOLED pixel lit. True black (#000000) turns
+// them off.
+lv_obj_set_style_bg_color(lv_screen_active(), lv_color_black(), 0);
+lv_obj_t *label = lv_label_create(lv_screen_active());
+lv_label_set_text(label, "Hello, ESPtember!");
+// Not styling — survival: at the default position (top-left, 0,0)
+// the label hides under the panel's rounded corner entirely.
+lv_obj_center(label);
+bsp_display_unlock();
 ```
 
-The whole flashable image is ~570KB — roughly 220KB of bootloader +
-hello world, and the rest is the price of the display stack (panel
-driver, PMU, LVGL).
+Every line is load-bearing — three of them because we deleted them,
+watched the screen go wrong, and put them back.
+
+## The part nobody tells you: the board dies in minutes
+
+Flash just the code above and the board runs for one to four minutes,
+then goes dark. Two separate bugs, both missing from the BSP:
+
+**1. The PMU starves the board.** The AXP2101 power chip defaults to a
+500 mA USB input limit. ESP32-S3 + AMOLED + lithium battery charging
+exceeds that once the charger ramps up — and the PMU cuts power to the
+*entire system*. USB disconnects; the screen freezes on its last frame
+(AMOLED memory holds the image, which makes it look like a software
+hang — it isn't). The fix is two register writes: raise the input limit
+to 900 mA, cap charging at 300 mA. See `pmu_init()` in the source.
+
+**2. The panel's reset line is floating (V2 boards).** Waveshare
+quietly revised this board: current units ship a CO5300 panel driver
+and CST816-family touch instead of the V1's SH8601/FT3168. On V2, the
+panel reset sits behind a TCA9554 I/O expander that the BSP never
+drives. Floating reset means the panel *usually* comes up — then drops
+dark at random while every `esp_lcd` call still returns `ESP_OK`. The
+fix is the factory firmware's reset pulse, sent before display init.
+Known issue:
+[waveshareteam/ESP32-S3-Touch-AMOLED-1.8#12](https://github.com/waveshareteam/ESP32-S3-Touch-AMOLED-1.8/issues/12).
+See `panel_reset_release()` in the source.
+
+With both fixes: 15+ minute soak test, rock solid. Your board is a V2
+if the boot log says `CST816S` and `co5300`.
 
 ## Flash it (prebuilt binary)
 
@@ -70,8 +89,8 @@ esptool --chip esp32s3 --port /dev/cu.usbmodem1101 \
 ## Build from source
 
 Requires [ESP-IDF](https://docs.espressif.com/projects/esp-idf/en/stable/esp32s3/get-started/) v5.5+.
-The BSP dependency is fetched automatically from the component registry
-on first build.
+Dependencies (the BSP and the TCA9554 I/O expander driver) are fetched
+automatically from the component registry on first build.
 
 ```sh
 cd firmware
@@ -83,11 +102,11 @@ idf.py -p /dev/cu.usbmodem1101 flash monitor
 
 ## What's in the image
 
-| offset  | file                | what                                    |
-| ------- | ------------------- | --------------------------------------- |
-| 0x0     | bootloader.bin      | second-stage bootloader                  |
-| 0x8000  | partition-table.bin | where the app lives in flash             |
-| 0x10000 | app                 | hello world + display stack (BSP + LVGL) |
+| offset  | file                | what                                     |
+| ------- | ------------------- | ---------------------------------------- |
+| 0x0     | bootloader.bin      | second-stage bootloader                   |
+| 0x8000  | partition-table.bin | where the app lives in flash              |
+| 0x10000 | app                 | hello world + display stack (BSP + LVGL)  |
 
 The downloadable `.bin` is all three merged into one image flashed at
 offset `0x0` — that's why the flash command is a single line.
