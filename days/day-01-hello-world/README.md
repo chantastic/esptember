@@ -6,13 +6,10 @@ firmware: /firmware/day-01-hello-world.bin
 ---
 
 Put text on the screen.
+That's the whole assignment.
 
-One label.
-Default everything.
-Big and pretty comes later.
-
-Waveshare ships a [BSP](https://components.espressif.com/components/waveshare/esp32_s3_touch_amoled_1_8) that powers the panel and hands you LVGL.
-The hello world is six lines:
+Waveshare ships a [BSP](https://components.espressif.com/components/waveshare/esp32_s3_touch_amoled_1_8) that powers the panel, starts LVGL, and hands you a canvas.
+So hello world is six lines:
 
 ```c
 bsp_display_start();
@@ -33,15 +30,15 @@ lv_obj_center(label);
 bsp_display_unlock();
 ```
 
-Every line pulls weight.
-We deleted three of them.
-The screen punished us.
-We put them back.
+Six lines looks padded.
+It isn't.
+We deleted three of them, watched the screen go wrong three different ways, and put them back with comments that say why.
 
 ## The board dies in minutes
 
-Flash only the code above and the board runs one to four minutes.
-Then it goes dark.
+The code above works.
+Then, one to four minutes in, it doesn't.
+The screen goes dark, the USB port vanishes, and nothing in the log says why.
 
 Two bugs.
 Both missing from the BSP.
@@ -49,27 +46,26 @@ Both missing from the BSP.
 ### The PMU starves the board
 
 The AXP2101 limits USB input to 500 mA by default.
-ESP32-S3 + AMOLED + battery charging wants more.
-When the charger ramps up, the PMU cuts power to everything.
+That's plenty for a bare chip.
+But this board runs an ESP32-S3, lights an AMOLED, and charges a lithium battery on that same 500 mA — and when the charger ramps up, the PMU cuts power to everything.
 
-USB disconnects.
-The screen freezes on its last frame.
-It looks like a software hang.
-It isn't — AMOLED memory holds the image after death.
+It doesn't look like a power failure.
+The screen holds its last frame and the whole thing reads as a software hang.
+It isn't.
+AMOLED memory keeps the image after death.
 
 Two register writes fix it: raise input to 900 mA, cap charging at 300 mA.
 See `pmu_init()` in the source.
 
 ### The panel reset floats
 
-Waveshare revised this board.
-Current units ship a CO5300 panel and CST816 touch — not the wiki's SH8601 and FT3168.
-Your board is a V2 if the boot log says `co5300` and `CST816S`.
+The wiki says this board pairs an SH8601 panel with FT3168 touch.
+Ours boots `co5300` and `CST816S`.
+Waveshare revised the hardware and left the docs behind — current units are V2.
 
-On V2, panel reset hides behind a TCA9554 I/O expander.
-The BSP never drives it.
-The floating reset usually comes up.
-Then it drops dark at random — while every `esp_lcd` call returns `ESP_OK`.
+On V2, panel reset hides behind a TCA9554 I/O expander the BSP never drives.
+A floating reset usually comes up, the demo runs, and everything looks fine.
+Then the panel drops dark at random — while every `esp_lcd` call keeps returning `ESP_OK`.
 
 Pulse reset the way the factory firmware does, before display init.
 See `panel_reset_release()` in the source, and [waveshareteam issue #12](https://github.com/waveshareteam/ESP32-S3-Touch-AMOLED-1.8/issues/12).
@@ -80,21 +76,19 @@ With both fixes the board ran a 15-minute soak without a flicker.
 
 `printf` is one line because someone built the plumbing before you arrived.
 A screen has no plumbing.
-Six lines is naive — for a display.
+Six lines is what naive costs on a display.
 
-Delete a line and watch what breaks.
-The screen teaches faster than the docs.
+Docs describe the board they remember.
+The boot log names the board you have.
+Trust the log.
 
-Hardware lies politely.
-Every call returned `ESP_OK` while the panel sat in reset.
-A dead AMOLED holds its last frame — a crash that looks like a freeze.
+Hardware fails politely.
+Every call returned `ESP_OK` while the panel sat in reset — success codes measure the conversation, not the picture.
 
-Defaults are decisions someone else made.
-500 mA starved this board.
+Defaults are decisions someone else made, for a board they never met.
+500 mA starved this one.
 
-Read your boot log.
-Ours said `co5300`, not `SH8601` — a hardware revision the wiki doesn't mention.
-Someone already hit your bug.
+And someone already hit your bug.
 Search the issues before you burn an afternoon.
 
 ## Flash it
