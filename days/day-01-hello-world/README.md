@@ -9,7 +9,7 @@ Put text on the screen.
 That's the whole assignment.
 
 Waveshare ships a [BSP](https://components.espressif.com/components/waveshare/esp32_s3_touch_amoled_1_8) that powers the panel, starts LVGL, and hands you a canvas.
-Hello world is six lines:
+Hello world is eight calls:
 
 ```c
 bsp_display_start();
@@ -34,10 +34,10 @@ bsp_display_unlock();
 
 The code above works.
 Then, one to four minutes in, it doesn't.
-The screen goes dark, the USB port vanishes, and nothing in the log says why.
+The screen goes dark — sometimes the whole board with it — and nothing in the log says why.
 
 Two bugs.
-Both missing from the BSP.
+Neither is in your eight calls.
 
 ### The PMU starves the board
 
@@ -72,12 +72,13 @@ With both fixes: a 15-minute soak, no flicker.
 Download [day-01-hello-world.bin](https://esptember.com/firmware/day-01-hello-world.bin).
 It's the bootloader, partition table, and app merged into one image — one command, no offsets.
 
+Find your port: `ls /dev/cu.usbmodem*` on macOS, `ls /dev/ttyACM*` on Linux.
+
 ```sh
 uvx esptool --chip esp32s3 --port /dev/cu.usbmodem1101 \
   write-flash 0x0 day-01-hello-world.bin
 ```
 
-Your port: `ls /dev/cu.usbmodem*` on macOS, `ls /dev/ttyACM*` on Linux.
 The screen says hello.
 
 Building from source instead?
@@ -88,7 +89,7 @@ Dependencies fetch on first build.
 
 `printf` is one line because someone built the plumbing before you arrived.
 A screen has no plumbing.
-Six lines is what naive costs on a display.
+Eight calls is what naive costs on a display.
 
 Defaults are decisions someone else made, for a board they never met.
 500 mA starved this one.

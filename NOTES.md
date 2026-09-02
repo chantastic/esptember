@@ -15,6 +15,11 @@
   CO5300 panel + CST816-family touch, not the wiki's SH8601/FT3168.
   Every future day inherits pmu_init() + panel_reset_release() —
   consider extracting a tiny shared component once day 02 needs it.
+- **Retest backlight_on** — we proved `bsp_display_backlight_on()` was
+  required *before* the panel-reset fix existed. The floating reset may
+  have been why init brightness didn't stick. Retest removal now that
+  `panel_reset_release()` runs; if it's removable, day 01 drops to seven
+  calls and the comment needs rewording.
 - **Styling lesson** — day 01 is deliberately unstyled (default LVGL
   theme). A later day covers LVGL styling: colors, fonts
   (CONFIG_LV_FONT_MONTSERRAT_*), alignment, wrapping. ESPtember orange is
