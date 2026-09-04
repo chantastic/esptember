@@ -35,7 +35,8 @@
   note the toolchain in the day's frontmatter.
 - **Days 03–06 media sequence implemented** — static graphic, swipeable
   carousel, GIF, raw RGB565 movie with SD-file preference and flash fallback.
-  Writeups remain in `drafts/` until visual/hardware checks are complete.
+  Days 03 and 04 are published through September 4.
+  Days 05 and 06 remain in `drafts/`; outstanding hardware checks are recorded there.
   Saved internet media and attribution live in `assets/media/`;
   `scripts/make-media.py` converts them reproducibly with FFmpeg.
 - **Storage is a partition decision** — day 02's 16 MB flash setting still

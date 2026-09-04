@@ -4,15 +4,16 @@ Days 03–06 continue from Styled Text: a GitHub avatar → three public portrai
 [Media sources and attribution](../assets/media/README.md) accompany the saved assets.
 The stopwatch lesson remains a later idea.
 
-These are lesson drafts backed by four implemented, successfully built firmware projects in `days/`.
+Days 03 and 04 are published.
+Days 05 and 06 remain drafts, backed by successfully built firmware projects in `days/`.
 Hardware verification is in progress.
 Verification results belong in `verification.md`; visual checks and SD playback must be distinguished from serial boot checks.
-They live outside `days/` so the Astro collection does not publish them.
+The remaining drafts live outside `days/` so the Astro collection does not publish them.
 
 | Day | Assignment | New idea |
 | --- | --- | --- |
-| [03: A Static Graphic](day-03-static-graphic/README.md) | Display one image | Convert an asset into firmware data |
-| [04: A Carousel](day-04-carousel/README.md) | Swipe between three images | Separate the images from navigation |
+| [03: A Static Graphic](../days/day-03-static-graphic/README.md) | Display one image | Convert an asset into firmware data |
+| [04: A Carousel](../days/day-04-carousel/README.md) | Swipe between three images | Separate the images from navigation |
 | [05: A GIF](day-05-gif/README.md) | Play a short loop | Budget for decoded pixels and a decoder |
 | [06: A Movie](day-06-movie/README.md) | Play a clip, then read it from SD | Separate storage, memory, and frame rate |
 

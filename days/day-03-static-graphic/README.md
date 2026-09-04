@@ -2,10 +2,8 @@
 day: 3
 title: A Static Graphic
 toolchain: ESP-IDF v5.5 + Waveshare BSP (LVGL 9.5)
+firmware: /firmware/day-03-static-graphic.bin
 ---
-
-> Draft: firmware builds successfully; hardware verification is in progress.
-> Build and board results: [verification notes](../verification.md).
 
 Put one graphic on the screen.
 Leave it there.
@@ -30,7 +28,7 @@ Board initialization carries over from day 02.
 The included graphic is my GitHub avatar, cropped to 240 × 240.
 `scripts/make-media.py` converts the saved JPEG into little-endian RGB565 with FFmpeg.
 Regenerate the lesson assets from the repository root with `python3 scripts/make-media.py`.
-The original JPEG and its source link live in [the media folder](../../assets/media/README.md).
+The original JPEG and its source link live in [the media folder](https://github.com/chantastic/esptember/blob/main/assets/media/README.md).
 
 RGB565 stores red, green, and blue in 16 bits per pixel.
 It has no alpha channel; the photograph supplies every pixel.
@@ -79,14 +77,26 @@ Those dimensions come from the BSP and [Waveshare's board documentation](https:/
 The embedded asset and its constant descriptor live in flash.
 The display still needs working buffers in RAM; storing the image in flash doesn't remove those.
 
-## Build and check
+## Flash it
 
-The implementation keeps day 02's board bring-up and replaces its text UI with the excerpt above.
-Build with `idf.py build` and inspect `idf.py size` before making the merged image.
+Download [day-03-static-graphic.bin](https://esptember.com/firmware/day-03-static-graphic.bin).
+The bootloader, partition table, app, and portraits are merged into one image.
 
-On hardware, check the image's orientation, the grayscale tones against the original portrait, and the black background.
-Let it sit long enough to catch the panel and power problems from day 01.
-Record the result before adding the flash download and command here.
+Find your port: `ls /dev/cu.usbmodem*` on macOS, `ls /dev/ttyACM*` on Linux.
+Replace the example port below with yours.
+
+```sh
+uvx esptool --chip esp32s3 --port /dev/cu.usbmodem1101 \
+  write-flash 0x0 day-03-static-graphic.bin
+```
+
+Your GitHub portrait stays on the screen.
+
+## Build from source
+
+Use [ESP-IDF](https://docs.espressif.com/projects/esp-idf/en/stable/esp32s3/get-started/) v5.5 with the dependencies pinned in this day's firmware project.
+From `days/day-03-static-graphic/firmware/`, run `idf.py -p PORT flash monitor`.
+Run `idf.py merge-bin` to produce the combined download image.
 
 ## What we learned
 

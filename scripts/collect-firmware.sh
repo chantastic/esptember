@@ -9,6 +9,8 @@ mkdir -p public/firmware
 for merged in days/*/firmware/build/merged-binary.bin; do
   [ -f "$merged" ] || continue
   day="$(basename "$(dirname "$(dirname "$(dirname "$merged")")")")"
+  # Only publish firmware for days with a published lesson.
+  [ -f "days/$day/README.md" ] || continue
   cp "$merged" "public/firmware/$day.bin"
   echo "collected: public/firmware/$day.bin"
 done

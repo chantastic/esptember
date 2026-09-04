@@ -2,10 +2,8 @@
 day: 4
 title: A Carousel
 toolchain: ESP-IDF v5.5 + Waveshare BSP (LVGL 9.5)
+firmware: /firmware/day-04-carousel.bin
 ---
-
-> Draft: firmware builds successfully; hardware verification is in progress.
-> Build and board results: [verification notes](../verification.md).
 
 Put three avatars on the board.
 Show one at a time.
@@ -47,7 +45,7 @@ The BSP supplies the touch input.
 The included portraits come from my GitHub profile, React Conf speaker page, and React Advanced speaker page.
 Same person, three versions of me on the internet.
 `scripts/make-media.py` crops each saved photograph to 240 × 240 and converts it to RGB565.
-[The media folder](../../assets/media/README.md) records the original files and source links.
+[The media folder](https://github.com/chantastic/esptember/blob/main/assets/media/README.md) records the original files and source links.
 The main component embeds `github.rgb565`, `react_conf.rgb565`, and `react_advanced.rgb565`; `main.c` gives each a constant image descriptor, just as in day 03.
 
 Use `CONFIG_LV_USE_TILEVIEW=y`.
@@ -72,17 +70,27 @@ lv_tileview_set_tile_by_index(carousel, 1, 0, LV_ANIM_ON);
 That's also the operation an automatic carousel could run from an LVGL timer.
 For this day, keep the swipe as the interaction so we can test touch independently of automatic movement.
 
-## Build and check
+## Flash it
 
-Build with `idf.py build` and inspect `idf.py size` after adding all three assets.
-On the V2 board, swipe forward and backward, release halfway through a swipe, and check that the first and last slides stop at their edges.
-Repeat swipes during an extended run.
+Download [day-04-carousel.bin](https://esptember.com/firmware/day-04-carousel.bin).
+The bootloader, partition table, app, and portraits are merged into one image.
 
-If a swipe doesn't work, first try the programmatic change above.
-That separates whether the tile can move from whether touch is reaching it.
-Neither outcome has been observed for this draft yet.
+Find your port: `ls /dev/cu.usbmodem*` on macOS, `ls /dev/ttyACM*` on Linux.
+Replace the example port below with yours.
 
-Add the verified merged image and flash instructions after these checks.
+```sh
+uvx esptool --chip esp32s3 --port /dev/cu.usbmodem1101 \
+  write-flash 0x0 day-04-carousel.bin
+```
+
+Swipe between the three portraits.
+If a swipe does not work, try the programmatic change above to separate tile movement from touch input.
+
+## Build from source
+
+Use [ESP-IDF](https://docs.espressif.com/projects/esp-idf/en/stable/esp32s3/get-started/) v5.5 with the dependencies pinned in this day's firmware project.
+From `days/day-04-carousel/firmware/`, run `idf.py -p PORT flash monitor`.
+Run `idf.py merge-bin` to produce the combined download image.
 
 ## What we learned
 
