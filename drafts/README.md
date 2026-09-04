@@ -1,6 +1,7 @@
 # ESPtember — media lesson drafts
 
-Days 03–06 continue from Styled Text: one graphic → a swipeable carousel → a GIF → a movie.
+Days 03–06 continue from Styled Text: a GitHub avatar → three public portraits → Homer backing into the bushes → a Big Buck Bunny clip.
+[Media sources and attribution](../assets/media/README.md) accompany the saved assets.
 The stopwatch lesson remains a later idea.
 
 These are lesson drafts backed by four implemented, successfully built firmware projects in `days/`.

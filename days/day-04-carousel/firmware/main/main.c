@@ -94,23 +94,23 @@ static void heartbeat(const char *lesson)
     }
 }
 
-extern const uint8_t circle_start[] asm("_binary_circle_rgb565_start");
-static const lv_image_dsc_t circle = {
+extern const uint8_t github_start[] asm("_binary_github_rgb565_start");
+static const lv_image_dsc_t github = {
     .header = { .magic = LV_IMAGE_HEADER_MAGIC, .cf = LV_COLOR_FORMAT_RGB565,
                 .w = 240, .h = 240, .stride = 480 },
-    .data_size = 240 * 240 * 2, .data = circle_start,
+    .data_size = 240 * 240 * 2, .data = github_start,
 };
-extern const uint8_t square_start[] asm("_binary_square_rgb565_start");
-static const lv_image_dsc_t square = {
+extern const uint8_t react_conf_start[] asm("_binary_react_conf_rgb565_start");
+static const lv_image_dsc_t react_conf = {
     .header = { .magic = LV_IMAGE_HEADER_MAGIC, .cf = LV_COLOR_FORMAT_RGB565,
                 .w = 240, .h = 240, .stride = 480 },
-    .data_size = 240 * 240 * 2, .data = square_start,
+    .data_size = 240 * 240 * 2, .data = react_conf_start,
 };
-extern const uint8_t triangle_start[] asm("_binary_triangle_rgb565_start");
-static const lv_image_dsc_t triangle = {
+extern const uint8_t react_advanced_start[] asm("_binary_react_advanced_rgb565_start");
+static const lv_image_dsc_t react_advanced = {
     .header = { .magic = LV_IMAGE_HEADER_MAGIC, .cf = LV_COLOR_FORMAT_RGB565,
                 .w = 240, .h = 240, .stride = 480 },
-    .data_size = 240 * 240 * 2, .data = triangle_start,
+    .data_size = 240 * 240 * 2, .data = react_advanced_start,
 };
 
 static void slide_changed(lv_event_t *event)
@@ -123,7 +123,7 @@ static void slide_changed(lv_event_t *event)
 void app_main(void)
 {
     board_start();
-    const lv_image_dsc_t *slides[] = { &circle, &square, &triangle };
+    const lv_image_dsc_t *slides[] = { &github, &react_conf, &react_advanced };
     bsp_display_lock(0);
     lv_obj_t *carousel = lv_tileview_create(lv_screen_active());
     lv_obj_set_size(carousel, lv_pct(100), lv_pct(100));
@@ -143,6 +143,6 @@ void app_main(void)
     }
     lv_obj_add_event_cb(carousel, slide_changed, LV_EVENT_VALUE_CHANGED, NULL);
     bsp_display_unlock();
-    ESP_LOGI("media", "READY day04: swipe between orange circle, square, triangle");
+    ESP_LOGI("media", "READY day04: swipe between chantastic GitHub, React Conf, React Advanced portraits");
     heartbeat("day04");
 }

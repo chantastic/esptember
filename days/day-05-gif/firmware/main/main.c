@@ -94,8 +94,8 @@ static void heartbeat(const char *lesson)
     }
 }
 
-extern const uint8_t gif_start[] asm("_binary_orbit_gif_start");
-extern const uint8_t gif_end[] asm("_binary_orbit_gif_end");
+extern const uint8_t gif_start[] asm("_binary_homer_gif_start");
+extern const uint8_t gif_end[] asm("_binary_homer_gif_end");
 static lv_image_dsc_t esptember_loop;
 static unsigned loops;
 
@@ -110,18 +110,20 @@ void app_main(void)
     board_start();
     esptember_loop = (lv_image_dsc_t) {
         .header = { .magic = LV_IMAGE_HEADER_MAGIC, .cf = LV_COLOR_FORMAT_RAW,
-                    .w = 160, .h = 160 },
+                    .w = 368, .h = 448 },
         .data_size = gif_end - gif_start, .data = gif_start,
     };
     bsp_display_lock(0);
     lv_obj_set_style_bg_color(lv_screen_active(), lv_color_black(), 0);
     lv_obj_t *animation = lv_gif_create(lv_screen_active());
+    // Complete opaque frames need no alpha; use the panel's native format.
+    lv_gif_set_color_format(animation, LV_COLOR_FORMAT_RGB565);
     lv_gif_set_src(animation, &esptember_loop);
     if (lv_gif_is_loaded(animation)) {
         lv_gif_set_loop_count(animation, 0);
         lv_obj_center(animation);
         lv_obj_add_event_cb(animation, loop_finished, LV_EVENT_READY, NULL);
-        ESP_LOGI("media", "READY day05: GIF loaded; bytes=%lu; ARGB8888 canvas=102400 bytes",
+        ESP_LOGI("media", "READY day05: Homer GIF loaded; bytes=%lu; RGB565 canvas=329728 bytes",
                  (unsigned long)esptember_loop.data_size);
     } else {
         ESP_LOGE("media", "GIF load failed");

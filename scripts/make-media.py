@@ -1,43 +1,16 @@
 #!/usr/bin/env python3
-"""Generate the original geometric artwork for ESPtember days 03–06.
+"""Convert the saved internet media for ESPtember days 03–06.
 
-Python standard library only for stills/movie; FFmpeg is needed for the GIF.
-Run from any directory: python3 scripts/make-media.py
+Requires FFmpeg. Run from any directory: python3 scripts/make-media.py
+Sources and attribution: assets/media/README.md. No network requests at build time.
 """
-import math
 from pathlib import Path
-import struct
+import shutil
 import subprocess
-import tempfile
+import sys
 
 ROOT = Path(__file__).resolve().parents[1]
-ORANGE = (255, 91, 4)
-
-
-def pixels(size, shape, phase=0):
-    for y in range(size):
-        for x in range(size):
-            dx, dy = (x + 0.5 - size / 2) / size, (y + 0.5 - size / 2) / size
-            radius = math.hypot(dx, dy)
-            if shape == "circle":
-                lit = 0.27 < radius < 0.37 or radius < 0.075
-            elif shape == "square":
-                lit = 0.26 < max(abs(dx), abs(dy)) < 0.36
-            elif shape == "triangle":
-                lit = -0.35 < dy < 0.30 and abs(dx) < (dy + 0.35) * 0.58
-            else:
-                angle = phase * 2 * math.pi
-                dot_x, dot_y = 0.29 * math.sin(angle), -0.29 * math.cos(angle)
-                lit = math.hypot(dx - dot_x, dy - dot_y) < 0.075
-                if 0.28 < radius < 0.30 and not lit:
-                    yield (48, 54, 61)
-                    continue
-            yield ORANGE if lit else (0, 0, 0)
-
-
-def rgb565(colors):
-    return b"".join(struct.pack("<H", ((r >> 3) << 11) | ((g >> 2) << 5) | (b >> 3))
-                    for r, g, b in colors)
+SOURCES = ROOT / "assets" / "media"
 
 
 def main_dir(slug):
@@ -46,34 +19,35 @@ def main_dir(slug):
     return path
 
 
+def convert(*args):
+    subprocess.run(["ffmpeg", "-hide_banner", "-loglevel", "error", "-y", *map(str, args)], check=True)
+
+
 def main():
-    static = main_dir("day-03-static-graphic")
     carousel = main_dir("day-04-carousel")
-    for shape in ("circle", "square", "triangle"):
-        data = rgb565(pixels(240, shape))
-        (carousel / f"{shape}.rgb565").write_bytes(data)
-        if shape == "circle":
-            (static / "circle.rgb565").write_bytes(data)
+    for name, source in [("github", "chan-github.jpg"),
+                         ("react_conf", "chan-react-conf.jpg"),
+                         ("react_advanced", "chan-react-advanced.jpg")]:
+        convert("-i", SOURCES / source, "-frames:v", "1",
+                "-vf", "scale=240:240:force_original_aspect_ratio=increase,crop=240:240,setsar=1",
+                "-c:v", "rawvideo", "-pix_fmt", "rgb565le", "-f", "rawvideo",
+                carousel / f"{name}.rgb565")
+    shutil.copyfile(carousel / "github.rgb565", main_dir("day-03-static-graphic") / "avatar.rgb565")
 
-    gif_dir = main_dir("day-05-gif")
-    with tempfile.TemporaryDirectory() as temp:
-        for i in range(20):
-            rgb = bytes(channel for color in pixels(160, "orbit", i / 20) for channel in color)
-            (Path(temp) / f"{i:02}.ppm").write_bytes(b"P6\n160 160\n255\n" + rgb)
-        subprocess.run([
-            "ffmpeg", "-hide_banner", "-loglevel", "error", "-y",
-            "-framerate", "10", "-i", f"{temp}/%02d.ppm",
-            "-filter_complex", "split[a][b];[a]palettegen[p];[b][p]paletteuse",
-            "-loop", "0", str(gif_dir / "orbit.gif"),
-        ], check=True)
+    # LVGL 9.5 clears transparent delta pixels instead of retaining the
+    # previous frame. Supply complete opaque frames, including unchanged fills.
+    # Move the crop window right 26px to shift the picture left by 7% of 368px.
+    convert("-i", SOURCES / "homer-bushes-original.gif",
+            "-filter_complex", "fps=10,scale=368:448:force_original_aspect_ratio=increase:flags=area,crop=368:448:x=(iw-ow)/2+26:y=(ih-oh)/2,setsar=1,format=rgb24,split[a][b];[a]palettegen=max_colors=128:reserve_transparent=0[p];[b][p]paletteuse=dither=none",
+            "-gifflags", "0", "-loop", "0", main_dir("day-05-gif") / "homer.gif")
+    subprocess.run([sys.executable, ROOT / "scripts/check-gif-frames.py",
+                    main_dir("day-05-gif") / "homer.gif"], check=True)
 
-    movie_dir = main_dir("day-06-movie")
-    # A raw RGB565 movie, 184 × 224 at 10 fps, 3 seconds long.
-    # Letterbox our 184px square with 20 black rows above and below.
-    border = bytes(184 * 20 * 2)
-    with (movie_dir / "movie.rgb").open("wb") as out:
-        for i in range(30):
-            out.write(border + rgb565(pixels(184, "orbit", i / 30)) + border)
+    # The saved MP4 is the 01:00–01:03 excerpt of Big Buck Bunny, without audio.
+    convert("-i", SOURCES / "big-buck-bunny-clip.mp4", "-t", "3", "-an",
+            "-vf", "fps=10,scale=368:224:force_original_aspect_ratio=decrease,pad=368:224:(ow-iw)/2:(oh-ih)/2:black,setsar=1",
+            "-c:v", "rawvideo", "-pix_fmt", "rgb565le", "-f", "rawvideo",
+            main_dir("day-06-movie") / "movie.rgb")
 
 
 if __name__ == "__main__":

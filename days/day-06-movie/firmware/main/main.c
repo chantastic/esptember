@@ -99,7 +99,7 @@ static void heartbeat(const char *lesson)
 #include "esp_partition.h"
 #include "src/misc/cache/instance/lv_image_cache.h"
 
-#define MOVIE_WIDTH 184
+#define MOVIE_WIDTH 368
 #define MOVIE_HEIGHT 224
 #define MOVIE_FPS 10
 #define FRAME_BYTES (MOVIE_WIDTH * MOVIE_HEIGHT * 2)
@@ -126,7 +126,7 @@ void app_main(void)
             } else {
                 long size = ftell(sd_file);
                 if (size <= 0 || size % FRAME_BYTES != 0 || fseek(sd_file, 0, SEEK_SET) != 0) {
-                    ESP_LOGW("media", "SD movie must contain complete 184x224 RGB565 frames");
+                    ESP_LOGW("media", "SD movie must contain complete 368x224 RGB565 frames");
                     fclose(sd_file);
                     sd_file = NULL;
                 } else {

@@ -1,1 +1,1 @@
-idf_component_register(SRCS "main.c" EMBED_FILES "circle.rgb565")
+idf_component_register(SRCS "main.c" EMBED_FILES "avatar.rgb565")

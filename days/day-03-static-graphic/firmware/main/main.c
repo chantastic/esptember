@@ -94,12 +94,12 @@ static void heartbeat(const char *lesson)
     }
 }
 
-extern const uint8_t circle_start[] asm("_binary_circle_rgb565_start");
+extern const uint8_t avatar_start[] asm("_binary_avatar_rgb565_start");
 static const lv_image_dsc_t esptember_graphic = {
     .header = { .magic = LV_IMAGE_HEADER_MAGIC, .cf = LV_COLOR_FORMAT_RGB565,
                 .w = 240, .h = 240, .stride = 480 },
     .data_size = 240 * 240 * 2,
-    .data = circle_start,
+    .data = avatar_start,
 };
 
 void app_main(void)
@@ -111,6 +111,6 @@ void app_main(void)
     lv_image_set_src(image, &esptember_graphic);
     lv_obj_center(image);
     bsp_display_unlock();
-    ESP_LOGI("media", "READY day03: orange ring and dot; 240x240 RGB565; 115200 bytes");
+    ESP_LOGI("media", "READY day03: chantastic GitHub portrait; 240x240 RGB565; 115200 bytes");
     heartbeat("day03");
 }

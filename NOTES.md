@@ -36,17 +36,28 @@
 - **Days 03–06 media sequence implemented** — static graphic, swipeable
   carousel, GIF, raw RGB565 movie with SD-file preference and flash fallback.
   Writeups remain in `drafts/` until visual/hardware checks are complete.
-  Reproducible geometric assets come from `scripts/make-media.py`.
+  Saved internet media and attribution live in `assets/media/`;
+  `scripts/make-media.py` converts them reproducibly with FFmpeg.
 - **Storage is a partition decision** — day 02's 16 MB flash setting still
   used the default 1 MiB app partition. Media lessons reserve 3 MiB for the
   app; day 06 additionally reserves 12 MiB for movie data and includes it in
   the merged firmware image.
 - **LVGL heap vs PSRAM** — the installed LVGL is 9.5.0. Its built-in 64 KiB
-  allocator cannot hold even the 102,400-byte ARGB8888 canvas of a 160×160
+  allocator cannot hold even the 659,456-byte ARGB8888 canvas of the 368×448 Homer
   GIF. Days 05–06 select the C library allocator; keep PSRAM enabled and
   check actual memory allocation rather than importing LVGL 8 formulas.
 - **Movie follow-ups** — measure SD playback with a known card; add MJPEG
   parsing/decoding if longer flash clips are useful. Audio synchronization,
   large-file support, maximum card capacity, and higher frame rates remain
-  separate experiments. Current raw player targets 184×224 at 10 fps,
+  separate experiments. Current raw player targets 368×224 at 10 fps,
   silent, with two PSRAM frame buffers; it does not decode MP4 or MJPEG.
+
+- **Homer GIF fills turning black** — user observed the first frame looked
+  right, then bushes, wall, and white shirt lost their fills. The old GIF
+  had transparency in 28/29 frames (disposal 1); LVGL 9.5 clears those
+  pixels' alpha instead of preserving prior colors. Encode complete opaque
+  frames with `reserve_transparent=0` and `-gifflags 0`, and validate with
+  `scripts/check-gif-frames.py`. User also requested full-screen playback:
+  scale to cover 368×448 without stretching, then crop with the picture
+  shifted left 26px (7% of screen width). User confirmed the opaque-frame
+  fix preserves all fills and the full-screen version works.

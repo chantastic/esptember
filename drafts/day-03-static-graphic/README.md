@@ -27,30 +27,30 @@ Board initialization carries over from day 02.
 
 ## Make the asset
 
-The included graphic is a 240 × 240 orange ring with a dot in its center.
-Its source is `scripts/make-media.py`, which generates the pixels and packs them into little-endian RGB565.
+The included graphic is my GitHub avatar, cropped to 240 × 240.
+`scripts/make-media.py` converts the saved JPEG into little-endian RGB565 with FFmpeg.
 Regenerate the lesson assets from the repository root with `python3 scripts/make-media.py`.
-Python makes the still images and raw movie; FFmpeg is also needed for the GIF.
+The original JPEG and its source link live in [the media folder](../../assets/media/README.md).
 
 RGB565 stores red, green, and blue in 16 bits per pixel.
-It has no alpha channel; our background pixels are black.
+It has no alpha channel; the photograph supplies every pixel.
 
 The main component embeds the generated binary:
 
 ```cmake
-idf_component_register(SRCS "main.c" EMBED_FILES "circle.rgb565")
+idf_component_register(SRCS "main.c" EMBED_FILES "avatar.rgb565")
 ```
 
 ESP-IDF exposes the embedded data as a linker symbol.
 The image descriptor tells LVGL what those bytes mean:
 
 ```c
-extern const uint8_t circle_start[] asm("_binary_circle_rgb565_start");
+extern const uint8_t avatar_start[] asm("_binary_avatar_rgb565_start");
 static const lv_image_dsc_t esptember_graphic = {
     .header = { .magic = LV_IMAGE_HEADER_MAGIC, .cf = LV_COLOR_FORMAT_RGB565,
                 .w = 240, .h = 240, .stride = 480 },
     .data_size = 240 * 240 * 2,
-    .data = circle_start,
+    .data = avatar_start,
 };
 ```
 
@@ -70,7 +70,7 @@ Our 240 × 240 image takes 115,200 bytes of pixel data:
 ```
 
 That excludes the descriptor and any alignment overhead.
-It also says nothing about the size of the original PNG.
+It also says nothing about the size of the original JPEG.
 The compressed file on the computer and the converted pixels on the board have different sizes.
 
 The panel is 368 × 448, so a full-screen RGB565 image takes 329,728 bytes, or 322 KiB, before overhead.
@@ -84,14 +84,20 @@ The display still needs working buffers in RAM; storing the image in flash doesn
 The implementation keeps day 02's board bring-up and replaces its text UI with the excerpt above.
 Build with `idf.py build` and inspect `idf.py size` before making the merged image.
 
-On hardware, check the image's orientation, the orange against a known color, and the black background.
+On hardware, check the image's orientation, the grayscale tones against the original portrait, and the black background.
 Let it sit long enough to catch the panel and power problems from day 01.
 Record the result before adding the flash download and command here.
 
-## The idea
+## What we learned
 
-An image can be part of a program.
-Its dimensions become a storage decision.
+The JPEG becomes pixels before the board sees it.
+Converting on the computer lets the firmware display a photograph without adding a JPEG decoder.
+
+Dimensions give us an exact pixel budget.
+Our 240 × 240 RGB565 portrait uses 115,200 bytes, regardless of how small the source JPEG was.
+
+The descriptor is part of the image: format, dimensions, stride, and data must agree.
+Saving the original portrait alongside the conversion script also lets us rebuild this version after the online avatar changes.
 
 The screen is small.
 The pixels still count.

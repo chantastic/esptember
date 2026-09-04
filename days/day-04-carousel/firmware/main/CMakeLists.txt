@@ -1,1 +1,1 @@
-idf_component_register(SRCS "main.c" EMBED_FILES "circle.rgb565" "square.rgb565" "triangle.rgb565")
+idf_component_register(SRCS "main.c" EMBED_FILES "github.rgb565" "react_conf.rgb565" "react_advanced.rgb565")
