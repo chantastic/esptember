@@ -1,0 +1,32 @@
+{
+  "waveshare-amoled-18-v2": {
+    "name": "Waveshare Touch AMOLED 1.8",
+    "model": "ESP32-S3-Touch-AMOLED-1.8 V2",
+    "maker": "Waveshare",
+    "chip": "ESP32-S3",
+    "display": "1.8″ AMOLED · 368 × 448",
+    "image": "/images/boards/waveshare-amoled-18.svg",
+    "url": "https://www.waveshare.com/esp32-s3-touch-amoled-1.8.htm",
+    "description": "The first workbench: a rectangular touch display with room for text, portraits, and motion."
+  },
+  "waveshare-amoled-175-b": {
+    "name": "Waveshare Touch AMOLED 1.75-B",
+    "model": "ESP32-S3-Touch-AMOLED-1.75-B",
+    "maker": "Waveshare",
+    "chip": "ESP32-S3",
+    "display": "1.75″ round AMOLED · 466 × 466",
+    "image": "/images/boards/waveshare-amoled-175-b.svg",
+    "url": "https://www.waveshare.com/esp32-s3-touch-amoled-1.75.htm?sku=31262",
+    "description": "A circular touch display in a protective case. A new canvas for round interfaces."
+  },
+  "m5stack-stopwatch": {
+    "name": "M5Stack Stopwatch",
+    "model": "Stopwatch Dev Kit (ESP32-S3) · C152",
+    "maker": "M5Stack",
+    "chip": "ESP32-S3",
+    "display": "1.75″ round AMOLED · 466 × 466",
+    "image": "/images/boards/m5stack-stopwatch.svg",
+    "url": "https://shop.m5stack.com/products/m5stack-stopwatch-dev-kit-esp32-s3?variant=48862593515777",
+    "description": "A round touch display, programmable buttons, and a built-in battery for portable projects."
+  }
+}

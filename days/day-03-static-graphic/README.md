@@ -1,4 +1,5 @@
 ---
+board: waveshare-amoled-18-v2
 day: 3
 title: A Static Graphic
 toolchain: ESP-IDF v5.5 + Waveshare BSP (LVGL 9.5)

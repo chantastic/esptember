@@ -31,12 +31,25 @@ outline and a collapsible menu below 1050px.
 ```yaml
 day: 1 # sort order
 title: Hello World
+board: waveshare-amoled-18-v2 # required key from src/lib/boards.json
 summary: Put your first words on an AMOLED. Keep them there.
 verification: Visual soak recorded # short label; explain scope in the guide
 toolchain: ESP-IDF v5.5 # noted on every lesson — toolchains vary by day
 firmware: /firmware/day-01-hello-world.bin # optional, hosted merged binary
 video: https://youtu.be/VIDEO_ID # optional, embedded when present
 ```
+
+## Boards
+
+`src/lib/boards.json` defines each kit’s exact model, chip, product link, display,
+and SVG illustration. Each lesson must select a registered `board` in frontmatter.
+That identity drives its illustrated board card, install instructions, flasher
+chip family, project-index label, and Markdown metadata.
+The homepage derives published project counts from these assignments.
+Adding a board to the workbench does not imply an existing binary supports it.
+
+Illustrations are original stylized vectors in `public/images/boards/`, based on
+manufacturer product references. They show the form of each kit, not a wiring diagram.
 
 ## Develop
 

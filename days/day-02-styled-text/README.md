@@ -1,4 +1,5 @@
 ---
+board: waveshare-amoled-18-v2
 day: 2
 title: Styled Text
 toolchain: ESP-IDF v5.5 + Waveshare BSP (LVGL)

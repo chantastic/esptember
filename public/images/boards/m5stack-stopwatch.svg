@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 280" fill="none">
+  <title>M5Stack Stopwatch development kit, illustrated</title>
+  <defs><linearGradient id="case" x1="73" y1="57" x2="252" y2="249" gradientUnits="userSpaceOnUse"><stop stop-color="#5c6257"/><stop offset=".5" stop-color="#2d322a"/><stop offset="1" stop-color="#151913"/></linearGradient><linearGradient id="glass" x1="92" y1="55" x2="229" y2="221" gradientUnits="userSpaceOnUse"><stop stop-color="#2d352b"/><stop offset=".5" stop-color="#0c100d"/></linearGradient></defs>
+  <ellipse cx="163" cy="255" rx="96" ry="10" fill="#000" opacity=".18"/>
+  <g transform="rotate(9 160 140)">
+    <rect x="59" y="104" width="16" height="33" rx="6" fill="#e1ae47" stroke="#f2d18d"/>
+    <rect x="246" y="109" width="12" height="29" rx="5" fill="#4b5145" stroke="#858c7b"/>
+    <circle cx="161" cy="149" r="101" fill="#151a13" stroke="#4a5242"/>
+    <circle cx="160" cy="137" r="101" fill="url(#case)" stroke="#77806b"/>
+    <circle cx="160" cy="137" r="93" fill="#080c07" stroke="#7d8870"/>
+    <circle cx="160" cy="137" r="86" fill="url(#glass)"/>
+    <path d="M105 80a79 79 0 0 1 53-20" stroke="#fff" stroke-opacity=".15" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="160" cy="137" r="48" stroke="#354130" stroke-width="3"/>
+    <path d="M160 89a48 48 0 0 1 46 62" stroke="#ff824d" stroke-width="4" stroke-linecap="round"/>
+    <path d="M160 106v31l-21 17" stroke="#e6ecdd" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="160" cy="137" r="5" fill="#ff824d"/>
+    <path d="M147 202h26" stroke="#bbc4b0" stroke-width="3" stroke-linecap="round"/>
+    <rect x="133" y="238" width="27" height="7" rx="2" fill="#e26143"/>
+    <rect x="180" y="234" width="22" height="5" rx="2" fill="#090c08" stroke="#87917b"/>
+  </g>
+</svg>

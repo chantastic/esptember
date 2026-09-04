@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 280" fill="none">
+  <title>Waveshare Touch AMOLED 1.75-B development kit, illustrated</title>
+  <defs><linearGradient id="rim" x1="72" y1="45" x2="244" y2="241" gradientUnits="userSpaceOnUse"><stop stop-color="#859080"/><stop offset=".35" stop-color="#303a2b"/><stop offset=".7" stop-color="#151c12"/><stop offset="1" stop-color="#68745c"/></linearGradient><linearGradient id="glass" x1="96" y1="63" x2="222" y2="222" gradientUnits="userSpaceOnUse"><stop stop-color="#2e392a"/><stop offset=".5" stop-color="#0a100a"/></linearGradient></defs>
+  <ellipse cx="162" cy="255" rx="94" ry="10" fill="#000" opacity=".18"/>
+  <g transform="rotate(-10 160 140)">
+    <rect x="251" y="101" width="5" height="17" rx="2" fill="#85917a"/>
+    <rect x="251" y="158" width="5" height="17" rx="2" fill="#85917a"/>
+    <circle cx="160" cy="145" r="99" fill="#11180f" stroke="#47553c"/>
+    <circle cx="160" cy="137" r="99" fill="url(#rim)" stroke="#7d8c70"/>
+    <circle cx="160" cy="137" r="93" fill="#050b04" stroke="#222e1a" stroke-width="2"/>
+    <circle cx="160" cy="137" r="87" fill="url(#glass)"/>
+    <path d="M104 78a83 83 0 0 1 58-23" stroke="#e8f4de" stroke-opacity=".18" stroke-width="2" stroke-linecap="round"/>
+    <circle cx="160" cy="137" r="61" stroke="#39492b" stroke-dasharray="2 8" stroke-width="3"/>
+    <path d="M130 103h20v22h-20v22h20m18-44v22h23m0-22v44" stroke="#dce9cd" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M144 167h32" stroke="#b4d28d" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="160" cy="82" r="4" fill="#b4d28d"/>
+  </g>
+</svg>

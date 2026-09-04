@@ -3,6 +3,9 @@ import { getCollection } from "astro:content";
 import Layout from "../layouts/Layout.astro";
 import FeaturedVideo from "../components/FeaturedVideo.astro";
 import { INTRO_VIDEO } from "../lib/site";
+import BoardCard from "../components/BoardCard.astro";
+import boards from "../lib/boards.json";
+const boardIds = Object.keys(boards) as (keyof typeof boards)[];
 const days = (await getCollection("days")).sort((a,b) => a.data.day-b.data.day);
 const latest = days.at(-1)!;
 ---
@@ -10,7 +13,7 @@ const latest = days.at(-1)!;
   <main id="main-content">
     <section class="hero">
       <div>
-        <p class="eyebrow">30 days. One small screen.</p>
+        <p class="eyebrow">30 days. Small screens.</p>
         <h1>Big ideas.<br /><span>Small beginnings.</span></h1>
         <p class="lede">A new ESP32 project every day in September. Real code, flashable firmware, and the things we learned getting it to work.</p>
         <div class="hero-actions"><a class="button" href={`/day/${latest.id}/`}>Build day {String(latest.data.day).padStart(2,'0')} →</a><a href="#projects">Explore the projects ↓</a></div>
@@ -23,14 +26,20 @@ const latest = days.at(-1)!;
       <ol class="days">{days.map(entry => <li>
         <a href={`/day/${entry.id}/`} class="day-card">
           <span class="day-num">{String(entry.data.day).padStart(2,'0')}</span>
-          <div><h3>{entry.data.title}</h3><p>{entry.data.summary}</p><span class="card-meta">Guide + build story <span>·</span> {entry.data.verification}</span></div>
+          <div><h3>{entry.data.title}</h3><p>{entry.data.summary}</p><span class="card-meta">{boards[entry.data.board].name} <span>·</span> Guide + story</span></div>
           <span class="card-arrow" aria-hidden="true">↗</span>
         </a>
       </li>)}</ol>
     </section>
-    <section class="about-project" aria-label="Getting started">
-      <div><p class="eyebrow">The workbench</p><h2>One board.<br />A little further every day.</h2></div>
-      <div><p>These projects use the <a href="https://www.waveshare.com/esp32-s3-touch-amoled-1.8.htm">Waveshare ESP32-S3-Touch-AMOLED-1.8 V2</a>: a touch display, an ESP32-S3, and enough room to experiment.</p><p>Use the prebuilt firmware or change the source. Each guide includes commands, expected results, and what has actually been checked.</p><a href="/llms.txt">Working with an agent? Start with the Markdown index ↗</a></div>
+    <section class="workbench" id="boards" aria-labelledby="boards-heading">
+      <p class="eyebrow">The workbench</p>
+      <h2 id="boards-heading">Different boards. More possibilities.</h2>
+      <p class="section-description">Rectangular screens, round screens, buttons you can feel. Every project names its dev kit so you can match the firmware to the hardware.</p>
+      <div class="board-grid">{boardIds.map(id => {
+        const count = days.filter(day => day.data.board === id).length;
+        return <BoardCard board={id} label={count ? `${count} published projects` : 'On the workbench · projects to come'} />;
+      })}</div>
+      <p class="workbench-note">Use each lesson’s guide for its hardware revision and setup. <a href="/llms.txt">Working with an agent? Get the Markdown index ↗</a></p>
     </section>
   </main>
 </Layout>
@@ -54,8 +63,10 @@ const latest = days.at(-1)!;
   .card-meta { font: .65rem var(--mono); color: var(--muted); }
   .card-meta span { margin: 0 .4rem; }
   .card-arrow { color: var(--accent); font-size: 1.4rem; text-align: right; }
-  .about-project { display: grid; grid-template-columns: 1fr 1.3fr; gap: 4rem; margin-top: 5rem; }
-  .about-project p { color: var(--muted); margin-top: .5rem; }
-  .about-project a { font-size: .9rem; }
-  @media(max-width: 760px) { .hero { grid-template-columns: 1fr; padding: 3rem 0; gap: 3rem; } .about-project { grid-template-columns: 1fr; gap: 1rem; margin-top: 3rem; } .day-card { grid-template-columns: 2rem 1fr 1rem; gap: .7rem; padding: 1.5rem 0; } .day-card h3 { font-size: 1.2rem; } .count { font-size: .6rem; } .card-meta { line-height: 1.8; } }
+  .workbench { margin-top: 5rem; }
+  .board-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; }
+  .workbench-note { color: var(--muted); font-size: .85rem; margin-top: 1.5rem; }
+  .workbench-note a { display: block; margin-top: .5rem; }
+  @media(max-width: 950px) { .board-grid { grid-template-columns: 1fr; max-width: 480px; } }
+  @media(max-width: 760px) { .hero { grid-template-columns: 1fr; padding: 3rem 0; gap: 3rem; } .workbench { margin-top: 3rem; } .day-card { grid-template-columns: 2rem 1fr 1rem; gap: .7rem; padding: 1.5rem 0; } .day-card h3 { font-size: 1.2rem; } .count { font-size: .6rem; } .card-meta { line-height: 1.8; } }
 </style>

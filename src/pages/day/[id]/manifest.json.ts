@@ -1,4 +1,5 @@
 import type { APIRoute } from "astro";
+import boards from "../../../lib/boards.json";
 import { getCollection, type CollectionEntry } from "astro:content";
 
 // ESP Web Tools manifest, one per day that ships firmware.
@@ -18,7 +19,7 @@ export const GET: APIRoute = ({ props }) => {
     version: "1",
     builds: [
       {
-        chipFamily: "ESP32-S3",
+        chipFamily: boards[entry.data.board].chip,
         parts: [{ path: entry.data.firmware, offset: 0 }],
       },
     ],

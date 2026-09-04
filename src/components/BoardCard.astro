@@ -1,0 +1,37 @@
+---
+import boards from "../lib/boards.json";
+interface Props { board: keyof typeof boards; compact?: boolean; label?: string }
+const { board: id, compact = false, label = 'The dev kit' } = Astro.props;
+const board = boards[id];
+---
+<section class:list={['board-card', { compact }]} aria-label={`${label}: ${board.name}`}>
+  <img src={board.image} alt={`Illustration of the ${board.name} development kit`} width="320" height="280" loading="lazy" />
+  <div class="board-info">
+    <p class="eyebrow">{label}</p>
+    <h3><a href={board.url}>{board.name} <span aria-hidden="true">↗</span></a></h3>
+    <p class="board-model">{board.model}</p>
+    <p class="board-spec">{board.display} <span>·</span> {board.chip}</p>
+    {!compact && <p class="board-description">{board.description}</p>}
+  </div>
+</section>
+<style>
+  .board-card { min-width: 0; background: var(--card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+  img { display: block; width: 100%; height: 230px; object-fit: contain; background: radial-gradient(ellipse at 50% 80%, #323c26 0, transparent 68%); }
+  .board-info { padding: 0 1.5rem 1.5rem; }
+  .eyebrow { margin: .25rem 0 .7rem; }
+  h3 { margin: 0; font-size: 1.15rem; }
+  h3 a { color: var(--fg); text-decoration: none; }
+  h3 a:hover { color: var(--accent); }
+  h3 span { color: var(--accent); }
+  .board-model { font: .65rem/1.6 var(--mono); color: var(--muted); margin: .5rem 0; overflow-wrap: anywhere; }
+  .board-spec { font-size: .8rem; margin: .6rem 0; color: var(--fg); }
+  .board-spec span { color: var(--muted); margin: 0 .3rem; }
+  .board-description { font-size: .9rem; color: var(--muted); margin-bottom: 0; }
+  .compact { display: flex; align-items: center; margin-bottom: 1.25rem; }
+  .compact img { flex: 0 0 130px; width: 130px; height: 140px; }
+  .compact .board-info { padding: 1rem; }
+  .compact h3 { font-size: 1rem; }
+  .compact .eyebrow { font-size: .6rem; margin-bottom: .45rem; }
+  .compact .board-spec { margin-bottom: 0; }
+  @media(max-width: 500px) { .compact { align-items: start; } .compact img { flex-basis: 88px; width: 88px; height: 118px; } .compact .board-info { padding: 1rem .8rem .9rem 0; } .compact h3 { font-size: .9rem; } .compact .board-spec { font-size: .7rem; } }
+</style>

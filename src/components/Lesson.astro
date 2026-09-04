@@ -4,8 +4,11 @@ import Layout from "../layouts/Layout.astro";
 import OnThisPage from "./OnThisPage.astro";
 import { GITHUB_REPO, INTRO_VIDEO } from "../lib/site";
 import FeaturedVideo from "./FeaturedVideo.astro";
+import BoardCard from "./BoardCard.astro";
+import boards from "../lib/boards.json";
 interface Props { entry: CollectionEntry<"days">; view?: "guide" | "story" }
 const { entry, view = "guide" } = Astro.props;
+const board = boards[entry.data.board];
 const story = await getEntry("stories", entry.id);
 if (view === "story" && !story) throw new Error(`Missing story: ${entry.id}`);
 const { Content, headings } = await render(view === "story" ? story! : entry);
@@ -21,7 +24,7 @@ const sources = Object.entries(import.meta.glob([
 .filter(([path]) => path.includes(`/days/${entry.id}/firmware/`))
 .map(([path,content]) => ({ path: path.split('/firmware/')[1], content }))
 .sort((a,b) => a.path.localeCompare(b.path));
-const toc = view === "guide" ? [...headings, { depth: 2, slug: "firmware-source", text: "Firmware source" }] : headings;
+const toc = view === "guide" ? [{ depth: 2, slug: "dev-kit", text: "The dev kit" }, ...headings, { depth: 2, slug: "firmware-source", text: "Firmware source" }] : headings;
 ---
 <Layout title={`${entry.data.title} · ${view === 'guide' ? 'Guide' : 'Story'}`} description={entry.data.summary} markdown={`${base}guide.md`}>
   <main id="main-content" class="lesson-main">
@@ -44,12 +47,13 @@ const toc = view === "guide" ? [...headings, { depth: 2, slug: "firmware-source"
     <div class="reading-layout">
       <OnThisPage headings={toc} />
       <div class="reading-column">
+        <div id="dev-kit"><BoardCard board={entry.data.board} compact label="Used in this project" /></div>
         {view === 'guide' && entry.data.firmware && <section class="quick-start" aria-label="Firmware actions">
-          <div><strong>Try it on your board</strong><p>Waveshare AMOLED 1.8″ V2 · USB</p></div>
+          <div><strong>Run this project</strong><p>Firmware for {board.model}</p></div>
           <a class="button" href={entry.data.firmware} download>Download firmware ↓</a>
           <details class="web-flash">
             <summary>Or flash from your browser</summary>
-            <p>Connect the V2 board with a USB data cable. Use a desktop Chromium browser with Web Serial support. Installation replaces the firmware on the connected board.</p>
+            <p>Connect the {board.model} with a USB data cable. Use a desktop Chromium browser with Web Serial support. Installation replaces the firmware on the connected board.</p>
             <esp-web-install-button manifest={`${base}manifest.json`}><button slot="activate" class="button">Connect and install</button><span slot="unsupported">This browser does not support Web Serial. Use the download and terminal instructions below.</span></esp-web-install-button>
           </details>
         </section>}
