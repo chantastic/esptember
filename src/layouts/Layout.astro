@@ -18,6 +18,71 @@ const { title } = Astro.props;
   </head>
   <body>
     <slot />
+    <footer class="conference-footer">
+      <section class="conference-cta" aria-labelledby="conference-heading">
+        <!-- Official conference wordmark from https://workos.com/init. -->
+        <img src="/images/init-logo.svg" alt="init()" width="512" height="115" />
+        <p class="conference-meta">
+          The conference for builders. By WorkOS.<br />
+          October 7 &middot; SFJAZZ Center
+        </p>
+        <h2 id="conference-heading">Ready to start something?</h2>
+        <p>
+          Join us at init() 2026. We’re giving away
+          <a href="https://shop.m5stack.com/products/m5stack-stopwatch-dev-kit-esp32-s3?variant=48862593515777">M5Stack Stopwatch Dev Kits</a>
+          to registrants—because every big thing starts small.
+        </p>
+        <a class="conference-link" href="https://workos.com/init">
+          Register for init() 2026 <span aria-hidden="true">→</span>
+        </a>
+      </section>
+    </footer>
+    <style>
+      .conference-footer {
+        max-width: 48rem;
+        margin: 0 auto;
+        padding: 0 1rem 3rem;
+      }
+      .conference-cta {
+        padding: clamp(1.25rem, 4vw, 2rem);
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-top: 3px solid var(--accent);
+        border-radius: 6px;
+      }
+      .conference-cta img {
+        display: block;
+        width: 10rem;
+        max-width: 100%;
+        height: auto;
+      }
+      .conference-meta {
+        margin: 0.75rem 0 1.5rem;
+        color: var(--muted);
+        font-size: 0.85rem;
+      }
+      .conference-cta h2 {
+        margin: 0;
+        font-size: 1.35rem;
+      }
+      .conference-link {
+        display: inline-block;
+        margin-top: 0.5rem;
+        padding: 0.65rem 1rem;
+        border-radius: 4px;
+        background: var(--accent);
+        color: var(--bg);
+        font-weight: 700;
+        text-decoration: none;
+      }
+      .conference-link:hover {
+        text-decoration: underline;
+      }
+      .conference-link:focus-visible {
+        outline: 2px solid var(--fg);
+        outline-offset: 4px;
+      }
+    </style>
     <style is:global>
       :root {
         color-scheme: dark;
