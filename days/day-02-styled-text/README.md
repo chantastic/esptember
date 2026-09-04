@@ -3,13 +3,63 @@ day: 2
 title: Styled Text
 toolchain: ESP-IDF v5.5 + Waveshare BSP (LVGL)
 firmware: /firmware/day-02-styled-text.bin
+summary: "Make the greeting yours with color, size, and a custom font."
+verification: "Rendering observed"
 ---
 
-Day 01 put text on the screen.
-Today we make it ours.
+## The result
 
-Color, size, typeface — one rung at a time, one flash per rung.
-The final firmware is the top of the ladder:
+Make the greeting yours with color, size, and a custom font.
+The firmware displays an orange, bold italic greeting on black.
+Each day is a standalone firmware image; you can start here without flashing earlier days.
+
+## What you need
+
+- **Board:** Waveshare ESP32-S3-Touch-AMOLED-1.8 **V2**: ESP32-S3, CO5300 panel, CST816-family touch, 16 MB flash, 8 MB PSRAM.
+- **Connection:** a USB data cable and a computer with access to the serial port.
+- **For the download:** [uv](https://docs.astral.sh/uv/getting-started/installation/) supplies the `uvx` command below. ESP-IDF is not needed.
+- **For source builds:** [ESP-IDF v5.5](https://docs.espressif.com/projects/esp-idf/en/stable/esp32s3/get-started/) with its environment activated. Dependencies are declared in the firmware project.
+
+The display is 368 × 448 pixels.
+Flashing replaces the firmware currently on the board.
+
+## Run it
+
+Download [day-02-styled-text.bin](https://esptember.com/firmware/day-02-styled-text.bin) and open a terminal in the download directory.
+This is a merged image containing the bootloader, partition table, and application.
+
+Find your serial port:
+
+```sh
+# macOS
+ls /dev/cu.usbmodem*
+# Linux
+ls /dev/ttyACM*
+```
+
+On Windows, use the board’s COM port from Device Manager.
+Replace `PORT` with your port, then flash the image at `0x0`:
+
+```sh
+uvx esptool --chip esp32s3 --port PORT \
+  write-flash 0x0 day-02-styled-text.bin
+```
+
+Close any serial monitor using that port before flashing.
+When flashing completes, the board restarts into this lesson.
+
+## Check the result
+
+- The greeting appears in orange (`#ff5b04`) on black.
+- The type is 48px Montserrat bold italic, wrapped and centered inside 90% of the screen width.
+- Every character is visible; no blank label or clipped line appears.
+
+**Recorded evidence · September 4, 2026:** The custom-font rendering failure and its fix were observed during development. No separate timed soak is recorded for this lesson.
+
+## How it works
+
+This is the UI excerpt from [the firmware source](https://github.com/chantastic/esptember/tree/main/days/day-02-styled-text/firmware).
+The full program first initializes power, releases the V2 panel reset, starts the display, and sets brightness.
 
 ```c
 LV_FONT_DECLARE(montserrat_bi_48);
@@ -32,51 +82,8 @@ lv_obj_center(label);
 bsp_display_unlock();
 ```
 
-## Rung 1: color
-
-One line.
-
-```diff
-  lv_label_set_text(label, "Hello, ESPtember!");
-+ lv_obj_set_style_text_color(label, lv_color_hex(0xff5b04), 0);
-```
-
-ESPtember orange on true black.
-LVGL styles are calls on objects — no stylesheet, no cascade.
-
-## Rung 2: size
-
-Also one line — plus a flag.
-
-```diff
-+ lv_obj_set_style_text_font(label, &lv_font_montserrat_48, 0);
-```
-
-```diff
-  # sdkconfig.defaults
-+ CONFIG_LV_FONT_MONTSERRAT_48=y
-```
-
-The flag is the interesting part.
-A microcontroller has no font system — fonts compile into the binary, and the built-in 48px Montserrat costs 78 KB of flash.
-
-But 48px type doesn't fit a 368px panel.
-Two more lines wrap and center it:
-
-```diff
-+ lv_obj_set_width(label, lv_pct(90));
-+ lv_obj_set_style_text_align(label, LV_TEXT_ALIGN_CENTER, 0);
-```
-
-Typography is layout.
-
-## Rung 3: typeface
-
-The built-ins are Montserrat, regular weight, sizes 8 through 48.
-Bold italic isn't on the menu.
-Nothing else is either.
-
-So we compile our own:
+The converted font is already included in `firmware/main/montserrat_bi_48.c`.
+To regenerate it, provide `Montserrat-BoldItalic.ttf` in that directory and run:
 
 ```sh
 npx lv_font_conv --font Montserrat-BoldItalic.ttf \
@@ -85,64 +92,45 @@ npx lv_font_conv --font Montserrat-BoldItalic.ttf \
   -o montserrat_bi_48.c
 ```
 
-The TTF becomes a C file.
-Add it to the build, declare it, point the label at it:
+The ASCII range supplies the characters used here.
+The `--no-compress` flag matches this firmware’s decoder configuration.
 
-```diff
-+ LV_FONT_DECLARE(montserrat_bi_48);
+## Build and change it
 
-- lv_obj_set_style_text_font(label, &lv_font_montserrat_48, 0);
-+ lv_obj_set_style_text_font(label, &montserrat_bi_48, 0);
-```
-
-ASCII-only at 48px, bold italic: 46 KB.
-You ship exactly the glyphs you use, at exactly the sizes you use.
-
-## The blank screen
-
-Our first conversion left out `--no-compress`.
-The font compiled, linked, and drew.
-The screen showed nothing.
-
-`lv_font_conv` compresses glyphs by default, but LVGL ships with its font decompressor turned off — and a compressed glyph with no decompressor renders as nothing at all.
-No error.
-No warning.
-Orange nothing on black nothing.
-
-Pass `--no-compress`, or enable `LV_USE_FONT_COMPRESSED`.
-Pick one, or render nothing.
-
-## Flash it
-
-Download [day-02-styled-text.bin](https://esptember.com/firmware/day-02-styled-text.bin).
-It's the bootloader, partition table, and app merged into one image — one command, no offsets.
-
-Find your port: `ls /dev/cu.usbmodem*` on macOS, `ls /dev/ttyACM*` on Linux.
+Clone the repository once:
 
 ```sh
-uvx esptool --chip esp32s3 --port /dev/cu.usbmodem1101 \
-  write-flash 0x0 day-02-styled-text.bin
+git clone https://github.com/chantastic/esptember.git
+cd esptember
 ```
 
-The screen says hello — in bold italic.
+With the ESP-IDF environment activated, run from the repository root:
 
-Building from source instead?
-[ESP-IDF](https://docs.espressif.com/projects/esp-idf/en/stable/esp32s3/get-started/) v5.5+, then `idf.py -p PORT flash monitor` from `firmware/`.
-Board bring-up (`pmu_init`, `panel_reset_release`) carries over from [day 01](/day/day-01-hello-world/) — that story lives there.
+```sh
+cd days/day-02-styled-text/firmware
+idf.py build
+idf.py size
+idf.py -p PORT flash monitor
+```
 
-## What we learned
+Replace `PORT` with the board’s serial port.
+Exit the monitor with `Ctrl+]`.
+To create the single downloadable image, run `idf.py merge-bin` in the same firmware directory.
+The output is `build/merged-binary.bin`.
 
-Styles are calls, not stylesheets.
-No cascade, no inheritance fights — the label is exactly what you set on it.
+Keep `pmu_init()` and `panel_reset_release()` before display startup when changing the UI.
 
-Fonts aren't installed.
-They're compiled — every glyph, every size, paid for in flash.
-The `--range` flag is your budget.
+## If it goes wrong
 
-A big font isn't a style, it's a negotiation.
-The panel is 368 pixels wide and doesn't care what you meant.
+| Symptom | Check / fix |
+| --- | --- |
+| Custom font compiles but the label is blank | Convert with `--no-compress`, as this project does. The current LVGL configuration has font decompression disabled. |
+| Text clips at the screen edge | Set the label width to 90% and center its text before centering the object. |
+| Display goes dark or board loses power | Preserve the PMU and panel-reset setup from day 01. |
 
-And the failure was silent, again.
-Day 01: `ESP_OK` while the panel sat in reset.
-Day 02: a font that compiled clean and drew nothing.
-Watch the screen, not the return codes.
+## Take it with you
+
+Fonts become firmware data.
+Choose the glyphs, size, and compression your build supports, then give the text enough room to render.
+
+[Read the build story](https://esptember.com/day/day-02-styled-text/story/) for the investigation and lessons behind this version.

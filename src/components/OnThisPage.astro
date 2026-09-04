@@ -1,0 +1,57 @@
+---
+import type { MarkdownHeading } from "astro";
+interface Props { headings: MarkdownHeading[] }
+const headings = Astro.props.headings.filter(h => h.depth === 2 || h.depth === 3);
+---
+<aside class="outline" aria-label="On this page">
+  <nav>
+    <p class="eyebrow">On this page</p>
+    <ol>
+      {headings.map(h => <li class:list={{ nested: h.depth === 3 }}><a href={`#${h.slug}`} data-heading={h.slug}>{h.text}</a></li>)}
+    </ol>
+  </nav>
+</aside>
+<details class="mobile-outline">
+  <summary>On this page</summary>
+  <nav aria-label="Page sections"><ol>{headings.filter(h => h.depth === 2).map(h => <li><a href={`#${h.slug}`}>{h.text}</a></li>)}</ol></nav>
+</details>
+<script>
+  const links = [...document.querySelectorAll<HTMLAnchorElement>('[data-heading]')];
+  const sections = links.map(link => document.getElementById(link.dataset.heading!)).filter((el): el is HTMLElement => !!el);
+  let scheduled = false;
+  function updateOutline() {
+    scheduled = false;
+    let active = sections[0];
+    for (const section of sections) if (section.getBoundingClientRect().top <= 140) active = section;
+    if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 4) active = sections.at(-1);
+    for (const link of links) {
+      if (link.dataset.heading === active?.id) link.setAttribute('aria-current', 'location');
+      else link.removeAttribute('aria-current');
+    }
+  }
+  window.addEventListener('scroll', () => {
+    if (!scheduled) { scheduled = true; requestAnimationFrame(updateOutline); }
+  }, { passive: true });
+  window.addEventListener('resize', updateOutline);
+  updateOutline();
+  document.querySelectorAll('.mobile-outline a').forEach(link => link.addEventListener('click', () => {
+    document.querySelector('.mobile-outline')?.removeAttribute('open');
+  }));
+</script>
+<style>
+  .outline { grid-column: 2; grid-row: 1; align-self: start; position: sticky; top: 2rem; padding-top: .25rem; }
+  ol { list-style: none; margin: 0; padding: 0; }
+  .outline ol { border-left: 1px solid var(--border); }
+  .outline a { display: block; padding: .45rem 0 .45rem 1rem; margin-left: -1px; border-left: 2px solid transparent; color: var(--muted); font-size: .8rem; text-decoration: none; line-height: 1.4; }
+  .outline a:hover { color: var(--fg); }
+  .outline a[aria-current] { color: var(--accent); border-color: var(--accent); }
+  .nested a { padding-left: 1.75rem; font-size: .75rem; }
+  .mobile-outline { display: none; }
+  @media (max-width: 1050px) {
+    .outline { display: none; }
+    .mobile-outline { display: block; padding: .9rem 0; border-bottom: 1px solid var(--border); margin-bottom: 2rem; }
+    summary { color: var(--muted); font-size: .9rem; cursor: pointer; }
+    .mobile-outline ol { padding: .75rem 0 0; }
+    .mobile-outline a { display: block; padding: .3rem 0; font-size: .9rem; }
+  }
+</style>

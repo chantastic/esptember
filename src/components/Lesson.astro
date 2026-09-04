@@ -1,0 +1,133 @@
+---
+import { getCollection, getEntry, render, type CollectionEntry } from "astro:content";
+import Layout from "../layouts/Layout.astro";
+import OnThisPage from "./OnThisPage.astro";
+import { GITHUB_REPO } from "../lib/site";
+import { youtubeId } from "../lib/youtube";
+interface Props { entry: CollectionEntry<"days">; view?: "guide" | "story" }
+const { entry, view = "guide" } = Astro.props;
+const story = await getEntry("stories", entry.id);
+if (view === "story" && !story) throw new Error(`Missing story: ${entry.id}`);
+const { Content, headings } = await render(view === "story" ? story! : entry);
+const days = (await getCollection("days")).sort((a,b) => a.data.day - b.data.day);
+const index = days.findIndex(day => day.id === entry.id);
+const previous = days[index - 1], next = days[index + 1];
+const base = `/day/${entry.id}/`;
+const sources = Object.entries(import.meta.glob([
+  "../../days/*/firmware/**/*.{c,h,cpp,hpp}", "../../days/*/firmware/**/CMakeLists.txt",
+  "../../days/*/firmware/sdkconfig.defaults", "../../days/*/firmware/partitions.csv",
+  "../../days/*/firmware/main/idf_component.yml", "!**/build/**", "!**/managed_components/**",
+], { query: "?raw", import: "default", eager: true }) as Record<string,string>)
+.filter(([path]) => path.includes(`/days/${entry.id}/firmware/`))
+.map(([path,content]) => ({ path: path.split('/firmware/')[1], content }))
+.sort((a,b) => a.path.localeCompare(b.path));
+const toc = view === "guide" ? [...headings, { depth: 2, slug: "firmware-source", text: "Firmware source" }] : headings;
+---
+<Layout title={`${entry.data.title} · ${view === 'guide' ? 'Guide' : 'Story'}`} description={entry.data.summary} markdown={`${base}guide.md`}>
+  <main id="main-content" class="lesson-main">
+    <header class="lesson-header">
+      <p class="eyebrow">September {String(entry.data.day).padStart(2, '0')} / 2026 <span>·</span> Day {String(entry.data.day).padStart(2, '0')}</p>
+      <h1>{entry.data.title}</h1>
+      <p class="lede">{entry.data.summary}</p>
+      <div class="lesson-meta"><span>{entry.data.toolchain}</span><span class="evidence">{entry.data.verification}</span></div>
+    </header>
+    <nav class="view-nav" aria-label="Lesson views">
+      <div class="views">
+        <a href={base} aria-current={view === 'guide' ? 'page' : undefined}>Guide <span>Build it</span></a>
+        {story && <a href={`${base}story/`} aria-current={view === 'story' ? 'page' : undefined}>Story <span>Behind the build</span></a>}
+      </div>
+      <a class="markdown-link" href={`${base}guide.md`}>Plain Markdown ↗</a>
+    </nav>
+    <div class="reading-layout">
+      <OnThisPage headings={toc} />
+      <div class="reading-column">
+        {view === 'guide' && entry.data.firmware && <section class="quick-start" aria-label="Firmware actions">
+          <div><strong>Try it on your board</strong><p>Waveshare AMOLED 1.8″ V2 · USB</p></div>
+          <a class="button" href={entry.data.firmware} download>Download firmware ↓</a>
+          <details class="web-flash">
+            <summary>Or flash from your browser</summary>
+            <p>Connect the V2 board with a USB data cable. Use a desktop Chromium browser with Web Serial support. Installation replaces the firmware on the connected board.</p>
+            <esp-web-install-button manifest={`${base}manifest.json`}><button slot="activate" class="button">Connect and install</button><span slot="unsupported">This browser does not support Web Serial. Use the download and terminal instructions below.</span></esp-web-install-button>
+          </details>
+        </section>}
+        {view === 'story' && <p class="story-intro">The build notes: what we tried, what broke, and what stayed. <a href={base}>Get the working instructions →</a></p>}
+        {entry.data.video && <details class="watch"><summary>Watch the build</summary><iframe class="video" loading="lazy" src={`https://www.youtube-nocookie.com/embed/${youtubeId(entry.data.video)}`} title={entry.data.title} allowfullscreen /></details>}
+        <article class="prose"><Content /></article>
+        {view === 'guide' && <section class="sources" id="firmware-source">
+          <p class="eyebrow">The implementation</p><h2>Firmware source</h2>
+          <p>Read the files here or <a href={`${GITHUB_REPO}/tree/main/days/${entry.id}/firmware`}>open the project on GitHub ↗</a>.</p>
+          {sources.map(file => <details><summary><code>{file.path}</code></summary><pre><code>{file.content}</code></pre></details>)}
+        </section>}
+        <nav class="lesson-pagination" aria-label="Other lessons">
+          {previous ? <a href={`/day/${previous.id}/`}><small>← Previous day</small>{previous.data.title}</a> : <a href="/"><small>← All lessons</small>Back to ESPtember</a>}
+          {next && <a href={`/day/${next.id}/`}><small>Next day →</small>{next.data.title}</a>}
+        </nav>
+      </div>
+    </div>
+  </main>
+</Layout>
+<script>
+  import "esp-web-tools/dist/web/install-button.js";
+  document.querySelectorAll<HTMLPreElement>('.prose pre').forEach((pre, index) => {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'code-block';
+    pre.before(wrapper);
+    wrapper.append(pre);
+    const copy = document.createElement('button');
+    copy.className = 'copy-code';
+    copy.textContent = 'Copy';
+    copy.setAttribute('aria-label', `Copy code block ${index + 1}`);
+    const status = document.createElement('span');
+    status.className = 'copy-status';
+    status.setAttribute('role', 'status');
+    wrapper.append(copy, status);
+    copy.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(pre.querySelector('code')?.textContent ?? pre.textContent ?? '');
+        copy.textContent = 'Copied';
+        status.textContent = 'Code copied to clipboard';
+      } catch {
+        status.textContent = 'Could not copy. Select the code and copy it manually.';
+      }
+      setTimeout(() => { copy.textContent = 'Copy'; status.textContent = ''; }, 2500);
+    });
+  });
+</script>
+<style>
+  .lesson-main { max-width: 1160px; }
+  .lesson-header { max-width: 820px; padding: 3rem 0 2rem; }
+  .eyebrow span { margin: 0 .6rem; }
+  h1 { font-size: clamp(2.8rem, 7vw, 5rem); margin: 1rem 0; letter-spacing: -.055em; }
+  .lede { max-width: 650px; }
+  .lesson-meta { display: flex; flex-wrap: wrap; gap: .75rem 1.25rem; color: var(--muted); font: .75rem var(--mono); margin-top: 1.5rem; }
+  .evidence { color: var(--fg); }
+  .evidence::before { content: '◦'; color: var(--accent); margin-right: .4rem; }
+  .view-nav { display: flex; justify-content: space-between; align-items: stretch; border-bottom: 1px solid var(--border); margin-bottom: 2.5rem; gap: 1rem; }
+  .views { display: flex; gap: 2rem; }
+  .views a { display: flex; align-items: baseline; gap: .65rem; padding: 1rem 0; text-decoration: none; color: var(--muted); border-bottom: 2px solid transparent; margin-bottom: -1px; font-weight: 600; }
+  .views a[aria-current] { color: var(--fg); border-color: var(--accent); }
+  .views span { font-size: .75rem; color: var(--muted); font-weight: 400; }
+  .markdown-link { align-self: center; font: .75rem var(--mono); color: var(--muted); }
+  .reading-layout { display: grid; grid-template-columns: minmax(0, 760px) 200px; gap: clamp(2rem, 5vw, 5rem); }
+  .reading-column { grid-column: 1; grid-row: 1; min-width: 0; }
+  .quick-start { display: flex; align-items: center; flex-wrap: wrap; gap: 1rem; border: 1px solid var(--border); background: var(--card); border-radius: 12px; padding: 1.25rem; margin-bottom: 2.75rem; }
+  .quick-start > div { flex: 1; }
+  .quick-start strong { font-size: 1rem; }
+  .quick-start p { margin: .3rem 0 0; font-size: .8rem; color: var(--muted); }
+  .web-flash { flex-basis: 100%; font-size: .8rem; }
+  .web-flash summary { cursor: pointer; color: var(--muted); }
+  .web-flash p { margin: 1rem 0; max-width: 58ch; }
+  .story-intro { border-left: 2px solid var(--accent); padding-left: 1rem; color: var(--muted); margin: 0 0 2.5rem; }
+  .story-intro a { display: block; margin-top: .35rem; }
+  .sources { border-top: 1px solid var(--border); margin-top: 3rem; padding-top: 2rem; }
+  .sources h2 { margin-top: 0; }
+  .sources p { color: var(--muted); }
+  .sources details { border-bottom: 1px solid var(--border); padding: .8rem 0; }
+  .sources summary { cursor: pointer; font-size: .85rem; }
+  .lesson-pagination { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; border-top: 1px solid var(--border); margin-top: 3rem; padding-top: 1.5rem; }
+  .lesson-pagination a { text-decoration: none; }
+  .lesson-pagination a:last-child:not(:first-child) { text-align: right; }
+  .lesson-pagination small { display: block; font: .7rem var(--mono); color: var(--muted); margin-bottom: .4rem; }
+  @media(max-width: 1050px) { .reading-layout { display: block; } .lesson-main { max-width: 820px; } .view-nav { margin-bottom: 0; } }
+  @media(max-width: 580px) { .lesson-header { padding-top: 1.5rem; } .views { gap: 1.5rem; } .views span { display: none; } .markdown-link { font-size: .65rem; } .quick-start { align-items: start; } .quick-start > div { flex-basis: 100%; } }
+</style>

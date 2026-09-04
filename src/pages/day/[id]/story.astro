@@ -1,0 +1,9 @@
+---
+import { getCollection } from "astro:content";
+import Lesson from "../../../components/Lesson.astro";
+export async function getStaticPaths() {
+  const stories = await getCollection("stories");
+  return (await getCollection("days")).filter(entry => stories.some(story => story.id === entry.id)).map(entry => ({ params: { id: entry.id }, props: { entry } }));
+}
+---
+<Lesson entry={Astro.props.entry} view="story" />

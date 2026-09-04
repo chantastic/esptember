@@ -36,11 +36,12 @@ These are serial/runtime checks, not visual certification of the panel.
 SD initialization returned `ESP_ERR_TIMEOUT` during the first revised movie test; flash fallback worked.
 That does not establish whether a card is absent or faulty, and SD playback remains unverified.
 
-## Before publication
+## Outstanding checks
 
 Confirm image colors and orientation, physical carousel swipes, GIF rendering and loop boundary, movie rendering, and sustained panel operation.
 Test SD playback with a known card and record its capacity/filesystem, along with missing and invalid media cases.
 Complete an extended stability run before claiming long-term stability.
 Serial submissions are not a measurement of completed panel frames.
 
-The writing skill requires hardware verification before publication, so the lesson READMEs remain drafts.
+Days 03 and 04 were published at the user’s request on September 4.
+Their guides state the limited verification above. Days 05 and 06 remain drafts.

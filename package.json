@@ -6,7 +6,8 @@
     "dev": "astro dev",
     "build": "./scripts/collect-firmware.sh && astro build",
     "preview": "astro preview",
-    "deploy": "pnpm build && wrangler deploy"
+    "deploy": "pnpm build && pnpm check:site && wrangler deploy",
+    "check:site": "node scripts/check-site.mjs"
   },
   "dependencies": {
     "astro": "^5.13.0",
