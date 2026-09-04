@@ -2,8 +2,8 @@
 import { getCollection, getEntry, render, type CollectionEntry } from "astro:content";
 import Layout from "../layouts/Layout.astro";
 import OnThisPage from "./OnThisPage.astro";
-import { GITHUB_REPO } from "../lib/site";
-import { youtubeId } from "../lib/youtube";
+import { GITHUB_REPO, INTRO_VIDEO } from "../lib/site";
+import FeaturedVideo from "./FeaturedVideo.astro";
 interface Props { entry: CollectionEntry<"days">; view?: "guide" | "story" }
 const { entry, view = "guide" } = Astro.props;
 const story = await getEntry("stories", entry.id);
@@ -26,10 +26,13 @@ const toc = view === "guide" ? [...headings, { depth: 2, slug: "firmware-source"
 <Layout title={`${entry.data.title} · ${view === 'guide' ? 'Guide' : 'Story'}`} description={entry.data.summary} markdown={`${base}guide.md`}>
   <main id="main-content" class="lesson-main">
     <header class="lesson-header">
+      <div class="lesson-heading">
       <p class="eyebrow">September {String(entry.data.day).padStart(2, '0')} / 2026 <span>·</span> Day {String(entry.data.day).padStart(2, '0')}</p>
       <h1>{entry.data.title}</h1>
       <p class="lede">{entry.data.summary}</p>
       <div class="lesson-meta"><span>{entry.data.toolchain}</span><span class="evidence">{entry.data.verification}</span></div>
+      </div>
+      <FeaturedVideo url={entry.data.video ?? INTRO_VIDEO.url} title={entry.data.video ? entry.data.title : INTRO_VIDEO.title} label={entry.data.video ? 'Watch the build' : 'About ESPtember'} />
     </header>
     <nav class="view-nav" aria-label="Lesson views">
       <div class="views">
@@ -51,7 +54,6 @@ const toc = view === "guide" ? [...headings, { depth: 2, slug: "firmware-source"
           </details>
         </section>}
         {view === 'story' && <p class="story-intro">The build notes: what we tried, what broke, and what stayed. <a href={base}>Get the working instructions →</a></p>}
-        {entry.data.video && <details class="watch"><summary>Watch the build</summary><iframe class="video" loading="lazy" src={`https://www.youtube-nocookie.com/embed/${youtubeId(entry.data.video)}`} title={entry.data.title} allowfullscreen /></details>}
         <article class="prose"><Content /></article>
         {view === 'guide' && <section class="sources" id="firmware-source">
           <p class="eyebrow">The implementation</p><h2>Firmware source</h2>
@@ -95,7 +97,7 @@ const toc = view === "guide" ? [...headings, { depth: 2, slug: "firmware-source"
 </script>
 <style>
   .lesson-main { max-width: 1160px; }
-  .lesson-header { max-width: 820px; padding: 3rem 0 2rem; }
+  .lesson-header { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 3rem; align-items: center; padding: 3rem 0 2.5rem; }
   .eyebrow span { margin: 0 .6rem; }
   h1 { font-size: clamp(2.8rem, 7vw, 5rem); margin: 1rem 0; letter-spacing: -.055em; }
   .lede { max-width: 650px; }
@@ -129,5 +131,6 @@ const toc = view === "guide" ? [...headings, { depth: 2, slug: "firmware-source"
   .lesson-pagination a:last-child:not(:first-child) { text-align: right; }
   .lesson-pagination small { display: block; font: .7rem var(--mono); color: var(--muted); margin-bottom: .4rem; }
   @media(max-width: 1050px) { .reading-layout { display: block; } .lesson-main { max-width: 820px; } .view-nav { margin-bottom: 0; } }
-  @media(max-width: 580px) { .lesson-header { padding-top: 1.5rem; } .views { gap: 1.5rem; } .views span { display: none; } .markdown-link { font-size: .65rem; } .quick-start { align-items: start; } .quick-start > div { flex-basis: 100%; } }
+  @media(max-width: 760px) { .lesson-header { grid-template-columns: 1fr; gap: 2rem; padding-top: 1.5rem; } }
+  @media(max-width: 580px) { .views { gap: 1.5rem; } .views span { display: none; } .markdown-link { font-size: .65rem; } .quick-start { align-items: start; } .quick-start > div { flex-basis: 100%; } }
 </style>

@@ -1,0 +1,25 @@
+---
+import { youtubeId } from "../lib/youtube";
+interface Props { url: string; title: string; label?: string }
+const { url, title, label = 'Watch the introduction' } = Astro.props;
+const portrait = url.includes('/shorts/');
+---
+<figure class:list={['featured-video', { portrait }]}>
+  <iframe
+    src={`https://www.youtube-nocookie.com/embed/${youtubeId(url)}`}
+    title={title}
+    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+    referrerpolicy="strict-origin-when-cross-origin"
+    allowfullscreen
+  />
+  <figcaption><span>{label}</span><a href={url}>YouTube ↗</a></figcaption>
+</figure>
+<style>
+  .featured-video { width: 100%; max-width: 440px; margin: 0 auto; }
+  .portrait { max-width: 236px; }
+  iframe { display: block; width: 100%; aspect-ratio: 16 / 9; border: 1px solid var(--border); border-radius: 14px; background: #000; }
+  .portrait iframe { aspect-ratio: 9 / 16; }
+  figcaption { display: flex; justify-content: space-between; gap: .5rem; margin-top: .7rem; font: .65rem/1.5 var(--mono); color: var(--muted); }
+  figcaption a { color: var(--muted); white-space: nowrap; }
+  @media(max-width: 600px) { .portrait { max-width: 220px; } }
+</style>

@@ -1,6 +1,8 @@
 ---
 import { getCollection } from "astro:content";
 import Layout from "../layouts/Layout.astro";
+import FeaturedVideo from "../components/FeaturedVideo.astro";
+import { INTRO_VIDEO } from "../lib/site";
 const days = (await getCollection("days")).sort((a,b) => a.data.day-b.data.day);
 const latest = days.at(-1)!;
 ---
@@ -13,10 +15,7 @@ const latest = days.at(-1)!;
         <p class="lede">A new ESP32 project every day in September. Real code, flashable firmware, and the things we learned getting it to work.</p>
         <div class="hero-actions"><a class="button" href={`/day/${latest.id}/`}>Build day {String(latest.data.day).padStart(2,'0')} →</a><a href="#projects">Explore the projects ↓</a></div>
       </div>
-      <div class="screen-study" aria-label="Illustration of an ESPtember greeting on a small display">
-        <div class="device"><div class="screen">Hello,<br />ESPtember!<span class="screen-cursor">_</span></div><span class="device-port"></span></div>
-        <p class="eyebrow">368 × 448 pixels. Room to begin.</p>
-      </div>
+      <FeaturedVideo url={INTRO_VIDEO.url} title={INTRO_VIDEO.title} />
     </section>
     <section id="projects" aria-labelledby="projects-heading">
       <div class="section-heading"><div><p class="eyebrow">The daily builds</p><h2 id="projects-heading">Start anywhere.</h2></div><span class="count">{String(days.length).padStart(2,'0')} / 30 published</span></div>
@@ -42,12 +41,6 @@ const latest = days.at(-1)!;
   .lede { max-width: 34rem; font-size: 1.1rem; }
   .hero-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 1.5rem; margin-top: 2rem; }
   .hero-actions > a:last-child { color: var(--muted); font-size: .8rem; }
-  .screen-study { text-align: center; }
-  .screen-study p { margin-top: 1.5rem; font-size: .6rem; }
-  .device { background: #262821; padding: 10px; width: 206px; height: 265px; border-radius: 32px; margin: auto; position: relative; border: 1px solid #55584b; box-shadow: 14px 20px 0 #191b15; transform: rotate(-6deg); }
-  .screen { height: 100%; border-radius: 23px; background: #000; color: #ff5b04; display: flex; flex-direction: column; justify-content: center; text-align: center; font: italic 700 25px/1.2 var(--mono); }
-  .screen-cursor { font-style: normal; font-size: 18px; margin-top: 8px; }
-  .device-port { position: absolute; width: 30px; height: 4px; background: #070806; border-radius: 3px; bottom: -6px; left: calc(50% - 15px); }
   .section-heading { display: flex; justify-content: space-between; align-items: end; gap: 1rem; }
   h2 { font-size: 2.2rem; margin: .5rem 0; letter-spacing: -.04em; }
   .count { font: .7rem var(--mono); color: var(--muted); padding-bottom: .7rem; white-space: nowrap; }
@@ -64,5 +57,5 @@ const latest = days.at(-1)!;
   .about-project { display: grid; grid-template-columns: 1fr 1.3fr; gap: 4rem; margin-top: 5rem; }
   .about-project p { color: var(--muted); margin-top: .5rem; }
   .about-project a { font-size: .9rem; }
-  @media(max-width: 760px) { .hero { grid-template-columns: 1fr; padding: 3rem 0; gap: 3rem; } .screen-study { display: none; } .about-project { grid-template-columns: 1fr; gap: 1rem; margin-top: 3rem; } .day-card { grid-template-columns: 2rem 1fr 1rem; gap: .7rem; padding: 1.5rem 0; } .day-card h3 { font-size: 1.2rem; } .count { font-size: .6rem; } .card-meta { line-height: 1.8; } }
+  @media(max-width: 760px) { .hero { grid-template-columns: 1fr; padding: 3rem 0; gap: 3rem; } .about-project { grid-template-columns: 1fr; gap: 1rem; margin-top: 3rem; } .day-card { grid-template-columns: 2rem 1fr 1rem; gap: .7rem; padding: 1.5rem 0; } .day-card h3 { font-size: 1.2rem; } .count { font-size: .6rem; } .card-meta { line-height: 1.8; } }
 </style>
