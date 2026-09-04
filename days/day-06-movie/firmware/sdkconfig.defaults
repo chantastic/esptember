@@ -1,0 +1,25 @@
+# ESPtember Day 06
+CONFIG_IDF_TARGET="esp32s3"
+
+# Board: Waveshare ESP32-S3-Touch-AMOLED-1.8 (16MB quad flash, 8MB octal PSRAM)
+CONFIG_ESPTOOLPY_FLASHSIZE_16MB=y
+CONFIG_SPIRAM=y
+CONFIG_SPIRAM_MODE_OCT=y
+CONFIG_SPIRAM_SPEED_80M=y
+
+# Console over the board's USB-C port (USB-Serial/JTAG peripheral)
+CONFIG_ESP_CONSOLE_USB_SERIAL_JTAG=y
+
+# Optimize for size
+CONFIG_COMPILER_OPTIMIZATION_SIZE=y
+
+
+# LVGL dark theme: white text, black background — zero styling code,
+# and on an AMOLED, black pixels are simply off.
+CONFIG_LV_THEME_DEFAULT_DARK=y
+
+CONFIG_PARTITION_TABLE_CUSTOM=y
+CONFIG_PARTITION_TABLE_CUSTOM_FILENAME="partitions.csv"
+CONFIG_LV_USE_CLIB_MALLOC=y
+# CONFIG_LV_USE_BUILTIN_MALLOC is not set
+# CONFIG_BSP_SD_FORMAT_ON_MOUNT_FAIL is not set

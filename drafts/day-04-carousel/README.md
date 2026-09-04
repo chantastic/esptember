@@ -1,0 +1,89 @@
+---
+day: 4
+title: A Carousel
+toolchain: ESP-IDF v5.5 + Waveshare BSP (LVGL 9.5)
+---
+
+> Draft: firmware builds successfully; hardware verification is in progress.
+> Build and board results: [verification notes](../verification.md).
+
+Put three graphics on the board.
+Show one at a time.
+Swipe to the next.
+
+Yesterday's image becomes today's slide.
+The new work is moving between them.
+
+```c
+const lv_image_dsc_t *slides[] = { &circle, &square, &triangle };
+bsp_display_lock(0);
+lv_obj_t *carousel = lv_tileview_create(lv_screen_active());
+lv_obj_set_size(carousel, lv_pct(100), lv_pct(100));
+lv_obj_set_style_pad_all(carousel, 0, 0);
+lv_obj_set_style_border_width(carousel, 0, 0);
+lv_obj_set_style_bg_color(carousel, lv_color_black(), 0);
+lv_obj_set_scrollbar_mode(carousel, LV_SCROLLBAR_MODE_OFF);
+for (uint8_t i = 0; i < 3; i++) {
+    lv_dir_t directions = LV_DIR_NONE;
+    if (i > 0) directions |= LV_DIR_LEFT;
+    if (i < 2) directions |= LV_DIR_RIGHT;
+    lv_obj_t *tile = lv_tileview_add_tile(carousel, i, 0, directions);
+    lv_obj_set_style_pad_all(tile, 0, 0);
+    lv_obj_t *image = lv_image_create(tile);
+    lv_image_set_src(image, slides[i]);
+    lv_obj_center(image);
+}
+lv_obj_add_event_cb(carousel, slide_changed, LV_EVENT_VALUE_CHANGED, NULL);
+bsp_display_unlock();
+```
+
+This excerpt uses LVGL 9.5's [Tile View](https://docs.lvgl.io/9.5/widgets/tileview.html).
+The tiles occupy columns 0, 1, and 2 in the same row.
+Tile View supplies the scrolling and snapping.
+The BSP supplies the touch input.
+
+## Reuse the conversion
+
+The included 240 × 240 graphics are a circle, a square, and a triangle.
+`scripts/make-media.py` generates each as RGB565 pixel data.
+The main component embeds `circle.rgb565`, `square.rgb565`, and `triangle.rgb565`; `main.c` gives each a constant image descriptor, just as in day 03.
+
+Use `CONFIG_LV_USE_TILEVIEW=y`.
+It is already enabled in the inspected day-02 configuration; make it explicit in this day's defaults.
+
+Three images cost three images' worth of flash.
+At our chosen dimensions, that's 345,600 bytes of pixels, or 337.5 KiB, plus descriptors and the rest of the app.
+
+Full-screen assets would use 966 KiB for the three pixel arrays alone.
+The current single-app partition is only 1 MiB, so those assets would leave very little space for the program.
+The board's 16 MB label doesn't change the partition table.
+
+## Movement can come from code, too
+
+To move to the second slide, call this while holding the display lock:
+
+```c
+lv_tileview_set_tile_by_index(carousel, 1, 0, LV_ANIM_ON);
+```
+
+That's also the operation an automatic carousel could run from an LVGL timer.
+For this day, keep the swipe as the interaction so we can test touch independently of automatic movement.
+
+## Build and check
+
+Build with `idf.py build` and inspect `idf.py size` after adding all three assets.
+On the V2 board, swipe forward and backward, release halfway through a swipe, and check that the first and last slides stop at their edges.
+Repeat swipes during an extended run.
+
+If a swipe doesn't work, first try the programmatic change above.
+That separates whether the tile can move from whether touch is reaching it.
+Neither outcome has been observed for this draft yet.
+
+Add the verified merged image and flash instructions after these checks.
+
+## The idea
+
+The images didn't learn how to swipe.
+Their container did.
+
+Give the content a place to live, then teach that place how to move.

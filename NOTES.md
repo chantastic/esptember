@@ -33,3 +33,20 @@
   carousel of images → gif → movie. Prefer whatever toolchain produces the smallest
   binary for the simple days; heavier days may switch toolchains — always
   note the toolchain in the day's frontmatter.
+- **Days 03–06 media sequence implemented** — static graphic, swipeable
+  carousel, GIF, raw RGB565 movie with SD-file preference and flash fallback.
+  Writeups remain in `drafts/` until visual/hardware checks are complete.
+  Reproducible geometric assets come from `scripts/make-media.py`.
+- **Storage is a partition decision** — day 02's 16 MB flash setting still
+  used the default 1 MiB app partition. Media lessons reserve 3 MiB for the
+  app; day 06 additionally reserves 12 MiB for movie data and includes it in
+  the merged firmware image.
+- **LVGL heap vs PSRAM** — the installed LVGL is 9.5.0. Its built-in 64 KiB
+  allocator cannot hold even the 102,400-byte ARGB8888 canvas of a 160×160
+  GIF. Days 05–06 select the C library allocator; keep PSRAM enabled and
+  check actual memory allocation rather than importing LVGL 8 formulas.
+- **Movie follow-ups** — measure SD playback with a known card; add MJPEG
+  parsing/decoding if longer flash clips are useful. Audio synchronization,
+  large-file support, maximum card capacity, and higher frame rates remain
+  separate experiments. Current raw player targets 184×224 at 10 fps,
+  silent, with two PSRAM frame buffers; it does not decode MP4 or MJPEG.
