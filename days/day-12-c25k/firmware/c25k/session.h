@@ -16,6 +16,9 @@ class Session {
   uint32_t segmentElapsedMs = 0;
   uint64_t totalElapsedMs = 0;
   uint64_t runElapsedMs = 0;
+  // A bit records a countdown that reached its end in this session. Skipping
+  // does not complete a segment, and replaying does not erase earlier work.
+  uint32_t completedSegments = 0;
 
   void start(uint8_t index, uint32_t now) {
     workoutIndex = index < kWorkoutCount ? index : kWorkoutCount - 1;
@@ -24,6 +27,7 @@ class Session {
     paused = partial = false;
     segmentElapsedMs = 0;
     totalElapsedMs = runElapsedMs = 0;
+    completedSegments = 0;
     lastUpdateMs_ = now;
     warningFired_ = false;
     resetPrevChain();
@@ -53,7 +57,10 @@ class Session {
         warningFired_ = true;
         emit(SessionEvent::Warning);
       }
-      if (segmentElapsedMs == length) advance();
+      if (segmentElapsedMs == length) {
+        if (segmentIndex < 32U) completedSegments |= UINT32_C(1) << segmentIndex;
+        advance();
+      }
     }
   }
 
@@ -90,6 +97,7 @@ class Session {
 
   void cancel() {
     active = paused = false;
+    completedSegments = 0;
     resetPrevChain();
     clearEvents();
   }

@@ -1,6 +1,6 @@
 # C25K for M5Stack StopWatch — Design Spec
 
-Version 1.1 · 2026-09-12
+Version 1.2 · 2026-09-12
 
 This is the project's source of truth for product behavior, the workout program, and saved data.
 Change this document alongside any agreed behavior or storage change, then keep the firmware, tests, and guides consistent with it.
@@ -75,7 +75,8 @@ Media-player convention:
 
 ## 4. Screen architecture
 
-Home, History, and Settings use horizontal paging, one item per page, with dot indicators along the bottom arc and the current dot filled.
+Home, History, and Settings use horizontal paging, one item per page, with circle indicators along the bottom arc.
+Current items use a thick outline; completed workout and segment circles are filled (§4.7).
 Confirmation and result screens show their available actions explicitly.
 
 | From | Action | To |
@@ -112,7 +113,8 @@ History is reached by paging past the last workout on Home (see §4.1), and Esca
   - `BOTH TO START`.
 - The activity summary is derived from the same segment table as the timer; it must reconstruct every core segment exactly. Do not maintain separate handwritten workout descriptions.
 - Example: W1 D1 shows `8 ROUNDS`, `RUN 1:00 → WALK 1:30`, `5:00 WARM UP + 5:00 COOL DOWN`, and `30:00 total`. W4 shows all seven core intervals without shortening a partial repeat.
-- The **cursor** (next-up workout) is marked with a small filled triangle under its page label and its bottom-arc dot is drawn larger/brighter. The cursor is *not* the same as the page you're currently viewing.
+- The **cursor** (next-up workout) is marked with a small filled triangle under its page label and a thick outline around its bottom-arc circle. A separate small outer tick marks the page being viewed; browsing never changes which workout is next or makes it look completed.
+- A workout circle is filled if the retained log includes at least one non-partial completion. Partial-only workouts stay lightly outlined. The current/next-up outline takes precedence when repeating a previously completed workout.
 - On boot, Home opens on the cursor page.
 - **Enter** → start whatever workout is on the current page.
 - **Escape** → Settings.
@@ -126,7 +128,8 @@ Layout, top to bottom, all centered:
 - Segment label: `WARM UP` / `RUN` / `WALK` / `COOL DOWN`.
 - Segment countdown, largest text on screen: `M:SS`.
 - Below: `Seg 5/13` and elapsed session time in small text.
-- Bottom arc: dots = one per segment, current dot filled. Run segments drawn in the run color, walk segments in the walk color, so the pattern is readable at a glance.
+- Bottom arc: one circle per segment. Filled = completed; thick outline = current; light outline = incomplete. Run segments use the run color and walking segments use the walk color.
+- A segment fills when its countdown reaches the end. Skipping it leaves it incomplete. Replaying retains its completed status, with the current outline taking precedence until navigation leaves that segment again.
 
 Controls:
 
@@ -192,6 +195,23 @@ Filmstrip, one setting per page:
 - Success shows `History cleared` and `W1 D1 is next`. Enter or Escape returns Home at W1 D1.
 - Failure shows `Reset not confirmed` with a retry action. Keep the current in-memory history. Enter retries; Escape returns to Settings.
 - A failed readback does not prove flash was unchanged: do not report success or promise flash rollback. The reset flow must distinguish success, failure, and cancellation.
+
+### 4.7 Progress circle legend
+
+| Appearance | Meaning |
+|---|---|
+| Filled circle | Complete |
+| Thick outline | Current segment or next-up workout |
+| Light outline | Incomplete |
+
+Keep completion separate from position: a skipped segment or partial-only workout does not become complete just because the cursor moved past it.
+The current outline wins when the item is both current and already completed, including replay.
+When Home shows `PROGRAM COMPLETE`, hide the next-up outline and triangle; W9 D3 uses its completion state, so a finished program can show all 27 workout circles filled.
+Home's separate page marker identifies browsing without changing those meanings.
+History, Settings, and Set Time use a thick outline for the current page and light outlines for other pages; they do not show exercise completion.
+
+Workout completion is derived from retained logs and survives reboot with those logs.
+Segment completion is a per-session RAM bitmask, cleared on start or cancellation; it does not change the saved-data format.
 
 ## 5. Workout program
 
@@ -371,10 +391,10 @@ Arduino `Preferences` supplies NVS access.
 ### 12.1 Acceptance checks
 
 - **Program and summaries:** all 27 durations and run totals match §5; every compressed summary reconstructs the original core exactly.
-- **Controls and timing:** chord boundaries, held-gesture exclusivity, pause, replay, skip/partial flags, delayed boundaries, and `millis()` rollover pass the portable checks.
+- **Controls and timing:** chord boundaries, held-gesture exclusivity, pause, replay, skip/partial flags, segment completion masks, delayed boundaries, and `millis()` rollover pass the portable checks.
 - **Storage:** repeat history, ring overwrite, corrupt-record rejection, cursor rules, and reset failure preserving RAM pass the portable checks.
 - **On device:** save a completion and verify it after restart; confirm reset leaves history empty after an immediate restart with no intervening write; retain feedback preferences. Use isolated test data when production history exists.
-- **Visuals:** inspect representative round-screen captures, including long interval previews, paused timer, reset confirmation/result, and retained history counts.
+- **Visuals:** inspect representative round-screen captures, including long interval previews, paused timer, reset confirmation/result, and retained history counts. Confirm filled/thick/light circles during completion, skip, replay, pause, and Home browsing away from the next-up workout.
 - Run [scripts/test.sh](scripts/test.sh) for the portable checks. [BUILD.md](BUILD.md) records device procedures and observed results; §14 keeps the unverified items visible.
 
 ## 13. Out of scope for v1
@@ -411,3 +431,4 @@ Known limits and possible later work:
 |---|---|---|
 | [1.0](spec-history/v1.0.md) | 2026-09-11 | Original user-provided design, archived unchanged |
 | 1.1 | 2026-09-12 | Make this plan authoritative; add activity previews and explicit reset results; specify the exact storage layout, save/readback behavior, update preservation, clock limits, verified build choices, and remaining acceptance checks |
+| 1.2 | 2026-09-12 | Filled circles for completed workouts/segments, thick outline for current/next up, light outline for incomplete; distinguish browsing, skipping, partial sessions, and replay without changing storage schema |

@@ -21,6 +21,7 @@ struct UiView {
   bool resetSucceeded = false;
   uint8_t workoutIndex = 0, segmentIndex = 0, segmentCount = 0;
   uint32_t remainingSec = 0, elapsedSec = 0, runSec = 0, plannedSec = 0;
+  uint32_t completedWorkouts = 0, completedSegments = 0;
   float segmentProgress = 0, sessionProgress = 0;
   uint16_t historyCount = 0, historyPage = 0, completionCount = 0, partialCount = 0;
   int battery = -1;
@@ -122,15 +123,15 @@ class Ui {
     }
   }
 
-  void arcDots(unsigned count, unsigned selected, int cursor = -1,
-               const Workout* plan = nullptr) {
+  void arcDots(unsigned count, int current, uint32_t completed = 0,
+               const Workout* plan = nullptr, int viewed = -1) {
     if (!count) return;
     auto& g = surface();
     // Keep large histories readable with a moving window around the current page.
     unsigned visible = count > 28 ? 21 : count;
     unsigned first = 0;
-    if (count > visible && selected > visible / 2) {
-      first = selected - visible / 2;
+    if (count > visible && current > int(visible / 2)) {
+      first = unsigned(current) - visible / 2;
       if (first + visible > count) first = count - visible;
     }
     const float span = visible > 18 ? 120.0f : (visible > 8 ? 100.0f : 58.0f);
@@ -140,14 +141,29 @@ class Ui {
       float radians = angle * 0.01745329252f;
       int x = _cx + lroundf(sinf(radians) * 187);
       int y = _cy + lroundf(cosf(radians) * 187);
-      uint32_t color = plan ? segmentColor(plan->segments[i].type) : DIM;
-      int r = count > 20 ? 3 : 4;
-      if (int(i) == cursor) { color = WHITE; r = 5; }
-      if (i == selected) {
-        g.fillCircle(x, y, r + (int(i) != cursor ? 1 : 0), plan ? color : WHITE);
+      const uint32_t color = plan ? segmentColor(plan->segments[i].type) : WHITE;
+      const int r = count > 20 ? 4 : 5;
+      const bool done = i < 32 && (completed & (uint32_t(1) << i));
+      if (int(i) == current) {
+        // Current takes precedence while replaying an already finished item.
+        g.fillCircle(x, y, r + 2, color);
+        g.fillCircle(x, y, r - 1, BLACK);
+      } else if (done) {
+        g.fillCircle(x, y, r, color);
       } else {
-        g.drawCircle(x, y, r, color);
-        if (int(i) == cursor) g.drawCircle(x, y, r - 1, color);
+        g.drawCircle(x, y, r, plan ? color : DIM);
+      }
+      if (int(i) == viewed) {
+        // Browsing a Home page must not make that workout look completed or
+        // change which workout is next. An outer tick clears the footer text.
+        for (int offset = -1; offset <= 1; ++offset) {
+          const int dx = lroundf(cosf(radians) * offset);
+          const int dy = -lroundf(sinf(radians) * offset);
+          g.drawLine(_cx + lroundf(sinf(radians) * 198) + dx,
+                     _cy + lroundf(cosf(radians) * 198) + dy,
+                     _cx + lroundf(sinf(radians) * 203) + dx,
+                     _cy + lroundf(cosf(radians) * 203) + dy, WHITE);
+        }
       }
     }
   }
@@ -279,7 +295,7 @@ class Ui {
       char label[24], time[16], count[48];
       workoutLabel(label, sizeof(label), v.homePage);
       text(label, 132, &fonts::DejaVu56);
-      if (v.homePage == v.cursor) {
+      if (!v.programComplete && v.homePage == v.cursor) {
         surface().fillTriangle(_cx - 5, 175, _cx + 5, 175, _cx, 168, WHITE);
       }
       duration(time, sizeof(time), totalSeconds(workoutAt(v.homePage)));
@@ -303,7 +319,7 @@ class Ui {
       }
       text("BOTH TO START", 389, &fonts::DejaVu18, MUTED);
     }
-    arcDots(28, v.homePage, v.cursor);
+    arcDots(28, v.programComplete ? -1 : v.cursor, v.completedWorkouts, nullptr, v.homePage);
   }
 
   void workout(const UiView& v) {
@@ -322,7 +338,7 @@ class Ui {
     duration(time, sizeof(time), v.elapsedSec);
     snprintf(line, sizeof(line), "%s elapsed", time);
     text(line, 350, &fonts::DejaVu18, MUTED);
-    arcDots(plan.count, index, -1, &plan);
+    arcDots(plan.count, index, v.completedSegments, &plan);
   }
 
   void cancelConfirm() {

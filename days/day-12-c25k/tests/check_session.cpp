@@ -53,6 +53,7 @@ static void checkProgram() {
     assert(session.runElapsedMs == runs[i] * 1000);
     assert(session.remainingMs() == 0);
     assert(session.progressMs() == totals[i] * 1000);
+    assert(session.completedSegments == (UINT32_C(1) << workout.count) - 1U);
     const auto events = drain(session);
     assert(events.size() == static_cast<size_t>(workout.count) * 2 + 1);
     assert(events.front() == SessionEvent::Walk);
@@ -233,6 +234,57 @@ static void checkLongReplayTotalsAndQueue() {
   assert(events.size() == 64 && events.back() == SessionEvent::Complete);
 }
 
+static void checkSegmentCompletion() {
+  Session session;
+  session.start(0, 0);
+  assert(session.completedSegments == 0);
+  session.update(299999);
+  assert(session.completedSegments == 0);
+  session.update(300000);
+  assert(session.segmentIndex == 1 && session.completedSegments == 1U);
+
+  session.togglePause(301000);
+  session.update(500000);  // Paused time cannot complete the run.
+  assert(session.completedSegments == 1U);
+  session.next(500000);  // The skipped run remains incomplete.
+  assert(session.segmentIndex == 2 && session.completedSegments == 1U);
+  session.togglePause(500000);
+  session.update(590000);  // Finish the walk after the skipped run.
+  assert(session.segmentIndex == 3 && session.completedSegments == 5U);
+
+  session.prev(590000);  // Restart the current, unfinished segment.
+  session.prev(590000);  // Revisit the already completed walk.
+  assert(session.segmentIndex == 2 && session.completedSegments == 5U);
+  session.prev(590000);  // Revisit the skipped run.
+  assert(session.segmentIndex == 1 && session.completedSegments == 5U);
+  session.update(649999);
+  assert(session.completedSegments == 5U);
+  session.update(650000);  // Finishing its replay now completes the run.
+  assert(session.segmentIndex == 2 && session.completedSegments == 7U);
+  session.next(650000);  // Skipping a completed segment preserves its bit.
+  assert(session.segmentIndex == 3 && session.completedSegments == 7U);
+  assert(session.partial);  // Replay does not remove the session's skip flag.
+
+  session.start(26, 700000);
+  assert(session.completedSegments == 0);
+  session.update(2800000);  // Finish warm-up and run, but not cool-down.
+  assert(session.segmentIndex == 2 && session.completedSegments == 3U);
+  session.next(2800000);  // Next on the final segment must not fill its circle.
+  assert(!session.active && session.partial && session.completedSegments == 3U);
+  session.update(3100000);
+  assert(session.completedSegments == 3U);
+
+  session.start(0, 3200000);
+  for (uint8_t i = 0; i < c25k::workoutAt(0).count; ++i) session.next(3200000);
+  assert(!session.active && session.partial && session.completedSegments == 0);
+
+  session.start(0, 4000000);
+  session.next(4360000);  // Account for natural boundaries before applying Next.
+  assert(session.segmentIndex == 3 && session.completedSegments == 3U);
+  session.cancel();
+  assert(session.completedSegments == 0);
+}
+
 int main() {
   checkProgram();
   checkBoundaryAndWarning();
@@ -241,5 +293,6 @@ int main() {
   checkReplayAndCompletion();
   checkWrapAndCancel();
   checkLongReplayTotalsAndQueue();
-  std::cout << "C25K program/session checks passed (27 workouts, timing, controls, cues, wrap).\n";
+  checkSegmentCompletion();
+  std::cout << "C25K program/session checks passed (27 workouts, timing, controls, cues, wrap, segment completion).\n";
 }

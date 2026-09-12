@@ -80,8 +80,21 @@ The firmware allows 80 ms between presses and requires at least 80 ms of overlap
 A held pair produces Escape once; releasing it cannot also produce Enter.
 
 Home pages through W1 D1 to W9 D3, then History, and wraps at either end.
-The triangle marks the next-up workout.
+The triangle and thick circle outline mark the next-up workout.
 Browsing leaves it in place; Enter starts whichever workout is visible.
+A small tick outside the bottom arc marks the page you're viewing.
+
+Workout and segment circles share one legend:
+
+| Circle | Meaning |
+| --- | --- |
+| Filled | Complete |
+| Thick outline | Current segment or next-up workout |
+| Light outline | Incomplete |
+
+A workout fills when the retained history includes at least one full completion; partial-only workouts stay outlined.
+The thick outline takes precedence when a completed item is current again.
+At program completion, the next-up outline disappears and the final workout uses its completion state.
 
 Each workout shows its total time and a preview of the run/walk sequence before you start.
 Read the activities left to right, then top to bottom; matching sequences show how many rounds to repeat.
@@ -90,7 +103,8 @@ W1 D1 is eight rounds of a one-minute run and a ninety-second walk, with a five-
 ![W1 D1 showing eight rounds of running and walking, with warm-up, cool-down, and total duration](https://esptember.com/images/day-12-c25k/workout-summary.png)
 
 During a workout, the outer arc shows your position in the whole session and the inner ring shows progress through the current segment.
-Colored dots reveal the run/walk pattern.
+Colored circles reveal the run/walk pattern and fill as each countdown finishes.
+Skipping leaves a segment outlined; replay keeps its completion, with the thick current outline showing until you move on.
 Blue and Yellow still work while paused, and leave the timer paused.
 
 ![Paused countdown on the StopWatch](https://esptember.com/images/day-12-c25k/paused.png)
@@ -152,6 +166,8 @@ A delayed screen update can cross a boundary without assigning walking time to a
 Paused time contributes to neither total.
 
 Completion writes the log and cursor together in one versioned NVS blob.
+Workout circles are derived from that retained log; segment circles live in memory for the current session.
+The circle update uses the existing storage schema without changing saved data.
 A power loss during a workout loses that session and leaves the saved cursor unchanged.
 
 ## Check the result

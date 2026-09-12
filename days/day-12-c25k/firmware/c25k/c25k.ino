@@ -248,6 +248,11 @@ void render() {
   view.storageOk = storageOk; view.battery = batteryPercent;
   view.resetSucceeded = resetSucceeded;
   view.historyCount = progress.count; view.historyPage = historyPage;
+  for (uint16_t i = 0; i < progress.count; ++i) {
+    const auto* entry = progress.newest(i);
+    if (!(entry->flags & 1)) view.completedWorkouts |= uint32_t(1) << entry->workout;
+  }
+  view.completedSegments = session.completedSegments;
   view.workoutIndex = session.workoutIndex; view.segmentIndex = session.segmentIndex;
   view.segmentCount = workoutAt(session.workoutIndex).count;
   view.remainingSec = (session.remainingMs() + 999) / 1000;
@@ -292,13 +297,14 @@ const char* screenName() {
 }
 
 void reportStatus() {
-  Serial.printf("C25K_STATUS screen=%s page=%u cursor=%u workout=%u segment=%u remaining=%lu total_ms=%llu run_ms=%llu paused=%u partial=%u logs=%u sound=%u vibration=%u storage=%u rtc=%lu test=%u inputs=%lu loop_max_us=%lu psram=%u width=%d height=%d speaker=%u store=%s\n",
+  Serial.printf("C25K_STATUS screen=%s page=%u cursor=%u workout=%u segment=%u remaining=%lu total_ms=%llu run_ms=%llu paused=%u partial=%u logs=%u sound=%u vibration=%u storage=%u rtc=%lu test=%u inputs=%lu loop_max_us=%lu psram=%u width=%d height=%d speaker=%u store=%s segments_done=%lu\n",
     screenName(), homePage, progress.cursor, session.workoutIndex, session.segmentIndex,
     (unsigned long)session.remainingMs(), (unsigned long long)session.totalElapsedMs,
     (unsigned long long)session.runElapsedMs, session.paused, session.partial, progress.count,
     progress.sound_on, progress.vib_on, storageOk, (unsigned long)rtcTimestamp(), diagnostic,
     (unsigned long)physicalInputs, (unsigned long)maxLoopUs, ESP.getPsramSize(),
-    M5.Display.width(), M5.Display.height(), feedback.speakerReady, C25K_STORAGE_NAMESPACE);
+    M5.Display.width(), M5.Display.height(), feedback.speakerReady, C25K_STORAGE_NAMESPACE,
+    (unsigned long)session.completedSegments);
 }
 
 void startCapture() {

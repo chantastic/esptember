@@ -21,10 +21,16 @@ Press the two buttons within 80 ms of each other and keep them together for at l
 Release both before the next gesture.
 Touch and single-button holds have no actions.
 
-Home opens on the next-up workout, marked by a triangle.
+Home opens on the next-up workout, marked by a triangle and a thick circle outline.
 Blue and Yellow browse W1 D1 through W9 D3, followed by History.
 Enter starts whichever workout is visible.
+A separate small tick outside the bottom arc marks the viewed page without moving the next-up marker.
 On the History landing page, Enter opens the saved sessions, newest first.
+
+Workout and segment circles use the same legend: filled means complete, a thick outline means current or next up, and a light outline means incomplete.
+A workout fills when the retained log contains a non-partial completion; partial-only workouts stay outlined.
+The current outline takes precedence over a filled circle when revisiting completed work.
+When the program is complete, there is no next-up outline or triangle; the final workout uses its completion state.
 
 Each workout previews its total duration, run/walk times in order, and warm-up and cool-down.
 Read the activities left to right, then top to bottom.
@@ -35,6 +41,8 @@ During a workout, Blue skips to the next segment and marks the session partial.
 Yellow restarts the current segment; another Yellow within two seconds moves back one segment.
 Further Yellow clicks within that interval continue backwards.
 Navigation works while paused and leaves the workout paused.
+Segment circles fill only when their countdown finishes, so skipped segments stay outlined.
+Replay retains completion, with the current segment shown as a thick outline until you leave it again.
 
 Hold both to show Cancel workout, then release and hold both again to discard it.
 The timer keeps running under that overlay unless already paused.
@@ -117,6 +125,10 @@ The checksum and bounds checks reject damaged or unsupported data without silent
 Reset Progress explicitly permits replacing that C25K state.
 It adopts the cleared progress in memory only after the save and readback succeed; failure preserves the current in-memory progress for retry.
 
+Workout completion circles are derived from retained non-partial log entries and survive reboot with that history.
+Segment completion uses a per-session RAM bitmask, cleared on start or cancellation.
+The circle update leaves storage schema 1 and the 2,578-byte record unchanged.
+
 Log totals count active time spent in each segment, including replays, and exclude paused time.
 The outer arc follows the position in the planned workout, so it moves back when a segment is replayed.
 The timer uses unsigned `millis()` differences and survives its rollover.
@@ -134,6 +146,7 @@ days/day-12-c25k/scripts/test.sh
 
 These compile the production helpers with address and undefined-behavior sanitizers.
 They cover all 27 program durations and run totals, boundary cues, pause accounting, replay and skip behavior, button timing thresholds, clock rollover, repeated workouts, cursor movement, ring overwrite, and corrupt storage.
+Segment completion checks cover all 27 final masks, paused and skipped segments, replay, completing an earlier skipped segment, final-segment skips, and start/cancel clearing.
 Reset checks verify that a failed save preserves the entire original state and that a successful reset clears progress while retaining feedback preferences.
 Summary checks reconstruct all 27 activity sequences from their displayed rounds and durations, verify activity totals, and cover empty, single-segment, and maximum-size inputs.
 
@@ -166,6 +179,7 @@ Physical interaction invalidates its comparisons; leave the buttons alone while 
 Installation checks on September 12, 2026 verified upload hashes, a 468 × 468 framebuffer, 8 MiB PSRAM, speaker initialization, RTC readback, all 27 accelerated completions, and real NVS restoration after reboot.
 Captured screens were inspected with a circular display mask.
 The Home summary update was checked on all 27 workout pages, with twelve representative captures confirming that the activity sequences fit the round display.
+The circle update passed all 27 accelerated segment-completion checks and framebuffer checks for filled, thick-outline, and light-outline states during skip, pause, replay, and Home browsing, using temporary RAM-only progress.
 The reset update was checked with two saved test sessions in an isolated `c25k_check` namespace: cancellation kept them, confirmation cleared them, and an immediate reboot kept the history empty and feedback settings intact.
 Reinstalling the normal build restored access to the user's two saved sessions, whose History screens matched the pre-test captures.
 A separate 125-second real-time check crossed warm-up → RUN → WALK and recorded exactly 60 seconds of running; sampled timer progress tracked host elapsed time within 3 ms.
