@@ -14,6 +14,9 @@ Build a Couch-to-5K interval trainer for the M5Stack StopWatch.
 Choose a workout, press both buttons, and follow the countdown through warm-up, running, walking, and cool-down.
 The whole nine-week program lives on the device.
 
+The [project plan](https://github.com/chantastic/esptember/blob/main/days/day-12-c25k/SPEC.md) is the source of truth for workout behavior, controls, and saved data.
+It includes the current decisions and the checks still open.
+
 The design starts with a glance: what am I doing, and how much longer?
 RUN is coral.
 WALK is aqua.

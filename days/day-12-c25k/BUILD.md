@@ -1,7 +1,8 @@
 # Day 12: Couch to 5K on the M5Stack StopWatch
 
 A standalone, offline interval trainer for the M5Stack StopWatch C152.
-All 27 sessions from the supplied [design spec](SPEC.md) are included.
+The [project plan](SPEC.md) is the source of truth for behavior, all 27 workouts, and the saved-data contract.
+This guide covers operating, building, and verifying its implementation.
 The firmware is installed on the connected device.
 
 ## Use it
