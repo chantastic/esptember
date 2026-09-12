@@ -80,6 +80,12 @@ Home pages through W1 D1 to W9 D3, then History, and wraps at either end.
 The triangle marks the next-up workout.
 Browsing leaves it in place; Enter starts whichever workout is visible.
 
+Each workout shows its total time and a preview of the run/walk sequence before you start.
+Read the activities left to right, then top to bottom; matching sequences show how many rounds to repeat.
+W1 D1 is eight rounds of a one-minute run and a ninety-second walk, with a five-minute warm-up and five-minute cool-down, for thirty minutes total.
+
+![W1 D1 showing eight rounds of running and walking, with warm-up, cool-down, and total duration](https://esptember.com/images/day-12-c25k/workout-summary.png)
+
 During a workout, the outer arc shows your position in the whole session and the inner ring shows progress through the current segment.
 Colored dots reveal the run/walk pattern.
 Blue and Yellow still work while paused, and leave the timer paused.

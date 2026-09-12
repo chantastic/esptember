@@ -25,6 +25,11 @@ Blue and Yellow browse W1 D1 through W9 D3, followed by History.
 Enter starts whichever workout is visible.
 On the History landing page, Enter opens the saved sessions, newest first.
 
+Each workout previews its total duration, run/walk times in order, and warm-up and cool-down.
+Read the activities left to right, then top to bottom.
+Matching sequences show a round count; continuous runs show their full duration.
+The preview comes from the same segment table as the timer.
+
 During a workout, Blue skips to the next segment and marks the session partial.
 Yellow restarts the current segment; another Yellow within two seconds moves back one segment.
 Further Yellow clicks within that interval continue backwards.
@@ -86,6 +91,7 @@ The isolated source is in `firmware/c25k/`:
 | --- | --- |
 | `c25k.ino` | Screen flow, RTC, NVS, hardware setup, main loop, USB checks |
 | `workouts.h` | Static program table with real warm-up and cool-down segments |
+| `workout_summary.h` | Activity totals and exact repeating sequences derived from the program table |
 | `session.h` | Portable timing, pause, skip, track-back, and cue events |
 | `buttons.h` | Exclusive Enter/Escape recognition and click swallowing |
 | `progress.h` | Packed completion log, ring order, schema, checksum, cursor |
@@ -121,6 +127,7 @@ days/day-12-c25k/scripts/test.sh
 
 These compile the production helpers with address and undefined-behavior sanitizers.
 They cover all 27 program durations and run totals, boundary cues, pause accounting, replay and skip behavior, button timing thresholds, clock rollover, repeated workouts, cursor movement, ring overwrite, and corrupt storage.
+Summary checks reconstruct all 27 activity sequences from their displayed rounds and durations, verify activity totals, and cover empty, single-segment, and maximum-size inputs.
 
 The installed firmware also exposes a bounded, line-oriented USB protocol at 115200 baud.
 `status` reports state; `next`, `prev`, `enter`, and `escape` call the normal screen controls.
@@ -148,6 +155,7 @@ Physical interaction invalidates its comparisons; leave the buttons alone while 
 
 Installation checks on September 12, 2026 verified upload hashes, a 468 × 468 framebuffer, 8 MiB PSRAM, speaker initialization, RTC readback, all 27 accelerated completions, and real NVS restoration after reboot.
 Captured screens were inspected with a circular display mask.
+The Home summary update was checked on all 27 workout pages, with twelve representative captures confirming that the activity sequences fit the round display.
 A separate 125-second real-time check crossed warm-up → RUN → WALK and recorded exactly 60 seconds of running; sampled timer progress tracked host elapsed time within 3 ms.
 The largest observed main-loop gap in that timing window was 68.2 ms; framebuffer capture work can make it longer.
 This checks a short interval, not full-session clock drift or physical input timing.

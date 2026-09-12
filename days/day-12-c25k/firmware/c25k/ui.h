@@ -3,6 +3,7 @@
 #include <M5Unified.h>
 #include <math.h>
 #include "workouts.h"
+#include "workout_summary.h"
 
 namespace c25k {
 
@@ -209,9 +210,61 @@ class Ui {
     }
   }
 
+  void activitySummary(const Workout& plan) {
+    const WorkoutSummary summary = summarizeWorkout(plan);
+    char label[48], warmup[12], cooldown[12];
+    if (summary.repeats > 1)
+      snprintf(label, sizeof(label), "%u ROUNDS", unsigned(summary.repeats));
+    else if (summary.patternCount == 1)
+      snprintf(label, sizeof(label), "CONTINUOUS RUN");
+    else
+      snprintf(label, sizeof(label), "%u INTERVALS", unsigned(summary.coreCount));
+    text(label, 232, &fonts::DejaVu12, MUTED);
+
+    // Two large activities for a repeated pair; longer sequences flow across
+    // at most three rows. Every token comes from the same table as the timer.
+    const unsigned perRow = summary.patternCount <= 4 ? 2 : 3;
+    const unsigned rows = (summary.patternCount + perRow - 1) / perRow;
+    const lgfx::IFont* font = summary.patternCount <= 2 ? &fonts::DejaVu24 : &fonts::DejaVu18;
+    auto& g = surface();
+    for (unsigned row = 0; row < rows; ++row) {
+      char tokens[3][24]{};
+      int widths[3]{}, width = 0;
+      unsigned first = row * perRow;
+      unsigned count = summary.patternCount - first;
+      if (count > perRow) count = perRow;
+      g.setFont(font); g.setTextSize(1);
+      for (unsigned i = 0; i < count; ++i) {
+        const Segment& segment = plan.segments[summary.firstCore + first + i];
+        char time[12]; duration(time, sizeof(time), segment.seconds);
+        snprintf(tokens[i], sizeof(tokens[i]), "%s %s",
+                 segment.type == SegmentType::Run ? "RUN" : "WALK", time);
+        widths[i] = g.textWidth(tokens[i]); width += widths[i];
+      }
+      constexpr int gap = 18;
+      width += (count - 1) * gap;
+      int x = _cx - width / 2;
+      int y = rows == 1 ? 276 : rows == 2 ? 261 + row * 30 : 251 + row * 26;
+      for (unsigned i = 0; i < count; ++i) {
+        const Segment& segment = plan.segments[summary.firstCore + first + i];
+        text(tokens[i], y, font, segmentColor(segment.type), x + widths[i] / 2 - _cx);
+        x += widths[i];
+        if (i + 1 < count) {
+          g.drawLine(x + 6, y - 3, x + 10, y, DIM);
+          g.drawLine(x + 10, y, x + 6, y + 3, DIM);
+        }
+        x += gap;
+      }
+    }
+    duration(warmup, sizeof(warmup), summary.warmupSeconds);
+    duration(cooldown, sizeof(cooldown), summary.cooldownSeconds);
+    snprintf(label, sizeof(label), "%s WARM UP + %s COOL DOWN", warmup, cooldown);
+    text(label, 327, &fonts::DejaVu12, MUTED);
+  }
+
   void home(const UiView& v) {
-    text(v.storageOk ? "COUCH TO 5K" : "STORAGE UNAVAILABLE", 92,
-         &fonts::DejaVu18, MUTED);
+    text(!v.storageOk ? "STORAGE UNAVAILABLE" : v.programComplete ? "PROGRAM COMPLETE" : "COUCH TO 5K",
+         v.homePage >= 27 ? 92 : 82, &fonts::DejaVu12, MUTED);
     if (v.homePage >= 27) {
       historyIcon(174);
       text("History", 250, &fonts::DejaVu40);
@@ -221,19 +274,16 @@ class Ui {
       text(count, 300, &fonts::DejaVu18, MUTED);
       smallHint("BOTH TO OPEN");
     } else {
-      char label[16], time[16], count[48];
+      char label[24], time[16], count[48];
       workoutLabel(label, sizeof(label), v.homePage);
-      text(label, 158, &fonts::DejaVu56);
+      text(label, 132, &fonts::DejaVu56);
       if (v.homePage == v.cursor) {
-        surface().fillTriangle(_cx - 6, 203, _cx + 6, 203, _cx, 195, WHITE);
-      }
-      if (v.programComplete) {
-        check(_cx - 104, 220, MUTED);
-        text("Program complete", 223, &fonts::DejaVu18, MUTED, 12);
+        surface().fillTriangle(_cx - 5, 175, _cx + 5, 175, _cx, 168, WHITE);
       }
       duration(time, sizeof(time), totalSeconds(workoutAt(v.homePage)));
-      text(time, v.programComplete ? 268 : 251, &fonts::DejaVu40);
-      text("TOTAL SESSION", v.programComplete ? 304 : 291, &fonts::DejaVu12, MUTED);
+      snprintf(label, sizeof(label), "%s total", time);
+      text(label, 199, &fonts::DejaVu24);
+      activitySummary(workoutAt(v.homePage));
       if (v.completionCount || v.partialCount) {
         if (v.completionCount && v.partialCount) {
           snprintf(count, sizeof(count), "%u complete   ~%u partial",
@@ -245,13 +295,11 @@ class Ui {
           snprintf(count, sizeof(count), "%u %s", unsigned(v.completionCount),
                    v.completionCount == 1 ? "completion" : "completions");
         }
-        text(count, 324, &fonts::DejaVu18, MUTED);
+        text(count, 349, &fonts::DejaVu12, MUTED);
         if (v.lastDateText && *v.lastDateText)
-          text(v.lastDateText, 346, &fonts::DejaVu12, DIM);
-        text("BOTH TO START", 376, &fonts::DejaVu18, MUTED);
-      } else {
-        smallHint("BOTH TO START");
+          text(v.lastDateText, 367, &fonts::DejaVu12, DIM);
       }
+      text("BOTH TO START", 389, &fonts::DejaVu18, MUTED);
     }
     arcDots(28, v.homePage, v.cursor);
   }
