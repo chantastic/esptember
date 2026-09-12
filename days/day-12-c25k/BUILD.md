@@ -51,6 +51,10 @@ Hold both on Home to open Settings, then page through Sound, Vibration, Set Time
 Both selects or toggles; hold both returns home.
 Sound and Vibration independently control the boundary cues and the ten-second warning tick.
 Reset Progress requires a second Enter and clears only C25K history and its cursor; sound and vibration choices remain.
+On the confirmation page, briefly press both buttons and release to confirm; holding both cancels.
+Success shows **History cleared**.
+Press both again to return Home with W1 D1 next.
+If the save cannot be verified, progress remains in memory: press both to retry or hold both to return to Settings.
 
 The RTC was set from this workstation and read back during installation.
 This build uses Pacific local time (`America/Los_Angeles`), including daylight-saving rules, to convert the local RTC date/time to Unix log timestamps.
@@ -107,8 +111,10 @@ C25K owns only the `c25k` NVS namespace.
 Its 2,578-byte versioned blob holds all settings, the cursor, and a 256-entry circular log.
 Each packed log entry is ten bytes.
 A completion and its cursor are committed together in one NVS blob.
+Every save reads the blob back and compares it with the intended data.
 The checksum and bounds checks reject damaged or unsupported data without silently replacing it.
 Reset Progress explicitly permits replacing that C25K state.
+It adopts the cleared progress in memory only after the save and readback succeed; failure preserves the current in-memory progress for retry.
 
 Log totals count active time spent in each segment, including replays, and exclude paused time.
 The outer arc follows the position in the planned workout, so it moves back when a segment is replayed.
@@ -127,6 +133,7 @@ days/day-12-c25k/scripts/test.sh
 
 These compile the production helpers with address and undefined-behavior sanitizers.
 They cover all 27 program durations and run totals, boundary cues, pause accounting, replay and skip behavior, button timing thresholds, clock rollover, repeated workouts, cursor movement, ring overwrite, and corrupt storage.
+Reset checks verify that a failed save preserves the entire original state and that a successful reset clears progress while retaining feedback preferences.
 Summary checks reconstruct all 27 activity sequences from their displayed rounds and durations, verify activity totals, and cover empty, single-segment, and maximum-size inputs.
 
 The installed firmware also exposes a bounded, line-oriented USB protocol at 115200 baud.
@@ -150,12 +157,16 @@ days/day-12-c25k/.build/venv/bin/python days/day-12-c25k/scripts/check-device.py
 ```
 
 It checks every workout through natural completion using accelerated time, captures all screens, tests running/paused navigation and cancel behavior, and verifies the RTC.
-When production progress is empty, it also saves one synthetic partial completion, reboots to verify NVS, then clears that synthetic history through Reset Progress and restores the original feedback settings.
+When production progress is empty, it also saves one synthetic partial completion and reboots to verify NVS.
+It then clears that synthetic history through Reset Progress and reboots immediately, before any later settings write can mask a failed reset.
+Finally, it restores the original feedback settings.
 Physical interaction invalidates its comparisons; leave the buttons alone while it runs.
 
 Installation checks on September 12, 2026 verified upload hashes, a 468 × 468 framebuffer, 8 MiB PSRAM, speaker initialization, RTC readback, all 27 accelerated completions, and real NVS restoration after reboot.
 Captured screens were inspected with a circular display mask.
 The Home summary update was checked on all 27 workout pages, with twelve representative captures confirming that the activity sequences fit the round display.
+The reset update was checked with two saved test sessions in an isolated `c25k_check` namespace: cancellation kept them, confirmation cleared them, and an immediate reboot kept the history empty and feedback settings intact.
+Reinstalling the normal build restored access to the user's two saved sessions, whose History screens matched the pre-test captures.
 A separate 125-second real-time check crossed warm-up → RUN → WALK and recorded exactly 60 seconds of running; sampled timer progress tracked host elapsed time within 3 ms.
 The largest observed main-loop gap in that timing window was 68.2 ms; framebuffer capture work can make it longer.
 This checks a short interval, not full-session clock drift or physical input timing.

@@ -117,6 +117,10 @@ History keeps the newest 256 sessions, including repeats.
 Hold both on Home for Settings: Sound, Vibration, Set Time, Reset Progress, and About.
 Sound and vibration can be toggled independently; both include the ten-second warning cue.
 Reset Progress requires confirmation and clears the history and cursor while keeping those feedback preferences.
+On the confirmation page, briefly press both buttons and release to reset; holding both cancels.
+Success shows **History cleared**.
+Press both again to return Home with W1 D1 next.
+If the save cannot be verified, the current progress stays in memory and the screen offers a retry.
 
 Set Time steps through hour, minute, and confirmation.
 It preserves the RTC date; an unset clock uses the build date shown on confirmation.

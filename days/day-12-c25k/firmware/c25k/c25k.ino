@@ -12,6 +12,9 @@
 #ifndef C25K_TIMEZONE
 #define C25K_TIMEZONE "PST8PDT,M3.2.0,M11.1.0"
 #endif
+#ifndef C25K_STORAGE_NAMESPACE
+#define C25K_STORAGE_NAMESPACE "c25k"
+#endif
 
 using namespace c25k;
 Preferences preferences;
@@ -27,6 +30,7 @@ m5::rtc_date_t editDate;
 uint16_t historyPage = 0;
 bool storageOk = true, storageWritable = true, prefsOpen = false;
 bool dirty = true, diagnostic = false, displayReady = false;
+bool resetSucceeded = false;
 uint32_t diagnosticOffset = 0, overlayStart = 0, lastDraw = 0;
 uint32_t maxLoopUs = 0, previousLoopUs = 0, physicalInputs = 0;
 int batteryPercent = -1;
@@ -64,18 +68,25 @@ void formatDate(uint32_t stamp, char* out, size_t length, bool includeTime) {
   strftime(out, length, includeTime ? "%Y-%m-%d  %H:%M" : "%Y-%m-%d", &t);
 }
 
-bool saveProgress() {
-  progress.seal();
+bool writeProgress(const Progress& candidate) {
   if (diagnostic) return true;
+  Progress saved{};
   storageOk = storageWritable && prefsOpen &&
-      preferences.putBytes("state", &progress, sizeof(progress)) == sizeof(progress);
+      preferences.putBytes("state", &candidate, sizeof(candidate)) == sizeof(candidate) &&
+      preferences.getBytes("state", &saved, sizeof(saved)) == sizeof(saved) &&
+      memcmp(&candidate, &saved, sizeof(saved)) == 0;
   if (!storageOk && !capturePixels) Serial.println("C25K_STORAGE_ERROR");
   return storageOk;
 }
 
+bool saveProgress() {
+  progress.seal();
+  return writeProgress(progress);
+}
+
 void loadProgress() {
   progress.defaults();
-  prefsOpen = preferences.begin("c25k", false);
+  prefsOpen = preferences.begin(C25K_STORAGE_NAMESPACE, false);
   if (!prefsOpen) { storageOk = storageWritable = false; return; }
   const size_t length = preferences.getBytesLength("state");
   if (!length) return;
@@ -94,6 +105,14 @@ void applyFeedbackSettings() {
 
 void home() {
   screen = Screen::Home; homePage = progress.cursor; dirty = true;
+}
+
+void confirmReset() {
+  // Explicit reset may replace corrupt storage, but failed writes must leave
+  // the current in-memory history available for retry.
+  if (!diagnostic) storageWritable = prefsOpen;
+  resetSucceeded = resetSavedProgress(progress, writeProgress);
+  screen = Screen::ResetResult;
 }
 
 void completeWorkout() {
@@ -202,11 +221,13 @@ void handleInput(Input input) {
       break;
     case Screen::ResetConfirm:
       if (input == Input::Escape) screen = Screen::Settings;
-      else if (input == Input::Enter) {
-        progress.resetProgress();
-        if (!diagnostic) storageWritable = prefsOpen;
-        saveProgress(); screen = Screen::Settings;
-      }
+      else if (input == Input::Enter) confirmReset();
+      break;
+    case Screen::ResetResult:
+      if (resetSucceeded) {
+        if (input == Input::Enter || input == Input::Escape) home();
+      } else if (input == Input::Enter) confirmReset();
+      else if (input == Input::Escape) screen = Screen::Settings;
       break;
   }
   drainSessionEvents();
@@ -225,6 +246,7 @@ void render() {
   view.programComplete = progress.program_complete;
   view.soundOn = progress.sound_on; view.vibOn = progress.vib_on;
   view.storageOk = storageOk; view.battery = batteryPercent;
+  view.resetSucceeded = resetSucceeded;
   view.historyCount = progress.count; view.historyPage = historyPage;
   view.workoutIndex = session.workoutIndex; view.segmentIndex = session.segmentIndex;
   view.segmentCount = workoutAt(session.workoutIndex).count;
@@ -264,18 +286,19 @@ const char* screenName() {
     case Screen::CancelConfirm: return "cancel"; case Screen::Complete: return "complete";
     case Screen::History: return "history"; case Screen::Settings: return "settings";
     case Screen::SetTime: return "set_time"; case Screen::ResetConfirm: return "reset";
+    case Screen::ResetResult: return "reset_result";
   }
   return "unknown";
 }
 
 void reportStatus() {
-  Serial.printf("C25K_STATUS screen=%s page=%u cursor=%u workout=%u segment=%u remaining=%lu total_ms=%llu run_ms=%llu paused=%u partial=%u logs=%u sound=%u vibration=%u storage=%u rtc=%lu test=%u inputs=%lu loop_max_us=%lu psram=%u width=%d height=%d speaker=%u\n",
+  Serial.printf("C25K_STATUS screen=%s page=%u cursor=%u workout=%u segment=%u remaining=%lu total_ms=%llu run_ms=%llu paused=%u partial=%u logs=%u sound=%u vibration=%u storage=%u rtc=%lu test=%u inputs=%lu loop_max_us=%lu psram=%u width=%d height=%d speaker=%u store=%s\n",
     screenName(), homePage, progress.cursor, session.workoutIndex, session.segmentIndex,
     (unsigned long)session.remainingMs(), (unsigned long long)session.totalElapsedMs,
     (unsigned long long)session.runElapsedMs, session.paused, session.partial, progress.count,
     progress.sound_on, progress.vib_on, storageOk, (unsigned long)rtcTimestamp(), diagnostic,
     (unsigned long)physicalInputs, (unsigned long)maxLoopUs, ESP.getPsramSize(),
-    M5.Display.width(), M5.Display.height(), feedback.speakerReady);
+    M5.Display.width(), M5.Display.height(), feedback.speakerReady, C25K_STORAGE_NAMESPACE);
 }
 
 void startCapture() {

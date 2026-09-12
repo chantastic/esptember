@@ -231,9 +231,11 @@ class Device:
             for _ in range(3):
                 self.command("next")
             self.command("enter")
-            self.expect(self.command("enter"), screen="settings", logs=0, cursor=0)
-            for _ in range(3):
-                self.command("prev")
+            self.expect(self.command("enter"), screen="reset_result", logs=0, cursor=0, storage=1)
+            # Reboot before any later preference write can mask a failed reset.
+            state = self.reboot()
+            self.expect(state, screen="home", logs=0, cursor=0, sound=0, vibration=0, storage=1)
+            self.command("escape")
             if initial["sound"]:
                 self.command("enter")
             self.command("next")

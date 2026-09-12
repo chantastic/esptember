@@ -66,6 +66,15 @@ struct __attribute__((packed)) Progress {
   }
 };
 
+template<typename Save>
+bool resetSavedProgress(Progress& progress, Save save) {
+  Progress candidate = progress;
+  candidate.resetProgress();
+  if (!save(candidate)) return false;
+  progress = candidate;
+  return true;
+}
+
 inline uint16_t logSeconds(uint64_t ms) {
   const uint64_t sec = ms / 1000;
   return sec > 65535 ? 65535 : static_cast<uint16_t>(sec);

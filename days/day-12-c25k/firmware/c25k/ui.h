@@ -8,7 +8,7 @@
 namespace c25k {
 
 enum class Screen : uint8_t {
-  Home, Workout, CancelConfirm, Complete, History, Settings, SetTime, ResetConfirm
+  Home, Workout, CancelConfirm, Complete, History, Settings, SetTime, ResetConfirm, ResetResult
 };
 
 // A frame is a snapshot: drawing never changes the timer or persistent state.
@@ -18,6 +18,7 @@ struct UiView {
   uint8_t hour = 0, minute = 0;
   bool programComplete = false, soundOn = true, vibOn = true;
   bool partial = false, paused = false, rtcValid = true, storageOk = true;
+  bool resetSucceeded = false;
   uint8_t workoutIndex = 0, segmentIndex = 0, segmentCount = 0;
   uint32_t remainingSec = 0, elapsedSec = 0, runSec = 0, plannedSec = 0;
   float segmentProgress = 0, sessionProgress = 0;
@@ -51,7 +52,8 @@ class Ui {
       case Screen::History: history(v); break;
       case Screen::Settings: settings(v); break;
       case Screen::SetTime: setTime(v); break;
-      case Screen::ResetConfirm: resetConfirm(); break;
+      case Screen::ResetConfirm: resetConfirm(v); break;
+      case Screen::ResetResult: resetResult(v); break;
     }
   }
 
@@ -460,13 +462,34 @@ class Ui {
     arcDots(3, v.timeField);
   }
 
-  void resetConfirm() {
+  void resetConfirm(const UiView& v) {
     text("RESET PROGRESS", 102, &fonts::DejaVu18, MUTED);
     text("Start over?", 176, &fonts::DejaVu40);
-    text("Reset the next workout", 241, &fonts::DejaVu18);
-    text("and clear every saved run.", 270, &fonts::DejaVu18);
-    text("Hold both to go back", 320, &fonts::DejaVu18, MUTED);
-    smallHint("BOTH TO CONFIRM");
+    char label[48];
+    snprintf(label, sizeof(label), "Clear %u saved %s", unsigned(v.historyCount),
+             v.historyCount == 1 ? "session" : "sessions");
+    text(label, 241, &fonts::DejaVu18);
+    text("Return to W1 D1", 270, &fonts::DejaVu18);
+    text("Hold both to cancel", 310, &fonts::DejaVu18, MUTED);
+    text("PRESS BOTH + RELEASE", 354, &fonts::DejaVu18);
+    text("TO RESET", 380, &fonts::DejaVu12, MUTED);
+  }
+
+  void resetResult(const UiView& v) {
+    text("RESET PROGRESS", 94, &fonts::DejaVu18, MUTED);
+    if (v.resetSucceeded) {
+      check(_cx, 157, WALK, 2);
+      text("History cleared", 230, &fonts::DejaVu24);
+      text("W1 D1 is next", 276, &fonts::DejaVu24);
+      text("Sound and vibration kept", 318, &fonts::DejaVu12, MUTED);
+      smallHint("BOTH TO GO HOME");
+    } else {
+      text("Reset not confirmed", 181, &fonts::DejaVu24);
+      text("Could not verify the save.", 239, &fonts::DejaVu18);
+      text("Please try again.", 275, &fonts::DejaVu24);
+      text("Hold both to go back", 321, &fonts::DejaVu18, MUTED);
+      smallHint("BOTH TO RETRY");
+    }
   }
 };
 
