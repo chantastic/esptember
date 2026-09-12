@@ -6,11 +6,22 @@ cd "$(dirname "$0")/.."
 
 mkdir -p public/firmware
 
-for merged in days/*/firmware/build/merged-binary.bin; do
-  [ -f "$merged" ] || continue
-  day="$(basename "$(dirname "$(dirname "$(dirname "$merged")")")")"
+for readme in days/*/README.md; do
   # Only publish firmware for days with a published lesson.
-  [ -f "days/$day/README.md" ] || continue
+  [ -f "$readme" ] || continue
+  day_root="${readme%/README.md}"
+  day="${day_root##*/}"
+  merged=""
+  # ESP-IDF and Arduino CLI keep their merged fresh-install images here.
+  for candidate in "$day_root/firmware/build/merged-binary.bin" "$day_root"/.build/firmware/*.ino.merged.bin; do
+    [ -f "$candidate" ] || continue
+    if [ -n "$merged" ]; then
+      echo "Multiple merged firmware images found for $day; choose one before publishing." >&2
+      exit 1
+    fi
+    merged="$candidate"
+  done
+  [ -n "$merged" ] || continue
   cp "$merged" "public/firmware/$day.bin"
   echo "collected: public/firmware/$day.bin"
 done

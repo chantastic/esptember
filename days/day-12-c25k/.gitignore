@@ -1,0 +1,3 @@
+.build/
+firmware/c25k/build/
+scripts/__pycache__/

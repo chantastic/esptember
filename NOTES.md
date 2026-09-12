@@ -1,5 +1,18 @@
 # ESPtember — notes & lesson ideas
 
+- **Day 12: C25K on the M5Stack StopWatch** — standalone Arduino firmware;
+  all 27 workouts passed accelerated device checks, and a 125-second real-time
+  check crossed warm-up/run/walk boundaries. Button feel, perceived sound and
+  vibration cues, daylight legibility, and full-workout battery runtime still
+  need an outdoor check. The recorded 68.2 ms maximum loop gap excludes frame
+  captures; measure again before tightening the 80 ms chord window.
+- **Progress versus elapsed time** — replaying an interval moves the ring back
+  while retaining the effort in the log. Portable timing/button helpers make
+  those rules testable without real-time waits or fake completed user sessions.
+- **Day 12 clock follow-up** — hour/minute editing preserves the RTC date and
+  uses the visible build date when unset. Add calendar/timezone editing if this
+  firmware needs to travel beyond its current Pacific-time build.
+
 - **Browser flashing with ESP Web Tools** — devote a later day to adding
   one-click flashing from the site via Web Serial + a `manifest.json` per
   day pointing at the hosted merged binaries. The site already hosts

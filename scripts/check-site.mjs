@@ -2,6 +2,11 @@ import assert from 'node:assert/strict';
 import { readFileSync, existsSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 const read = path => readFileSync(path, 'utf8');
+const firmwareSources = directory => readdirSync(directory, { withFileTypes: true }).flatMap(entry => {
+  const path = join(directory, entry.name);
+  if (entry.isDirectory()) return ['build', 'managed_components'].includes(entry.name) ? [] : firmwareSources(path);
+  return /\.(c|h|cpp|hpp|ino)$/.test(entry.name) ? [path] : [];
+});
 const boards = JSON.parse(read('src/lib/boards.json'));
 const published = readdirSync('days').filter(slug => existsSync(`days/${slug}/README.md`));
 const home = read('dist/index.html'), index = read('dist/llms.txt');
@@ -33,8 +38,14 @@ for (const slug of published) {
   assert.equal(part.path, `/firmware/${slug}.bin`);
   assert(readFileSync(join('dist', part.path)).equals(readFileSync(`public/firmware/${slug}.bin`)), `${slug}: firmware mismatch`);
   // Excerpts may skip intervening code, but every executable line must exist in the source.
-  const firmware = read(`days/${slug}/firmware/main/main.c`);
-  for (const [, block] of body.matchAll(/```c\n([\s\S]*?)\n```/g)) {
+  const sourcePaths = firmwareSources(`days/${slug}/firmware`);
+  assert(sourcePaths.length, `${slug}: no firmware source found`);
+  const displayedSources = new Set([...guide.matchAll(/<summary\b[^>]*>\s*<code\b[^>]*>([^<]+)<\/code>\s*<\/summary>/g)].map(match => match[1]));
+  for (const path of sourcePaths) {
+    assert(displayedSources.has(path.split('/firmware/')[1]), `${slug}: source file missing from guide: ${path}`);
+  }
+  const firmware = sourcePaths.map(read).join('\n');
+  for (const [, block] of body.matchAll(/```(?:c|cpp|c\+\+|arduino)\n([\s\S]*?)\n```/g)) {
     for (const line of block.split('\n').map(line => line.trim()).filter(line => line && !line.startsWith('//'))) {
       assert(firmware.includes(line), `${slug}: excerpt drift: ${line}`);
     }
