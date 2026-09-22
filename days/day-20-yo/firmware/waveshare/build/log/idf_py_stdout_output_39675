@@ -1,0 +1,8 @@
+Command: ninja all
+[1/4] cd /Users/chan/Developer/esptember/days/day-20-yo/firmware/waveshare/build/esp-idf/esptool_py && /Users/chan/.espressif/python_env/idf5.5_py3.14_env/bin/python /Users/chan/Developer/m5stack-conference-badge/.build/toolchains/esp-idf/components/partition_table/check_sizes.py --offset 0x8000 partition --type app /Users/chan/Developer/esptember/days/day-20-yo/firmware/waveshare/build/partition_table/partition-table.bin /Users/chan/Developer/esptember/days/day-20-yo/firmware/waveshare/build/esptember-day-20-yo.bin
+esptember-day-20-yo.bin binary size 0x105d00 bytes. Smallest app partition is 0x300000 bytes. 0x1fa300 bytes (66%) free.
+[2/4] Performing build step for 'bootloader'
+[1/1] cd /Users/chan/Developer/esptember/days/day-20-yo/firmware/waveshare/build/bootloader/esp-idf/esptool_py && /Users/chan/.espressif/python_env/idf5.5_py3.14_env/bin/python /Users/chan/Developer/m5stack-conference-badge/.build/toolchains/esp-idf/components/partition_table/check_sizes.py --offset 0x8000 bootloader 0x0 /Users/chan/Developer/esptember/days/day-20-yo/firmware/waveshare/build/bootloader/bootloader.bin
+Bootloader binary size 0x5160 bytes. 0x2ea0 bytes (36%) free.
+[3/4] No install step for 'bootloader'
+[4/4] Completed 'bootloader'
