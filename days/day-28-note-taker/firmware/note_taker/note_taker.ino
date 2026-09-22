@@ -344,5 +344,14 @@ void loop() {
   }
 
   handleSerial();
+
+  // Redraw the idle screen when Wi-Fi state changes (it joins seconds
+  // after boot; a once-drawn "no Wi-Fi" frame would lie forever).
+  static bool wasConnected = false;
+  const bool connected = WiFi.status() == WL_CONNECTED;
+  if (connected != wasConnected) {
+    wasConnected = connected;
+    if (state == State::Idle) render();
+  }
   delay(2);
 }
