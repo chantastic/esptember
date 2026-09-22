@@ -1,0 +1,9 @@
+{
+  "name": "esptember-pipes-gateway",
+  "main": "src/index.js",
+  "compatibility_date": "2025-09-01",
+  "vars": {
+    "AUTHKIT_DOMAIN": "snappy-theme-19.authkit.app"
+  }
+  // Secret (set once): npx wrangler secret put WORKOS_API_KEY
+}
