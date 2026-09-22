@@ -1,0 +1,13 @@
+# Target labels
+ bootloader
+# Source files and their labels
+/Users/chan/Developer/esptember/days/day-24-walkie-internet/firmware/waveshare/build/CMakeFiles/bootloader
+/Users/chan/Developer/esptember/days/day-24-walkie-internet/firmware/waveshare/build/CMakeFiles/bootloader.rule
+/Users/chan/Developer/esptember/days/day-24-walkie-internet/firmware/waveshare/build/CMakeFiles/bootloader-complete.rule
+/Users/chan/Developer/esptember/days/day-24-walkie-internet/firmware/waveshare/build/bootloader-prefix/src/bootloader-stamp/bootloader-build.rule
+/Users/chan/Developer/esptember/days/day-24-walkie-internet/firmware/waveshare/build/bootloader-prefix/src/bootloader-stamp/bootloader-configure.rule
+/Users/chan/Developer/esptember/days/day-24-walkie-internet/firmware/waveshare/build/bootloader-prefix/src/bootloader-stamp/bootloader-download.rule
+/Users/chan/Developer/esptember/days/day-24-walkie-internet/firmware/waveshare/build/bootloader-prefix/src/bootloader-stamp/bootloader-install.rule
+/Users/chan/Developer/esptember/days/day-24-walkie-internet/firmware/waveshare/build/bootloader-prefix/src/bootloader-stamp/bootloader-mkdir.rule
+/Users/chan/Developer/esptember/days/day-24-walkie-internet/firmware/waveshare/build/bootloader-prefix/src/bootloader-stamp/bootloader-patch.rule
+/Users/chan/Developer/esptember/days/day-24-walkie-internet/firmware/waveshare/build/bootloader-prefix/src/bootloader-stamp/bootloader-update.rule

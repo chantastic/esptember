@@ -1,0 +1,2 @@
+source /Users/chan/Developer/esptember/days/day-24-walkie-internet/firmware/waveshare/build/bootloader/gdbinit/symbols
+source /Users/chan/Developer/esptember/days/day-24-walkie-internet/firmware/waveshare/build/bootloader/gdbinit/connect

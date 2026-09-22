@@ -1,0 +1,13 @@
+Command: cmake -G Ninja -DPYTHON_DEPS_CHECKED=1 -DPYTHON=/Users/chan/.espressif/python_env/idf5.5_py3.14_env/bin/python -DESP_PLATFORM=1 -DCCACHE_ENABLE=0 /Users/chan/Developer/esptember/days/day-24-walkie-internet/firmware/waveshare
+CMake Warning at /Users/chan/Developer/m5stack-conference-badge/.build/toolchains/esp-idf/tools/cmake/build.cmake:629 (message):
+Call Stack (most recent call first):
+  /Users/chan/Developer/m5stack-conference-badge/.build/toolchains/esp-idf/tools/cmake/project.cmake:752 (idf_build_process)
+  CMakeLists.txt:3 (project)
+
+
+CMake Warning at /Users/chan/Developer/m5stack-conference-badge/.build/toolchains/esp-idf/tools/cmake/project.cmake:765 (message):
+  Missing kconfig option.  Re-run the build process...
+Call Stack (most recent call first):
+  CMakeLists.txt:3 (project)
+
+
