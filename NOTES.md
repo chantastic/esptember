@@ -1,5 +1,21 @@
 # ESPtember — notes & lesson ideas
 
+- **Day 07 OPEN ITEM: physical touch calibration** — user reported touch
+  "way off" on the 1.8 V2. Raw CST816S reads match LVGL's indev exactly
+  (plumbing is fine); the question is panel-image vs. touch-coordinate
+  mapping. The shipped harness has `touchlog on` — do the corner drill
+  (hold TL, TR, BL, BR ~2s each) and compare against drawn positions.
+  Suspects: BSP's 16px `x_gap` (tuned for V1 SH8601, applied to V2
+  CO5300), or a mirror flag. Injected-touch verification PASSed fully.
+- **Day 07 harness pattern is reusable** — virtual LVGL pointer indev +
+  `status`/`tap`/`drag`/`capture` serial protocol + base64 framebuffer
+  dump. Extract into a shared component before day 08 needs it again.
+  Gotchas solved: LVGL builtin heap too small for snapshots (need
+  `CONFIG_LV_USE_CLIB_MALLOC=y` so PSRAM backs `lv_malloc`); yield every
+  32 rows during the dump or the task watchdog fires into the pixel
+  stream; hard flings elastically snap back — script gentle drags and
+  read coordinates from captures, not from the imagination.
+
 - **Day 12: C25K on the M5Stack StopWatch** — standalone Arduino firmware;
   all 27 workouts passed accelerated device checks, and a 125-second real-time
   check crossed warm-up/run/walk boundaries. Button feel, perceived sound and
