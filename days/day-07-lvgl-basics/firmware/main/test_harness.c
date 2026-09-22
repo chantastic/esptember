@@ -132,27 +132,52 @@ static void capture(void)
     lv_draw_buf_destroy(buf);
 }
 
-// --- Raw CST816S stream (physical-touch calibration aid) -------------------
+// --- Physical-touch stream (calibration aid) --------------------------------
+// Reads the BSP's own LVGL indev — the exact points LVGL hit-tests
+// with. (A parallel raw I2C poll races the BSP driver for the chip's
+// latched registers and corrupts both readers — learned the hard way.)
 static volatile bool touchlog_enabled = false;
-static i2c_master_dev_handle_t tp_dev;
+
+static lv_obj_t *touch_dot;
+static lv_obj_t *cal_target;
+
+// Center-anchored stretch correction, percent. 100 = off. If the
+// controller maps a taller glass onto the panel, reported coords are
+// stretched about the center; divide the deviation to undo it.
+static int cal_pct_x = 100, cal_pct_y = 100;
+
+static lv_point_t cal_apply(lv_point_t p)
+{
+    p.x = 184 + (int)(p.x - 184) * 100 / cal_pct_x;
+    p.y = 224 + (int)(p.y - 224) * 100 / cal_pct_y;
+    return p;
+}
 
 static void touchlog_task(void *arg)
 {
     (void)arg;
-    i2c_device_config_t cfg = {
-        .device_address = 0x15,
-        .scl_speed_hz = 100000,
-    };
-    i2c_master_bus_add_device(bsp_i2c_get_handle(), &cfg, &tp_dev);
     while (1) {
         if (touchlog_enabled) {
-            uint8_t reg = 0x01, buf[6] = {0};
-            if (i2c_master_transmit_receive(tp_dev, &reg, 1, buf, 6, 100) ==
-                    ESP_OK &&
-                buf[1]) {
-                int x = ((buf[2] & 0x0F) << 8) | buf[3];
-                int y = ((buf[4] & 0x0F) << 8) | buf[5];
-                printf("D07_RAWTP x=%d y=%d\n", x, y);
+            lv_indev_t *indev = bsp_display_get_input_dev();
+            if (indev &&
+                lv_indev_get_state(indev) == LV_INDEV_STATE_PRESSED) {
+                lv_point_t p;
+                lv_indev_get_point(indev, &p);
+                printf("D07_RAWTP x=%d y=%d\n", (int)p.x, (int)p.y);
+                p = cal_apply(p); // dot shows the corrected position
+                bsp_display_lock(0);
+                if (!touch_dot) {
+                    touch_dot = lv_obj_create(lv_layer_top());
+                    lv_obj_set_size(touch_dot, 16, 16);
+                    lv_obj_set_style_radius(touch_dot, LV_RADIUS_CIRCLE, 0);
+                    lv_obj_set_style_bg_color(touch_dot,
+                                              lv_color_hex(0x00ff00), 0);
+                    lv_obj_set_style_border_width(touch_dot, 0, 0);
+                    lv_obj_remove_flag(touch_dot, LV_OBJ_FLAG_CLICKABLE);
+                }
+                lv_obj_set_pos(touch_dot, p.x - 8, p.y - 8);
+                lv_obj_remove_flag(touch_dot, LV_OBJ_FLAG_HIDDEN);
+                bsp_display_unlock();
             }
         }
         vTaskDelay(pdMS_TO_TICKS(50));
@@ -188,6 +213,32 @@ static void harness_task(void *arg)
         } else if (!strcmp(line, "touchlog off")) {
             touchlog_enabled = false;
             printf("D07_TOUCHLOG off\n");
+        } else if (sscanf(line, "target %d %d", &x, &y) == 2) {
+            bsp_display_lock(0);
+            if (!cal_target) {
+                cal_target = lv_obj_create(lv_layer_top());
+                lv_obj_set_size(cal_target, 24, 24);
+                lv_obj_set_style_radius(cal_target, LV_RADIUS_CIRCLE, 0);
+                lv_obj_set_style_bg_color(cal_target, lv_color_hex(0xff0000),
+                                          0);
+                lv_obj_set_style_border_width(cal_target, 0, 0);
+                lv_obj_remove_flag(cal_target, LV_OBJ_FLAG_CLICKABLE);
+            }
+            lv_obj_set_pos(cal_target, x - 12, y - 12);
+            lv_obj_remove_flag(cal_target, LV_OBJ_FLAG_HIDDEN);
+            bsp_display_unlock();
+            printf("D07_TARGET %d %d\n", x, y);
+        } else if (sscanf(line, "cal %d %d", &x, &y) == 2) {
+            cal_pct_x = x > 0 ? x : 100;
+            cal_pct_y = y > 0 ? y : 100;
+            printf("D07_CAL x=%d y=%d\n", cal_pct_x, cal_pct_y);
+        } else if (!strcmp(line, "target off")) {
+            if (cal_target) {
+                bsp_display_lock(0);
+                lv_obj_add_flag(cal_target, LV_OBJ_FLAG_HIDDEN);
+                bsp_display_unlock();
+            }
+            printf("D07_TARGET off\n");
         } else if (!strcmp(line, "capture")) {
             capture();
         } else if (line[0]) {

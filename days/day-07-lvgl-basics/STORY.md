@@ -58,6 +58,24 @@ Physical touch calibration — whether a finger on the panel lands where the pan
 The harness ships a `touchlog on` command that streams raw controller coordinates for exactly that session.
 The lesson's claims stand on the injected path; the physical path has a pending appointment.
 
+## Addendum: the touch map (open investigation)
+
+The physical-touch story turned out deeper than a mirror flag, and it's still open.
+What's established, with instruments in the shipped harness:
+
+- The V2's touch IC reports id 0xB7 — a CST820, not the CST816S the BSP assumes, and not the FT3168 the wiki documents. No public datasheet.
+- The plumbing is fine: controller → driver → LVGL agree sample-for-sample. (A parallel raw I²C poll *corrupts* both readers — the chip's latched registers don't tolerate two masters. Instrument through the driver, not around it.)
+- The error is a linear stretch about the screen center: accurate in the middle, high toward the top, low toward the bottom. Classic glass-larger-than-panel mapping.
+- The driver clamps at the panel resolution, so the overshoot hides: a wall of y=447 readings at the bottom edge is clamping wearing a coincidence costume.
+- A constant-speed edge-to-edge drag measures through the clamp: the time pinned at each extreme brackets the sensor overrun at 5–11%. The suspiciously round theory — a 480-line sensor centered on a 448-line panel, k = 480/448 ≈ 1.07 — sits inside that bracket but didn't fully correct in hand.
+- Vendor precedent: Waveshare's own Arduino examples ship a TouchCalibration sketch whose four constants (`touch_map_x1/x2/y1/y2`) are hand-pasted into `touch.h` — a two-point linear map per axis. The ESP-IDF/BSP path has no equivalent. That's the gap this board fell into.
+
+The harness ships the instruments: `touchlog on` streams the driver's points and shows a corrected dot, `cal X Y` sets per-axis stretch percentages live, `target x y` draws calibration crosshairs.
+The remaining session is short: converge `cal` by feel, check whether the anchor is truly the center or carries an offset, and bake the constants.
+
+The virtuous fix has a home waiting: a shared board component (with day 01's `pmu_init` and `panel_reset_release`) that owns touch init, raises the driver's clamp to the sensor's true range, and applies the measured map in `process_coordinates` — the hook the driver provides for exactly this.
+Then an upstream issue to waveshareteam with the measurements, in the tradition of the day-01 panel-reset fix.
+
 ## What we learned
 
 - A widget is create-then-subscribe. The whole library is that one pattern with different shapes.
