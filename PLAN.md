@@ -6,8 +6,8 @@ this file records the lineup, the reasoning, and the constraints we've agreed.
 
 Boards: `waveshare-amoled-18-v2` ("1.8"), `waveshare-amoled-175-b` ("1.75-B"),
 `m5stack-stopwatch` ("Stopwatch"). Board balance: 1.8 ×14, Stopwatch ×10,
-1.75-B ×3, multi-board ×3. (Days 9 and 15 retargeted to the Stopwatch
-— the 1.75-B is missing in action; it keeps 20, 22, 23.)
+1.75-B ×3, multi-board ×3. (All 1.75-B days
+retargeted to the Stopwatch — the 1.75-B is missing in action.)
 
 ## Lineup
 
@@ -29,10 +29,10 @@ Boards: `waveshare-amoled-18-v2` ("1.8"), `waveshare-amoled-175-b` ("1.75-B"),
 | 19 | Tempo Checker | Stopwatch | planned |
 | 20 | Yo — ESP-NOW pager | all three | planned |
 | 21 | Captive Portal Provisioning | 1.8 | planned |
-| 22 | Weather Station | 1.75-B | planned |
+| 22 | Weather Station | Stopwatch | planned |
 | 23 | Walkie-Talkie: local (ESP-NOW) | Stopwatch + 1.8 | planned |
 | 24 | Walkie-Talkie: internet | Stopwatch + 1.8 | planned |
-| 25 | Flight Radar | 1.75-B | planned |
+| 25 | Flight Radar | Stopwatch | planned |
 | 26 | Package Tracker | 1.8 | planned |
 | 27 | Real-Time Captions (STT) | 1.8 | planned |
 | 28 | Note Taker (voice memos) | Stopwatch | planned |
