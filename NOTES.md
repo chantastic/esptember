@@ -1,5 +1,16 @@
 # ESPtember — notes & lesson ideas
 
+- **Pending hands-on checks (autonomous run, Sep 21)** — day 08 speaker
+  ear check; day 10 cue discrimination in-pocket; day 11 pusher feel;
+  day 13 keying feel per WPM; day 16 multi-day aging + evolution +
+  death (an egg is incubating on the StopWatch now — it hatches after
+  1h and should show offline aging after any power-off gap). Day 14
+  needs a shout test beyond room tone. Nothing deployed to the site
+  yet — all committed locally, deploy after the touch-drill below.
+- **Day 16 art pass** — the five 16x16 creatures are programmer hex art;
+  worth a real pixel pass. Also: sleep schedule and evolution branching
+  by care mistakes are speced in PLAN.md but not in v1.
+
 - **Day 07 OPEN ITEM: physical touch calibration** — user reported touch
   "way off" on the 1.8 V2. Raw CST816S reads match LVGL's indev exactly
   (plumbing is fine); the question is panel-image vs. touch-coordinate
