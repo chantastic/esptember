@@ -11,6 +11,7 @@
 #include <WiFi.h>
 #include <WebSocketsClient.h>
 #include <Preferences.h>
+#include "wifi_portal.h"
 
 #define RELAY_HOST "esptember-walkie-relay.chantastic.workers.dev"
 #define SAMPLE_RATE 8000
@@ -162,10 +163,21 @@ void setup() {
   prefs.begin("day22", false); // deliberately day 22's namespace:
                                // provision once, every lesson benefits
   const String ssid = prefs.getString("ssid", "");
-  if (ssid.length()) {
-    WiFi.mode(WIFI_STA);
-    WiFi.begin(ssid.c_str(), prefs.getString("pass", "").c_str());
+  if (!ssid.length()) {
+    canvas.fillSprite(TFT_BLACK);
+    canvas.setTextDatum(middle_center);
+    canvas.setTextColor(0xFD20, TFT_BLACK);
+    canvas.setTextSize(3);
+    canvas.drawString("SETUP", 233, 150);
+    canvas.setTextSize(2);
+    canvas.setTextColor(TFT_WHITE, TFT_BLACK);
+    canvas.drawString("join \"esptember-setup\"", 233, 220);
+    canvas.pushSprite(0, 0);
+    WifiPortal portal;
+    portal.run(prefs, prefs, nullptr, 0); // reboots on save
   }
+  WiFi.mode(WIFI_STA);
+  WiFi.begin(ssid.c_str(), prefs.getString("pass", "").c_str());
   ws.onEvent(onWsEvent);
   render();
   Serial.println("D24_READY tx");

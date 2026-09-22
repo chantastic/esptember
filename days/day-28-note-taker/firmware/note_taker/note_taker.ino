@@ -4,11 +4,13 @@
 // Deepgram for transcription; the text posts itself to your Memos
 // server. No keyboard ever existed and none was missed.
 //
-// Provisioning over serial, all persisted in NVS:
-//   wifi SSID PASS          (day 22's shared namespace)
-//   dgkey YOUR_DEEPGRAM_KEY
-//   memos https://memos.example.com TOKEN
+// Provisioning: with no saved Wi-Fi the board becomes the setup page —
+// join "esptember-setup" from a phone and the portal collects Wi-Fi,
+// the Deepgram key, and the Memos URL/token in one form (day 21's
+// pattern, ported). Serial stays available as the power-user path:
+//   wifi SSID PASS / dgkey KEY / memos URL TOKEN / forget
 #include <M5Unified.h>
+#include "wifi_portal.h"
 #include <WiFi.h>
 #include <HTTPClient.h>
 #include <ArduinoJson.h>
@@ -188,6 +190,10 @@ static void handleSerial() {
         notePrefs.putString("murl", a);
         notePrefs.putString("mtoken", b);
         Serial.printf("D28_SAVED memos=%s\n", a);
+      } else if (!strcmp(line, "forget")) {
+        wifiPrefs.clear();
+        Serial.println("D28_FORGOT");
+        ESP.restart();
       } else if (!strcmp(line, "s")) {
         reportStatus();
       }
@@ -215,10 +221,31 @@ void setup() {
   wifiPrefs.begin("day22", false); // shared Wi-Fi home
   notePrefs.begin("day28", false);
   const String ssid = wifiPrefs.getString("ssid", "");
-  if (ssid.length()) {
-    WiFi.mode(WIFI_STA);
-    WiFi.begin(ssid.c_str(), wifiPrefs.getString("pass", "").c_str());
+  if (!ssid.length()) {
+    // No Wi-Fi: become the setup page. The portal also collects this
+    // day's service settings, then reboots provisioned.
+    canvas.fillSprite(TFT_BLACK);
+    canvas.setTextDatum(middle_center);
+    canvas.setTextColor(0xFD20, TFT_BLACK);
+    canvas.setTextSize(3);
+    canvas.drawString("SETUP", 233, 140);
+    canvas.setTextSize(2);
+    canvas.setTextColor(TFT_WHITE, TFT_BLACK);
+    canvas.drawString("join Wi-Fi network", 233, 210);
+    canvas.drawString("\"esptember-setup\"", 233, 244);
+    canvas.setTextColor(TFT_DARKGRAY, TFT_BLACK);
+    canvas.drawString("the setup page opens itself", 233, 300);
+    canvas.pushSprite(0, 0);
+    static const PortalField fields[] = {
+        {"dgkey", "Deepgram API key", true},
+        {"murl", "Memos URL (https://...)", false},
+        {"mtoken", "Memos access token", true},
+    };
+    WifiPortal portal;
+    portal.run(wifiPrefs, notePrefs, fields, 3); // reboots on save
   }
+  WiFi.mode(WIFI_STA);
+  WiFi.begin(ssid.c_str(), wifiPrefs.getString("pass", "").c_str());
   render();
   Serial.println("D28_READY");
 }

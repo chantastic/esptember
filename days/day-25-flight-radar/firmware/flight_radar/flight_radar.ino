@@ -13,6 +13,7 @@
 #include <HTTPClient.h>
 #include <ArduinoJson.h>
 #include <Preferences.h>
+#include "wifi_portal.h"
 
 #define RADIUS_NM 25
 #define FETCH_MS 8000
@@ -211,10 +212,21 @@ void setup() {
 
   prefs.begin("day22", false); // the shared provisioning namespace
   const String ssid = prefs.getString("ssid", "");
-  if (ssid.length()) {
-    WiFi.mode(WIFI_STA);
-    WiFi.begin(ssid.c_str(), prefs.getString("pass", "").c_str());
+  if (!ssid.length()) {
+    canvas.fillSprite(TFT_BLACK);
+    canvas.setTextDatum(middle_center);
+    canvas.setTextColor(0xFD20, TFT_BLACK);
+    canvas.setTextSize(3);
+    canvas.drawString("SETUP", 233, 150);
+    canvas.setTextSize(2);
+    canvas.setTextColor(TFT_WHITE, TFT_BLACK);
+    canvas.drawString("join \"esptember-setup\"", 233, 220);
+    canvas.pushSprite(0, 0);
+    WifiPortal portal;
+    portal.run(prefs, prefs, nullptr, 0); // reboots on save
   }
+  WiFi.mode(WIFI_STA);
+  WiFi.begin(ssid.c_str(), prefs.getString("pass", "").c_str());
   render();
   Serial.println("D25_READY");
 }

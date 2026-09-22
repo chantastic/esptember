@@ -34,10 +34,11 @@ uvx esptool --chip esp32s3 --port PORT \
   write-flash 0x0 day-25-flight-radar.bin
 ```
 
-Provisioning is day 22's serial grammar, and the credentials are *shared* — a board provisioned for the weather station is already provisioned for radar:
+On first boot the board hosts the `esptember-setup` portal — join it from a phone and fill the form.
+Credentials are *shared*: a board provisioned for any lesson is provisioned for radar.
+Serial remains available for coordinates (default: Portland, OR):
 
 ```
-wifi YOUR_SSID YOUR_PASSWORD
 loc 45.52 -122.68
 ```
 
@@ -63,7 +64,7 @@ It is also entirely mandatory.
 
 ## Check the result
 
-- Unprovisioned: the scope says so and names the serial command.
+- Unprovisioned: the screen shows **SETUP** and hosts the `esptember-setup` portal.
 - Provisioned near any city: blips with callsigns appear inside the rings within seconds, headers count aircraft, `D25_AIRCRAFT` logs each fetch.
 - Blips crawl believably: an airliner at altitude crosses the 25 nm scope in a few minutes, leaders pointing along its path.
 - B forces a refetch; `loc` teleports the scope anywhere (try an airport).

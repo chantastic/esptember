@@ -46,8 +46,8 @@ uvx esptool --chip esp32s3 --port PORT \
   write-flash 0x0 day-22-weather.bin
 ```
 
-Then provision Wi-Fi once, over the same cable — the StopWatch has no browser for day 21's portal, so its setup channel is serial.
-Open any serial monitor at 115200 (`uvx esptool` users can use `screen PORT 115200`) and type:
+On first boot the screen says **SETUP**: join the Wi-Fi network `esptember-setup` from your phone and the setup page opens itself — pick your network, enter the password, done (day 21's portal, ported to this board).
+Serial remains the power-user path at 115200:
 
 ```
 wifi YOUR_SSID YOUR_PASSWORD
@@ -78,7 +78,7 @@ Ten minutes is deliberate politeness — Open-Meteo is free, and free APIs stay 
 
 ## Check the result
 
-- Unprovisioned: the screen says so and names the serial command.
+- Unprovisioned: the screen shows **SETUP** and hosts the `esptember-setup` portal.
 - After `wifi ...`: reboot, join, and the first fetch fills the face — temperature large, condition text, H/L, wind, twelve rim dots.
 - `D22_WEATHER` lines on serial log each fetch's parsed values.
 - B refetches immediately; `loc` moves the station anywhere on Earth.

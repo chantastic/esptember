@@ -40,7 +40,7 @@ uvx esptool --chip esp32s3 --port WAVESHARE_PORT \
   write-flash 0x0 day-24-walkie-internet-waveshare.bin
 ```
 
-Provision Wi-Fi: the StopWatch takes `wifi SSID PASS` over serial (day 22's channel, same saved credentials); the Waveshare runs day 21's captive portal — join `esptember-setup` and fill the form.
+Provision Wi-Fi: **both boards run the captive portal** — each hosts `esptember-setup` when unprovisioned; join from a phone and fill the form.
 Match channels, hold the crown, talk across the world.
 
 ## How it works

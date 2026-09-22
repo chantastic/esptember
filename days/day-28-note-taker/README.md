@@ -36,7 +36,8 @@ uvx esptool --chip esp32s3 --port PORT \
   write-flash 0x0 day-28-note-taker.bin
 ```
 
-Provision once, over serial at 115200:
+On first boot the board hosts the `esptember-setup` portal: join it from a phone and one form collects Wi-Fi, the Deepgram key, and the Memos URL + token (day 21's pattern, with per-day fields).
+Serial remains the power-user path at 115200:
 
 ```
 wifi YOUR_SSID YOUR_PASSWORD
@@ -44,7 +45,7 @@ dgkey YOUR_DEEPGRAM_KEY
 memos https://memos.example.com YOUR_MEMOS_TOKEN
 ```
 
-All three persist in NVS; the Wi-Fi line is day 22's shared namespace, so an already-provisioned board skips it.
+Everything persists in NVS; the Wi-Fi entry is day 22's shared namespace, so an already-provisioned board skips setup entirely.
 
 ## How it works
 
