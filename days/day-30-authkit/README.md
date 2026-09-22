@@ -5,7 +5,7 @@ title: WorkOS AuthKit
 toolchain: ESP-IDF v5.5 + Waveshare BSP (LVGL)
 firmware: /firmware/day-30-authkit.bin
 summary: "The finale: a keyboardless device signs a real user into a real identity provider — the OAuth device flow, on a wrist-sized screen."
-verification: "Boot, portal, and flow states verified; live sign-in pending Wi-Fi credentials and a client id"
+verification: "Full device-grant sign-in verified on hardware: QR, phone approval, AUTHORIZED"
 ---
 
 ## The result
@@ -75,7 +75,7 @@ The phone does the authenticating on WorkOS's pages; the board only ever learns 
 - Scanning opens AuthKit on your phone; approving flips the board to **AUTHORIZED — signed in as you@example.com** within one poll interval.
 - Declining shows **DENIED**; letting the code expire fetches a fresh pair automatically.
 
-**Recorded evidence · September 22, 2026:** Boot, the portal handoff, the client-id gate, and the flow's state machine were verified over serial (`D30_MODE`, `D30_STATUS`); the endpoints and grant are the ones proven in this hardware family by a prior project. The live sign-in awaits bench Wi-Fi and a client id, noted in NOTES.md.
+**Recorded evidence · September 22, 2026:** The complete flow was verified live on hardware: the board requested a code pair from WorkOS (`D30_CODE user_code=TXVL-DDCF`), displayed the QR and code, and — after approval on a phone — reported `D30_AUTHORIZED` with the signed-in user's email, all observed over serial while it happened.
 
 ## Used resources
 
