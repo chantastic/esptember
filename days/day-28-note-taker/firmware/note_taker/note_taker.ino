@@ -268,8 +268,9 @@ void loop() {
   M5.update();
 
   // PTT: the crown records for as long as it's held (or until full).
-  if (M5.BtnA.isPressed() && state != State::Recording &&
-      WiFi.status() == WL_CONNECTED) {
+  // Both pushers together is the setup chord, never a recording.
+  if (M5.BtnA.isPressed() && !M5.BtnB.isPressed() &&
+      state != State::Recording && WiFi.status() == WL_CONNECTED) {
     state = State::Recording;
     recorded = 0;
     render();
@@ -334,13 +335,28 @@ void loop() {
   static uint32_t chordSince = 0;
   if (M5.BtnA.isPressed() && M5.BtnB.isPressed()) {
     if (!chordSince) chordSince = millis();
-    else if (millis() - chordSince > 2000) {
+    const uint32_t held = millis() - chordSince;
+    // Live feedback: a filling bar, then the reset.
+    canvas.fillSprite(TFT_BLACK);
+    canvas.setTextDatum(middle_center);
+    canvas.setTextColor(0xFD20, TFT_BLACK);
+    canvas.setTextSize(3);
+    canvas.drawString("Wi-Fi SETUP", 233, 180);
+    canvas.setTextSize(2);
+    canvas.setTextColor(TFT_WHITE, TFT_BLACK);
+    canvas.drawString("keep holding...", 233, 240);
+    canvas.drawRect(133, 280, 200, 16, TFT_DARKGRAY);
+    const int w = held >= 2000 ? 200 : (int)(held * 200 / 2000);
+    canvas.fillRect(133, 280, w, 16, 0xFD20);
+    canvas.pushSprite(0, 0);
+    if (held > 2000) {
       wifiPrefs.clear();
       Serial.println("D28_WIFI_RESET");
       ESP.restart();
     }
-  } else {
+  } else if (chordSince) {
     chordSince = 0;
+    render(); // released early: restore the normal screen
   }
 
   handleSerial();
