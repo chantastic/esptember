@@ -4,14 +4,15 @@ day: 26
 title: Package Tracker
 toolchain: ESP-IDF v5.5 + Waveshare BSP (LVGL)
 firmware: /firmware/day-26-package-tracker.bin
-summary: "The first keyed API: 17TRACK follows any carrier, the key lives in NVS, and the screen becomes a status board."
-verification: "Boot, portal, store, and console verified; live tracking pending an API key"
+summary: "A status board for everything in the mail — demoable in two minutes with EasyPost's mock packages, no real parcel required."
+verification: "Boot, portal, store, and console verified; sandbox run pending a test key"
 ---
 
 ## The result
 
 A status board for everything in the mail: one row per package, latest event line, color by state — orange in transit, cyan out for delivery, green delivered, red exception.
-The data comes from [17TRACK](https://api.17track.net), whose free tier follows any carrier from a bare tracking number.
+It's built against [EasyPost](https://easypost.com), chosen for one reason above all: **the free sandbox is a complete demo in a box.**
+Test keys cost nothing forever, and mock tracking numbers `EZ1000000001` through `EZ1000000007` simulate every delivery state — you can fill the board with packages in seven different conditions in two minutes, indoors, with nothing in the mail.
 This is the series' first **keyed** API, and the key is provisioned like every secret this month: over serial, into NVS, never into the repository.
 Each day is a standalone firmware image; you can start here without flashing earlier days.
 
@@ -19,7 +20,7 @@ Each day is a standalone firmware image; you can start here without flashing ear
 
 - **Board:** Waveshare ESP32-S3-Touch-AMOLED-1.8 **V2**.
 - **Connection:** a USB data cable; a phone for the Wi-Fi portal.
-- **An API key:** a free [17TRACK API](https://api.17track.net) account (their free tier covers a personal mailbox comfortably).
+- **An API key:** a free [EasyPost](https://easypost.com) account — the **test** key (`EZTK...`) is all this lesson needs.
 - **For the download:** [uv](https://docs.astral.sh/uv/getting-started/installation/) supplies the `uvx` command below.
 - **For source builds:** [ESP-IDF v5.5](https://docs.espressif.com/projects/esp-idf/en/stable/esp32s3/get-started/) with its environment activated.
 
@@ -39,43 +40,57 @@ Wi-Fi arrives through day 21's portal (join `esptember-setup`).
 Then, over serial at 115200:
 
 ```
-key YOUR_17TRACK_KEY
-add 9400100000000000000000
+key EZTK_YOUR_TEST_KEY
+add EZ1000000001
+add EZ1000000004
+add EZ1000000006
 ```
 
-`add` takes up to six numbers; `del` removes one; `refresh` fetches immediately.
-Everything persists — key, numbers, and last-known statuses survive power loss.
+`add` takes up to six numbers (a second word names a carrier: `add 1Z... UPS`); `del` removes one; `refresh` fetches immediately.
+Everything persists — key, numbers, tracker handles, and last-known statuses survive power loss.
+With a production key, real tracking numbers work the same way.
 
 ## How it works
 
-17TRACK's contract has one wrinkle worth teaching: numbers must be **registered** before they can be queried.
-The firmware tracks a `registered` flag per package and registers stragglers before every fetch — idempotent, so a re-registration costs nothing.
+EasyPost's contract is create-then-read: a tracking number becomes a **tracker** object on first registration, and the tracker's id is the handle for every later query.
+The firmware keeps that id per package and registers stragglers before each refresh.
 
-The fetch itself is one POST with the key in a header and every number in the body:
+Both the create and the read return the same tracker shape, so one function absorbs either:
 
 ```c
-    esp_http_client_set_header(client, "17token", api_key);
+static void absorb_tracker(package_t *p, const cJSON *tracker)
 ```
 
-The response nests deep — `data.accepted[].track_info.latest_status.status` — and the parse walks it defensively, keeping two strings per package: a machine status for the color map and a human event line for the row.
+That symmetry is what keeps the provider layer thin — and the thinness is deliberate, because this layer is the part you might swap (see below).
 
-The refresh interval is fifteen minutes, the free-tier citizenship this series keeps practicing: packages move on truck time, not poll time.
-`refresh` over serial exists for the impatient moment after the doorbell.
+Auth is HTTP Basic with the key as username and an empty password; the refresh interval is fifteen minutes (packages move on truck time), with `refresh` on serial for the moment after the doorbell.
 
-The key rides NVS alongside day 21's Wi-Fi credentials — same rule, one more tenant: **the published binary is identical for everyone; the device gets personalized, never the firmware.**
+## Migrate it to another service
+
+EasyPost is the teaching choice, not a marriage.
+The provider layer is three functions — `api_request`, `absorb_tracker`, `register_new_numbers`/`refresh` — and porting them is a well-shaped job for an agent or an afternoon.
+Alternatives we evaluated:
+
+- **[17TRACK API](https://api.17track.net/en/doc)** — any-carrier from a bare number, free tier, key in a `17token` header, register-then-query like EasyPost. The strongest production choice.
+- **[AfterShip](https://www.aftership.com/docs/tracking/quickstart)** — similar shape, generous docs, free tier.
+- **[WhereParcel](https://whereparcel.com)** — newer entrant with a promotional free tier; simple endpoints, but weigh the longevity of a young service before building a daily driver on it.
+
+A migration prompt that carries the constraints this firmware already honors:
+
+> Port `days/day-26-package-tracker/firmware/main/main.c` from EasyPost to `<SERVICE>`. Keep everything outside the provider layer untouched: the NVS store, the serial grammar (`key`/`add`/`del`/`refresh`), the LVGL status board, and the 15-minute refresh. Replace `api_request` (auth: consult the service's docs — header token vs basic auth), `register_new_numbers` (if the service requires registration before queries, keep the per-package `registered`/handle fields; if not, delete them), and `absorb_tracker` (map the service's status vocabulary onto the existing `status_color` cases: delivered / out_for_delivery / in_transit / failure / pre_transit). Parse with cJSON against the existing 8 KB body buffer; if responses can exceed it, filter fields at the API or fail with a named error on `status_line`. Verify with the service's sandbox numbers if it has them, or a real tracking number if not, and confirm `D26_PACKAGE` serial lines carry status + latest event.
 
 ## Check the result
 
 - No key: the board says so and names the serial command. Same for zero packages.
-- With key + numbers: rows appear with statuses within one refresh, `D26_PACKAGE` lines logging each.
-- A delivered package rows green; an in-transit one rows orange with its latest scan event underneath.
-- Power-cycle: the board comes back with last-known statuses before the first fetch lands.
+- With a test key, the three mock numbers above fill the board in one refresh: one **pre-transit** gray, one **out for delivery** cyan, one **delivered** green, each with a simulated event line.
+- All seven mock numbers (`EZ1000000001`–`EZ1000000007`) exercise every color the board knows, including red.
+- Power-cycle: the board returns with last-known statuses before the first fetch lands.
 
-**Recorded evidence · September 22, 2026:** Boot, the portal handoff, the NVS store, and the console grammar (`key`/`add`/`del`/`refresh`) were verified over serial. Live tracking awaits an API key on the bench, noted in NOTES.md.
+**Recorded evidence · September 22, 2026:** Boot, the portal handoff, the NVS store, and the console grammar were verified over serial. The sandbox run awaits a test key on the bench, noted in NOTES.md.
 
 ## Used resources
 
-- [17TRACK API v2.2](https://api.17track.net/en/doc) — register + gettrackinfo, key in the `17token` header.
+- [EasyPost Trackers API](https://docs.easypost.com/docs/trackers) — create-then-read, test mode with mock tracking numbers.
 - Day 21's portal and the secrets-in-NVS rule, gaining its first API-key tenant.
 
 ## Build and change it
@@ -97,4 +112,4 @@ idf.py -p PORT flash monitor
 
 To create the single downloadable image, run `idf.py merge-bin` in the same firmware directory.
 Keep `pmu_init()` and `panel_reset_release()` before display startup when changing the UI.
-Webhooks are the natural v2 — 17TRACK can push instead of being polled, which turns the status board into a doorbell.
+Webhooks are the natural v2 — EasyPost pushes tracker updates, which turns the status board into a doorbell.

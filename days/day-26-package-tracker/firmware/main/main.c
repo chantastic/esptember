@@ -1,12 +1,17 @@
 // ESPtember Day 26 — Package Tracker
-// The first *keyed* API of the series: 17TRACK's free tier follows any
-// carrier from one tracking number. The key is provisioned like every
-// secret this month — over serial, into NVS, never into the repo:
-//   key  YOUR_17TRACK_KEY
-//   add  TRACKINGNUMBER      (up to 6)
-//   del  TRACKINGNUMBER
+// The first *keyed* API of the series, built against EasyPost — chosen
+// because its free sandbox is a complete demo in a box: test keys cost
+// nothing forever, and mock tracking numbers EZ1000000001..EZ1000000007
+// simulate every delivery state without a single real parcel. The key
+// is provisioned like every secret this month — over serial, into NVS,
+// never into the repo:
+//   key  EZTK...            (an EasyPost TEST key works fully)
+//   add  EZ1000000001       (up to 6; optional carrier: add NUM UPS)
+//   del  EZ1000000001
 // Wi-Fi arrives through day 21's portal. The screen is a status board:
 // one row per package, latest event line, color by delivery state.
+// The provider layer is deliberately thin — the README carries a
+// migration prompt for porting it to 17TRACK, AfterShip, or others.
 // Board bring-up (pmu_init, panel_reset_release) carries over from
 // day 01.
 #include <stdio.h>
@@ -27,8 +32,7 @@
 #include "cJSON.h"
 #include "portal.h"
 
-#define API_REGISTER "https://api.17track.net/track/v2.2/register"
-#define API_GETINFO "https://api.17track.net/track/v2.2/gettrackinfo"
+#define API_TRACKERS "https://api.easypost.com/v2/trackers"
 #define MAX_PACKAGES 6
 #define REFRESH_MS (15 * 60 * 1000) // free tier is a budget: 15 min
 
@@ -86,9 +90,11 @@ static void panel_reset_release(void)
 // --- Package store ------------------------------------------------------------
 typedef struct {
     char number[36];
-    char status[16];  // NotFound / InTransit / Delivered / ...
-    char event[64];   // latest tracking event text
-    bool registered;  // 17track wants numbers registered before queries
+    char carrier[12];    // USPS unless told otherwise
+    char tracker_id[40]; // EasyPost's handle, minted on registration
+    char status[20];     // pre_transit / in_transit / delivered / ...
+    char event[64];      // latest tracking event text
+    bool registered;     // a tracker must exist before it can be read
 } package_t;
 
 static package_t packages[MAX_PACKAGES];
@@ -121,22 +127,29 @@ static void store_load(void)
     nvs_close(nvs);
 }
 
-// --- 17TRACK client -------------------------------------------------------------
+// --- EasyPost client -------------------------------------------------------------
+// Auth is HTTP Basic with the key as username and an empty password —
+// the same key works in test and production modes, and test mode is a
+// complete simulation.
 static char http_body[8192];
 
-static cJSON *post_json(const char *url, const char *payload, int *status)
+static cJSON *api_request(const char *url, const char *payload, int *status)
 {
     esp_http_client_config_t cfg = {
         .url = url,
-        .method = HTTP_METHOD_POST,
+        .method = payload ? HTTP_METHOD_POST : HTTP_METHOD_GET,
         .crt_bundle_attach = esp_crt_bundle_attach,
         .timeout_ms = 15000,
+        .auth_type = HTTP_AUTH_TYPE_BASIC,
+        .username = api_key,
+        .password = "",
     };
     esp_http_client_handle_t client = esp_http_client_init(&cfg);
-    esp_http_client_set_header(client, "Content-Type", "application/json");
-    esp_http_client_set_header(client, "17token", api_key);
-    esp_http_client_open(client, strlen(payload));
-    esp_http_client_write(client, payload, strlen(payload));
+    if (payload)
+        esp_http_client_set_header(client, "Content-Type",
+                                   "application/json");
+    esp_http_client_open(client, payload ? strlen(payload) : 0);
+    if (payload) esp_http_client_write(client, payload, strlen(payload));
     esp_http_client_fetch_headers(client);
     const int len = esp_http_client_read_response(client, http_body,
                                                   sizeof(http_body) - 1);
@@ -147,18 +160,45 @@ static cJSON *post_json(const char *url, const char *payload, int *status)
     return cJSON_Parse(http_body);
 }
 
+// Pull status + latest event out of a tracker object — shared by the
+// create and read paths, because EasyPost returns the same shape from
+// both. That symmetry is what keeps this provider layer thin.
+static void absorb_tracker(package_t *p, const cJSON *tracker)
+{
+    const cJSON *id = cJSON_GetObjectItem(tracker, "id");
+    if (cJSON_IsString(id))
+        strlcpy(p->tracker_id, id->valuestring, sizeof(p->tracker_id));
+    const cJSON *st = cJSON_GetObjectItem(tracker, "status");
+    if (cJSON_IsString(st))
+        strlcpy(p->status, st->valuestring, sizeof(p->status));
+    const cJSON *details = cJSON_GetObjectItem(tracker, "tracking_details");
+    const int n = cJSON_GetArraySize(details);
+    if (n > 0) {
+        const cJSON *last = cJSON_GetArrayItem(details, n - 1);
+        const cJSON *msg = cJSON_GetObjectItem(last, "message");
+        if (cJSON_IsString(msg))
+            strlcpy(p->event, msg->valuestring, sizeof(p->event));
+    }
+    printf("D26_PACKAGE %s status=%s event=%s\n", p->number, p->status,
+           p->event);
+}
+
 static void register_new_numbers(void)
 {
     for (int i = 0; i < package_count; i++) {
         if (packages[i].registered) continue;
-        char payload[96];
-        snprintf(payload, sizeof(payload), "[{\"number\":\"%.35s\"}]",
-                 packages[i].number);
+        char payload[160];
+        snprintf(payload, sizeof(payload),
+                 "{\"tracker\":{\"tracking_code\":\"%.35s\","
+                 "\"carrier\":\"%.11s\"}}",
+                 packages[i].number, packages[i].carrier);
         int status = 0;
-        cJSON *r = post_json(API_REGISTER, payload, &status);
-        // "already registered" is also success for our purposes.
-        packages[i].registered = (status == 200);
+        cJSON *r = api_request(API_TRACKERS, payload, &status);
         printf("D26_REGISTER %s http=%d\n", packages[i].number, status);
+        if (r && (status == 200 || status == 201)) {
+            packages[i].registered = true;
+            absorb_tracker(&packages[i], r);
+        }
         if (r) cJSON_Delete(r);
     }
     store_save();
@@ -168,52 +208,23 @@ static void refresh(void)
 {
     if (!api_key[0] || !package_count) return;
     register_new_numbers();
-
-    char payload[MAX_PACKAGES * 48 + 8] = "[";
     for (int i = 0; i < package_count; i++) {
-        char item[64];
-        snprintf(item, sizeof(item), "%s{\"number\":\"%.35s\"}", i ? "," : "",
-                 packages[i].number);
-        strlcat(payload, item, sizeof(payload));
-    }
-    strlcat(payload, "]", sizeof(payload));
-
-    int status = 0;
-    cJSON *r = post_json(API_GETINFO, payload, &status);
-    if (!r || status != 200) {
-        snprintf(status_line, sizeof(status_line), "HTTP %d", status);
-        printf("D26_FETCH_FAILED http=%d\n", status);
-        if (r) cJSON_Delete(r);
-        return;
-    }
-    const cJSON *accepted =
-        cJSON_GetObjectItem(cJSON_GetObjectItem(r, "data"), "accepted");
-    cJSON *item;
-    cJSON_ArrayForEach(item, accepted) {
-        const cJSON *num = cJSON_GetObjectItem(item, "number");
-        if (!cJSON_IsString(num)) continue;
-        for (int i = 0; i < package_count; i++) {
-            if (strcmp(packages[i].number, num->valuestring)) continue;
-            const cJSON *info = cJSON_GetObjectItem(item, "track_info");
-            const cJSON *latest =
-                info ? cJSON_GetObjectItem(info, "latest_status") : NULL;
-            const cJSON *st =
-                latest ? cJSON_GetObjectItem(latest, "status") : NULL;
-            if (cJSON_IsString(st))
-                strlcpy(packages[i].status, st->valuestring,
-                        sizeof(packages[i].status));
-            const cJSON *ev =
-                info ? cJSON_GetObjectItem(info, "latest_event") : NULL;
-            const cJSON *desc =
-                ev ? cJSON_GetObjectItem(ev, "description") : NULL;
-            if (cJSON_IsString(desc))
-                strlcpy(packages[i].event, desc->valuestring,
-                        sizeof(packages[i].event));
-            printf("D26_PACKAGE %s status=%s event=%s\n", packages[i].number,
-                   packages[i].status, packages[i].event);
+        if (!packages[i].tracker_id[0]) continue;
+        char url[96];
+        snprintf(url, sizeof(url), API_TRACKERS "/%.39s",
+                 packages[i].tracker_id);
+        int status = 0;
+        cJSON *r = api_request(url, NULL, &status);
+        if (!r || status != 200) {
+            snprintf(status_line, sizeof(status_line), "HTTP %d", status);
+            printf("D26_FETCH_FAILED %s http=%d\n", packages[i].number,
+                   status);
+            if (r) cJSON_Delete(r);
+            continue;
         }
+        absorb_tracker(&packages[i], r);
+        cJSON_Delete(r);
     }
-    cJSON_Delete(r);
     snprintf(status_line, sizeof(status_line), "ok");
     store_save();
 }
@@ -226,12 +237,13 @@ static lv_obj_t *footer_label;
 
 static lv_color_t status_color(const char *status)
 {
-    if (!strcmp(status, "Delivered")) return lv_color_hex(0x00c853);
-    if (!strcmp(status, "OutForDelivery")) return lv_color_hex(0x00e5ff);
-    if (!strcmp(status, "InTransit")) return lv_color_hex(ESPTEMBER_ORANGE);
-    if (!strcmp(status, "Exception") || !strcmp(status, "Expired"))
+    if (!strcmp(status, "delivered")) return lv_color_hex(0x00c853);
+    if (!strcmp(status, "out_for_delivery")) return lv_color_hex(0x00e5ff);
+    if (!strcmp(status, "in_transit")) return lv_color_hex(ESPTEMBER_ORANGE);
+    if (!strcmp(status, "failure") || !strcmp(status, "error") ||
+        !strcmp(status, "return_to_sender"))
         return lv_color_hex(0xff1744);
-    return lv_color_hex(0x888888);
+    return lv_color_hex(0x888888); // pre_transit / unknown
 }
 
 static void ui_refresh(void)
@@ -240,11 +252,11 @@ static void ui_refresh(void)
     lv_obj_clean(list_container);
     if (!api_key[0]) {
         lv_obj_t *hint = lv_label_create(list_container);
-        lv_label_set_text(hint, "serial: key YOUR_17TRACK_KEY");
+        lv_label_set_text(hint, "serial: key EZTK...");
         lv_obj_set_style_text_color(hint, lv_color_hex(0x888888), 0);
     } else if (!package_count) {
         lv_obj_t *hint = lv_label_create(list_container);
-        lv_label_set_text(hint, "serial: add TRACKINGNUMBER");
+        lv_label_set_text(hint, "serial: add EZ1000000001");
         lv_obj_set_style_text_color(hint, lv_color_hex(0x888888), 0);
     }
     for (int i = 0; i < package_count; i++) {
@@ -359,19 +371,24 @@ static void console_task(void *arg)
     while (fgets(line, sizeof(line), stdin)) {
         char *nl = strpbrk(line, "\r\n");
         if (nl) *nl = 0;
-        char arg1[64];
+        char arg1[64], arg2[16];
         if (sscanf(line, "key %47s", api_key) == 1) {
             store_save();
             printf("D26_KEY saved\n");
             ui_refresh();
             refresh_requested = true;
-        } else if (sscanf(line, "add %35s", arg1) == 1 &&
+        } else if (sscanf(line, "add %35s %11s", arg1, arg2) >= 1 &&
                    package_count < MAX_PACKAGES) {
             package_t *p = &packages[package_count++];
             memset(p, 0, sizeof(*p));
             strlcpy(p->number, arg1, sizeof(p->number));
+            // Mock numbers are USPS; real ones name their carrier.
+            strlcpy(p->carrier,
+                    sscanf(line, "add %35s %11s", arg1, arg2) == 2 ? arg2
+                                                                   : "USPS",
+                    sizeof(p->carrier));
             store_save();
-            printf("D26_ADDED %s\n", arg1);
+            printf("D26_ADDED %s carrier=%s\n", p->number, p->carrier);
             ui_refresh();
             refresh_requested = true;
         } else if (sscanf(line, "del %35s", arg1) == 1) {

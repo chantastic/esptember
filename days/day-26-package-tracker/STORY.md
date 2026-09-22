@@ -7,6 +7,11 @@ Every carrier gates its API behind registration; every aggregator wants a token;
 
 So day 26 stopped pretending and became the lesson it wanted to be all along: **your first keyed API**, handled the way every real integration handles it.
 
+The provider went through its own drama.
+The first build targeted 17TRACK; then a search-engine AI suggested two alternatives, one of which — a service with a too-good-to-be-true free tier — turned out to exist but with terms the AI had invented.
+The other suggestion was the keeper: EasyPost's sandbox has *mock tracking numbers that simulate every delivery state*, which converts this lesson's weakest point — you can't demo a package tracker without a package in the mail — into its best feature.
+Verify AI-recommended services against their own websites; keep the good idea, discard the embellishment.
+
 ## A key is just another secret
 
 The month already built the machinery.
@@ -19,7 +24,7 @@ The *device* gets a key; the firmware never does.
 
 ## Register, then ask
 
-17TRACK's API has a two-step shape that trips first-time users: a tracking number must be registered to your account before queries about it answer.
+EasyPost's API has a two-step shape that trips first-time users: a tracking number becomes a *tracker* object before queries about it answer.
 It's an inversion of REST instinct — the API keeps state about your interests — and the firmware models it honestly with a `registered` flag per package and a catch-up pass before every fetch.
 Re-registering is idempotent, so the flag can lie toward false safely.
 When an API keeps state, your client keeps a belief about that state, and beliefs need to be cheap to repair.
@@ -36,6 +41,7 @@ Politeness with an override beats politeness as a cage.
 ## What we learned
 
 - There is no keyless package tracking. Sometimes the ecosystem's answer is "make an account," and the honest lesson is how to do that well.
+- Sandboxes with mock data beat live data for lessons. Seven fake packages in seven states demo more than one real one in transit.
 - Provisioning patterns compound. The key reused day 21's rule and day 22's grammar; the feature cost was one NVS field.
 - Stateful APIs create client beliefs. Model the server's registry explicitly and make repairing the belief idempotent.
 - Poll at the speed of the world. Trucks don't move in seconds; neither should your fetch timer.
