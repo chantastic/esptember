@@ -5,8 +5,9 @@ else is planned. Each day still gets its own SPEC before implementation —
 this file records the lineup, the reasoning, and the constraints we've agreed.
 
 Boards: `waveshare-amoled-18-v2` ("1.8"), `waveshare-amoled-175-b` ("1.75-B"),
-`m5stack-stopwatch` ("Stopwatch"). Board balance: 1.8 ×14, Stopwatch ×8,
-1.75-B ×5, multi-board ×3.
+`m5stack-stopwatch` ("Stopwatch"). Board balance: 1.8 ×14, Stopwatch ×10,
+1.75-B ×3, multi-board ×3. (Days 9 and 15 retargeted to the Stopwatch
+— the 1.75-B is missing in action; it keeps 20, 22, 23.)
 
 ## Lineup
 
@@ -15,13 +16,13 @@ Boards: `waveshare-amoled-18-v2` ("1.8"), `waveshare-amoled-175-b` ("1.75-B"),
 | 1–6 | Hello World → Movie | 1.8 | shipped |
 | 7 | LVGL Basics | 1.8 | planned |
 | 8 | Sound Effects Board | 1.8 | planned |
-| 9 | Level | 1.75-B | planned |
+| 9 | Level | Stopwatch | planned |
 | 10 | Buttons, Buzzer, Haptics | Stopwatch | planned |
 | 11 | Basic-Ass Stopwatch | Stopwatch | planned |
 | 12 | C25K | Stopwatch | shipped |
 | 13 | Morse Code Practicer | Stopwatch | planned |
 | 14 | Sound Level (dB) | 1.8 | planned |
-| 15 | Music Visualizer | 1.75-B | planned |
+| 15 | Music Visualizer | Stopwatch | planned |
 | 16 | Tamagotchi | Stopwatch | planned |
 | 17 | Pokedex | 1.8 | planned |
 | 18 | Yo — ESP-NOW pager | all three | planned |
