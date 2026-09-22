@@ -1,0 +1,11 @@
+dependencies:
+  cmake_utilities: 0.*
+  idf: '>=5.4'
+description: ESP LCD CO5300(SPI & QSPI & MIPI-DSI)
+issues: https://github.com/espressif/esp-iot-solution/issues
+repository: git://github.com/espressif/esp-iot-solution.git
+repository_info:
+  commit_sha: 2d289eb1f14431e345b345c3fd6fc299a555d770
+  path: components/display/lcd/esp_lcd_co5300
+url: https://github.com/espressif/esp-iot-solution/tree/master/components/display/lcd/esp_lcd_co5300
+version: 2.2.0
