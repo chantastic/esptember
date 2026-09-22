@@ -59,13 +59,22 @@ static bool transcribe(String &text) {
     http.end();
     return false;
   }
+  // Read the whole body, then parse: small enough, and it lets a
+  // failure show us the actual bytes instead of a shrug.
+  String body = http.getString();
+  http.end();
+  Serial.printf("D28_HTTP len=%u head=%.160s\n", body.length(), body.c_str());
   JsonDocument filter;
   filter["results"]["channels"][0]["alternatives"][0]["transcript"] = true;
   JsonDocument doc;
   const DeserializationError err = deserializeJson(
-      doc, http.getStream(), DeserializationOption::Filter(filter));
-  http.end();
-  if (err) { snprintf(statusLine, sizeof(statusLine), "bad JSON"); return false; }
+      doc, body, DeserializationOption::Filter(filter),
+      DeserializationOption::NestingLimit(16)); // Deepgram nests past
+                                                // ArduinoJson's default 10
+  if (err) {
+    snprintf(statusLine, sizeof(statusLine), "bad JSON: %s", err.c_str());
+    return false;
+  }
   text = doc["results"]["channels"][0]["alternatives"][0]["transcript"]
              .as<String>();
   return text.length() > 0;
