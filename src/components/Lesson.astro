@@ -20,6 +20,7 @@ const sources = Object.entries(import.meta.glob([
   "../../days/*/firmware/**/*.{c,h,cpp,hpp,ino}", "../../days/*/firmware/**/CMakeLists.txt",
   "../../days/*/firmware/sdkconfig.defaults", "../../days/*/firmware/partitions.csv",
   "../../days/*/firmware/main/idf_component.yml", "!**/build/**", "!**/managed_components/**",
+  "!**/generated/**", // build-time fetched assets (day 17): megabytes of pixel arrays
 ], { query: "?raw", import: "default", eager: true }) as Record<string,string>)
 .filter(([path]) => path.includes(`/days/${entry.id}/firmware/`))
 .map(([path,content]) => ({ path: path.split('/firmware/')[1], content }))

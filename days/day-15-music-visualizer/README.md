@@ -75,7 +75,7 @@ Bar dynamics are the classic pair: instant rise, slow fall —
 
 ```c
     if (level > barLevel[b]) barLevel[b] = level;
-    else barLevel[b] = barLevel[b] > 4 ? barLevel[b] - 4 : 0;
+    else barLevel[b] = barLevel[b] > 7 ? barLevel[b] - 7 : 0;
 ```
 
 Rendering reuses day 09's full-screen PSRAM sprite: bars redraw as thick radial strokes every captured frame, glassy-smooth on the round face.

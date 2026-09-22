@@ -97,17 +97,23 @@ static void analyze() {
     level = level < 0 ? 0 : level > 100 ? 100 : level;
     // Instant rise, slow fall.
     if (level > barLevel[b]) barLevel[b] = level;
-    else barLevel[b] = barLevel[b] > 4 ? barLevel[b] - 4 : 0;
+    else barLevel[b] = barLevel[b] > 7 ? barLevel[b] - 7 : 0;
   }
 }
 
 // --- Rendering ------------------------------------------------------------------
 static M5Canvas canvas(&M5.Display);
+static uint32_t tPush0;
 
-#define CX 233
-#define CY 233
+// The sprite covers only the ring's bounding box (420x420) at 8-bit
+// color: 176 KB per push instead of 434 KB — the difference between a
+// visible wipe and a live meter.
+#define SPRITE_SIZE 420
+#define SPRITE_OFF ((466 - SPRITE_SIZE) / 2)
+#define CX (SPRITE_SIZE / 2)
+#define CY (SPRITE_SIZE / 2)
 #define R_IN 90
-#define R_MAX 210
+#define R_MAX 208
 
 static void render() {
   canvas.fillSprite(TFT_BLACK);
@@ -129,7 +135,8 @@ static void render() {
                       color);
     }
   }
-  canvas.pushSprite(0, 0);
+  tPush0 = millis();
+  canvas.pushSprite(SPRITE_OFF, SPRITE_OFF);
 }
 
 void setup() {
@@ -143,8 +150,9 @@ void setup() {
   M5.begin(cfg);
   M5.Display.setRotation(0);
   M5.Display.setBrightness(255);
-  canvas.setColorDepth(16);
-  canvas.createSprite(466, 466);
+  canvas.setColorDepth(8);
+  canvas.createSprite(SPRITE_SIZE, SPRITE_SIZE);
+  M5.Display.fillScreen(TFT_BLACK);
   fftInit();
   bandsInit();
   M5.Mic.begin();
@@ -155,11 +163,22 @@ static uint32_t lastReport = 0;
 
 void loop() {
   M5.update();
+  static uint32_t tRec = 0, tFft = 0, tDraw = 0, tPush = 0, frames = 0;
+  uint32_t t0 = millis();
   if (M5.Mic.record(pcm, FFT_N, SAMPLE_RATE)) {
+    uint32_t t1 = millis();
     analyze();
+    uint32_t t2 = millis();
     render();
+    uint32_t t3 = millis();
+    tRec += t1 - t0; tFft += t2 - t1; tDraw += tPush0 - t2;
+    tPush += t3 - tPush0; frames++;
   }
   if (millis() - lastReport >= 2000) {
+    if (frames) Serial.printf("D15_TIMING fps=%u rec=%u fft=%u draw=%u push=%u (ms avg)\n",
+                              frames / 2, tRec / frames, tFft / frames,
+                              tDraw / frames, tPush / frames);
+    tRec = tFft = tDraw = tPush = frames = 0;
     lastReport = millis();
     int sum = 0, top = 0, topBar = 0;
     for (int b = 0; b < BARS; b++) {

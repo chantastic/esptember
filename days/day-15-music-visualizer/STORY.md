@@ -39,6 +39,14 @@ That asymmetry is older than digital audio — analog VU meters had ballistics c
 Instant-rise/slow-fall makes beats *visible*: the hit snaps up, the decay draws its tail.
 Symmetric dynamics turn music into static.
 
+## The 47-millisecond frame
+
+First hands-on report: “VERY slow.”
+Instrumenting the loop split the frame into capture (0 ms), FFT (0 ms), drawing (7 ms) — and 37–47 ms of pushing the sprite over the display bus.
+The math everyone worries about was free; the pixels were the cost.
+Dropping the sprite to 8-bit color and shrinking it to the ring's bounding box helped less than hoped — the bus, not the byte count, sets the floor — and the honest fix was making the decay snappier so 22 fps *feels* alive.
+Measure before optimizing: the FFT was never the suspect, and “slow” lived somewhere no algorithm could fix.
+
 ## What we learned
 
 - Thirty lines is not a dependency. Owning the FFT cost nothing and made the pipeline debuggable.

@@ -4,7 +4,7 @@ import { join } from 'node:path';
 const read = path => readFileSync(path, 'utf8');
 const firmwareSources = directory => readdirSync(directory, { withFileTypes: true }).flatMap(entry => {
   const path = join(directory, entry.name);
-  if (entry.isDirectory()) return ['build', 'managed_components'].includes(entry.name) ? [] : firmwareSources(path);
+  if (entry.isDirectory()) return ['build', 'managed_components', 'generated'].includes(entry.name) ? [] : firmwareSources(path);
   return /\.(c|h|cpp|hpp|ino)$/.test(entry.name) ? [path] : [];
 });
 const boards = JSON.parse(read('src/lib/boards.json'));

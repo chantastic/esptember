@@ -25,17 +25,17 @@ Boards: `waveshare-amoled-18-v2` ("1.8"), `waveshare-amoled-175-b` ("1.75-B"),
 | 15 | Music Visualizer | Stopwatch | planned |
 | 16 | Tamagotchi | Stopwatch | planned |
 | 17 | Pokedex | 1.8 | planned |
-| 18 | Yo — ESP-NOW pager | all three | planned |
-| 19 | Captive Portal Provisioning | 1.8 | planned |
-| 20 | Weather Station | 1.75-B | planned |
-| 21 | Walkie-Talkie: local (ESP-NOW) | Stopwatch + 1.8 | planned |
-| 22 | Walkie-Talkie: internet | Stopwatch + 1.8 | planned |
-| 23 | Flight Radar | 1.75-B | planned |
-| 24 | Package Tracker | 1.8 | planned |
-| 25 | Music Player | 1.8 | planned |
-| 26 | Real-Time Captions (STT) | 1.8 | planned |
-| 27 | Note Taker (voice memos) | Stopwatch | planned |
-| 28 | Shazam | 1.8 | planned |
+| 18 | Metronome | Stopwatch | planned |
+| 19 | Tempo Checker | Stopwatch | planned |
+| 20 | Yo — ESP-NOW pager | all three | planned |
+| 21 | Captive Portal Provisioning | 1.8 | planned |
+| 22 | Weather Station | 1.75-B | planned |
+| 23 | Walkie-Talkie: local (ESP-NOW) | Stopwatch + 1.8 | planned |
+| 24 | Walkie-Talkie: internet | Stopwatch + 1.8 | planned |
+| 25 | Flight Radar | 1.75-B | planned |
+| 26 | Package Tracker | 1.8 | planned |
+| 27 | Real-Time Captions (STT) | 1.8 | planned |
+| 28 | Note Taker (voice memos) | Stopwatch | planned |
 | 29 | Trivia Capstone | all three | planned |
 | 30 | WorkOS AuthKit — Device Grant | 1.8 | planned |
 
@@ -228,14 +228,11 @@ anything).
   wireless v2). Host half: pi extension lifecycle events / Claude Code
   hooks / a Herdr publisher; transport v1 = USB serial lines
   (`AGENT running codex`), v2 = WebSocket via the day-22 relay.
-- **Metronome** (StopWatch) — drift-free beat scheduling via timestamp
-  arithmetic (day 11), accented downbeat, haptic click, tap-tempo on
-  the second pusher (median of last 4 intervals), pendulum on the
-  round face. 40–240 BPM.
-- **Tempo checker** (StopWatch, mic) — the inverse: day 15's capture →
-  onset detection (spectral flux) → inter-onset autocorrelation → BPM
-  with confidence; octave ambiguity is the STORY. Verification: point
-  it at the metronome — the pair validates itself.
+- **Music Player** (demoted from the main line when metronome/tempo
+  were promoted) — the de-scoped iPod: onboard ES8311, library UI,
+  album art via the asset pipeline.
+- **Shazam** (demoted likewise) — capture path + fingerprint API
+  (ACRCloud/AudD) on top of the captions pipeline.
 
 - **Conference badge** — Mastodon/Bluesky public endpoints (no API keys),
   wearable on the cased 1.75-B. Best if there's an event to wear it at.
