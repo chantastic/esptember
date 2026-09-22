@@ -43,6 +43,7 @@ loc 45.52 -122.68
 ```
 
 Set `loc` to your coordinates; the scope centers on you.
+Holding **both pushers for two seconds** forgets Wi-Fi and reopens the portal — reconfiguration never needs a computer.
 
 ## How it works
 

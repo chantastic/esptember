@@ -42,6 +42,7 @@ uvx esptool --chip esp32s3 --port WAVESHARE_PORT \
 
 Provision Wi-Fi: **both boards run the captive portal** — each hosts `esptember-setup` when unprovisioned; join from a phone and fill the form.
 Match channels, hold the crown, talk across the world.
+On the StopWatch, holding **both pushers for two seconds** forgets Wi-Fi and reopens the portal.
 
 ## How it works
 

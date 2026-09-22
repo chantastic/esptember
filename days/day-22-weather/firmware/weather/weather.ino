@@ -240,6 +240,21 @@ void loop() {
     fetchWeather();
   }
 
+
+  // Hold both pushers ~2 s: forget Wi-Fi, reopen the setup portal.
+  static uint32_t chordSince = 0;
+  if (M5.BtnA.isPressed() && M5.BtnB.isPressed()) {
+    if (!chordSince) chordSince = millis();
+    else if (millis() - chordSince > 2000) {
+      prefs.remove("ssid");
+      prefs.remove("pass");
+      Serial.println("WIFI_RESET");
+      ESP.restart();
+    }
+  } else {
+    chordSince = 0;
+  }
+
   handleSerial();
 
   static uint32_t lastDraw = 0;

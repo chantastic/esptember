@@ -55,6 +55,7 @@ loc 45.52 -122.68
 ```
 
 Credentials persist in NVS; `forget` erases them.
+Holding **both pushers for two seconds** forgets Wi-Fi and reopens the portal — reconfiguration never needs a computer.
 The `loc` line sets your coordinates (the default is Portland, OR).
 
 ## How it works

@@ -1,14 +1,17 @@
 // ESPtember Day 28 — Note Taker
-// A voice recorder that files its own paperwork: hold the crown and
-// speak (up to 30 seconds into PSRAM), release, and the clip goes to
-// Deepgram for transcription; the text posts itself to your Memos
-// server. No keyboard ever existed and none was missed.
+// A voice recorder that writes: hold the crown and speak (up to 30
+// seconds into PSRAM), release, and the clip goes to Deepgram for
+// transcription; the text files itself LOCALLY — a ring of twenty notes
+// in NVS, browsable on the second pusher. No keyboard ever existed and
+// none was missed. Cloud backends (Notion, Telegram, Memos, your own
+// Worker) are the README's extended options.
+// Hold BOTH pushers ~2 s at any time to forget Wi-Fi and reopen the
+// setup portal.
 //
 // Provisioning: with no saved Wi-Fi the board becomes the setup page —
-// join "esptember-setup" from a phone and the portal collects Wi-Fi,
-// the Deepgram key, and the Memos URL/token in one form (day 21's
-// pattern, ported). Serial stays available as the power-user path:
-//   wifi SSID PASS / dgkey KEY / memos URL TOKEN / forget
+// join "esptember-setup" from a phone; the form collects Wi-Fi and the
+// Deepgram key. Serial stays available as the power-user path:
+//   wifi SSID PASS / dgkey KEY / forget
 #include <M5Unified.h>
 #include "wifi_portal.h"
 #include <WiFi.h>
@@ -60,30 +63,45 @@ static bool transcribe(String &text) {
   return text.length() > 0;
 }
 
-// --- Memos -----------------------------------------------------------------------
-static bool saveToMemos(const String &text) {
-  const String url = notePrefs.getString("murl", "");
-  const String token = notePrefs.getString("mtoken", "");
-  if (!url.length() || !token.length()) {
-    snprintf(statusLine, sizeof(statusLine), "no memos config");
+// --- Local note store ---------------------------------------------------------
+// A ring of twenty notes in NVS: note0..note19 plus a cursor. Local
+// first — the notes survive power loss and browse on the B pusher; a
+// cloud backend is one function away when wanted.
+#define NOTE_SLOTS 20
+
+static int noteCursor = 0; // next slot to write
+static int noteTotal = 0;  // lifetime count (caps display at slots)
+static int browseIndex = -1;
+
+static void notesLoad() {
+  noteCursor = notePrefs.getInt("cursor", 0);
+  noteTotal = notePrefs.getInt("total", 0);
+}
+
+static void noteKey(char *out, size_t n, int slot) {
+  snprintf(out, n, "note%d", slot);
+}
+
+static bool saveNoteLocal(const String &text) {
+  char key[12];
+  noteKey(key, sizeof(key), noteCursor % NOTE_SLOTS);
+  if (!notePrefs.putString(key, text)) {
+    snprintf(statusLine, sizeof(statusLine), "NVS write failed");
     return false;
   }
-  HTTPClient http;
-  http.begin(url + "/api/v1/memos");
-  http.addHeader("Authorization", "Bearer " + token);
-  http.addHeader("Content-Type", "application/json");
-  http.setTimeout(15000);
-  JsonDocument doc;
-  doc["content"] = text;
-  String body;
-  serializeJson(doc, body);
-  const int code = http.POST(body);
-  http.end();
-  if (code != 200) {
-    snprintf(statusLine, sizeof(statusLine), "memos HTTP %d", code);
-    return false;
-  }
+  noteCursor = (noteCursor + 1) % NOTE_SLOTS;
+  noteTotal++;
+  notePrefs.putInt("cursor", noteCursor);
+  notePrefs.putInt("total", noteTotal);
   return true;
+}
+
+static String readNote(int back) { // back=0: newest
+  const int stored = noteTotal < NOTE_SLOTS ? noteTotal : NOTE_SLOTS;
+  if (back < 0 || back >= stored) return "";
+  char key[12];
+  noteKey(key, sizeof(key), (noteCursor - 1 - back + 2 * NOTE_SLOTS) % NOTE_SLOTS);
+  return notePrefs.getString(key, "");
 }
 
 // --- Display -----------------------------------------------------------------------
@@ -186,10 +204,6 @@ static void handleSerial() {
       } else if (sscanf(line, "dgkey %127s", a) == 1) {
         notePrefs.putString("dgkey", a);
         Serial.println("D28_SAVED dgkey");
-      } else if (sscanf(line, "memos %127s %127s", a, b) == 2) {
-        notePrefs.putString("murl", a);
-        notePrefs.putString("mtoken", b);
-        Serial.printf("D28_SAVED memos=%s\n", a);
       } else if (!strcmp(line, "forget")) {
         wifiPrefs.clear();
         Serial.println("D28_FORGOT");
@@ -220,6 +234,8 @@ void setup() {
 
   wifiPrefs.begin("day22", false); // shared Wi-Fi home
   notePrefs.begin("day28", false);
+  notesLoad();
+  notesSaved = noteTotal;
   const String ssid = wifiPrefs.getString("ssid", "");
   if (!ssid.length()) {
     // No Wi-Fi: become the setup page. The portal also collects this
@@ -238,11 +254,9 @@ void setup() {
     canvas.pushSprite(0, 0);
     static const PortalField fields[] = {
         {"dgkey", "Deepgram API key", true},
-        {"murl", "Memos URL (https://...)", false},
-        {"mtoken", "Memos access token", true},
     };
     WifiPortal portal;
-    portal.run(wifiPrefs, notePrefs, fields, 3); // reboots on save
+    portal.run(wifiPrefs, notePrefs, fields, 1); // reboots on save
   }
   WiFi.mode(WIFI_STA);
   WiFi.begin(ssid.c_str(), wifiPrefs.getString("pass", "").c_str());
@@ -282,7 +296,7 @@ void loop() {
           Serial.printf("D28_TRANSCRIPT %s\n", lastNote);
           state = State::Saving;
           render();
-          if (saveToMemos(text)) {
+          if (saveNoteLocal(text)) {
             notesSaved++;
             state = State::Done;
             Serial.println("D28_FILED");
@@ -299,12 +313,34 @@ void loop() {
       }
     }
   }
-  // Any state settles back to Idle on the next crown press; B clears now.
-  if (state == State::Done || state == State::Error) {
-    if (M5.BtnB.wasClicked()) {
+  // B browses the local ring (newest first); it also dismisses results.
+  if (M5.BtnB.wasClicked() && state != State::Recording) {
+    if (state == State::Done || state == State::Error) {
       state = State::Idle;
-      render();
+      browseIndex = -1;
+    } else {
+      const int stored = noteTotal < NOTE_SLOTS ? noteTotal : NOTE_SLOTS;
+      if (stored) {
+        browseIndex = (browseIndex + 1) % stored;
+        strlcpy(lastNote, readNote(browseIndex).c_str(), sizeof(lastNote));
+        state = State::Done; // reuse the note display
+        Serial.printf("D28_BROWSE %d %s\n", browseIndex, lastNote);
+      }
     }
+    render();
+  }
+
+  // Hold both pushers ~2 s: forget Wi-Fi, reopen the portal.
+  static uint32_t chordSince = 0;
+  if (M5.BtnA.isPressed() && M5.BtnB.isPressed()) {
+    if (!chordSince) chordSince = millis();
+    else if (millis() - chordSince > 2000) {
+      wifiPrefs.clear();
+      Serial.println("D28_WIFI_RESET");
+      ESP.restart();
+    }
+  } else {
+    chordSince = 0;
   }
 
   handleSerial();
