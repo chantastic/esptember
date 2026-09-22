@@ -52,7 +52,7 @@ When flashing completes, an egg appears.
 
 ## How it works
 
-The rules are hours, compressed from the 1996 pacing: the egg hatches in one hour, childhood arrives at 24, adulthood at 72.
+The pacing honors the 1996 original where it counts: the egg hatches in five minutes — the first-session payoff — then childhood arrives at 24 hours and adulthood at 72.
 Hunger loses a heart every 4 hours, happiness every 6 — faster if poop is on screen.
 A poop appears every 5 waking hours.
 Twenty-four consecutive hours with hunger empty and the pet is gone; both pushers held together start a new egg.
@@ -86,7 +86,7 @@ The creature itself is five 16-line bitmaps — egg, baby, child, adult, and one
 
 - First boot: an egg, `EGG 0h`, four hearts on both meters, and the toast `AN EGG APPEARED`.
 - A cycles `< FEED >` through the four actions with a tick; B fires the selected one with its own tone and toast.
-- After one hour of real time, the egg hatches — `IT GREW!`.
+- Five minutes after first boot, the egg hatches — `IT GREW!`.
 - Power the board off overnight: on boot, the meters reflect the hours away and the age header has kept counting.
 - If the worst happens, both pushers held together lay a new egg.
 

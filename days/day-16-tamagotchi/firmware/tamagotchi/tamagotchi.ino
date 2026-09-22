@@ -11,10 +11,11 @@
 #include <Preferences.h>
 
 // --- Life stages ---------------------------------------------------------
-// Thresholds are hours of age. The 1996 pacing compressed: egg hatches
-// in one hour, adulthood in three days.
+// Thresholds are minutes of age. The egg hatches in five minutes — the
+// 1996 original's first-session payoff — then childhood at one day and
+// adulthood at three.
 enum Stage : uint8_t { EGG, BABY, CHILD, ADULT, DEAD };
-static const uint32_t STAGE_AT_HOURS[] = {0, 1, 24, 72};
+static const uint32_t STAGE_AT_MINUTES[] = {0, 5, 1440, 4320};
 static const char *STAGE_NAME[] = {"EGG", "BABY", "CHILD", "ADULT", "GONE"};
 
 // --- Pet state -------------------------------------------------------------
@@ -48,6 +49,7 @@ static uint32_t nowEpoch() {
   return (uint32_t)mktime(&tmv);
 }
 
+static uint32_t ageMinutes() { return (nowEpoch() - pet.bornAt) / 60; }
 static uint32_t ageHours() { return (nowEpoch() - pet.bornAt) / 3600; }
 
 static void savePet() {
@@ -86,10 +88,10 @@ static void simulate(uint32_t minutes) {
     }
   }
   // Stage from age, never backwards.
-  const uint32_t age = ageHours();
+  const uint32_t age = ageMinutes();
   uint8_t stage = EGG;
   for (int s = ADULT; s >= 0; s--)
-    if (age >= STAGE_AT_HOURS[s]) { stage = s; break; }
+    if (age >= STAGE_AT_MINUTES[s]) { stage = s; break; }
   if (stage > pet.stage && pet.stage != DEAD) pet.stage = stage;
 }
 
