@@ -220,6 +220,23 @@ anything).
 
 ## Stretch / sequel list
 
+- **Agent pet** — a desk creature embodying your coding agents (Codex,
+  Claude Code, pi/Herdr): asleep when idle, working animation while an
+  agent runs, attention beep + vibration when one blocks on input,
+  celebration on completion; crown = acknowledge. Composes day 16 (pet
+  state machine + art), day 10 (haptics), day 19 (portal, for the
+  wireless v2). Host half: pi extension lifecycle events / Claude Code
+  hooks / a Herdr publisher; transport v1 = USB serial lines
+  (`AGENT running codex`), v2 = WebSocket via the day-22 relay.
+- **Metronome** (StopWatch) — drift-free beat scheduling via timestamp
+  arithmetic (day 11), accented downbeat, haptic click, tap-tempo on
+  the second pusher (median of last 4 intervals), pendulum on the
+  round face. 40–240 BPM.
+- **Tempo checker** (StopWatch, mic) — the inverse: day 15's capture →
+  onset detection (spectral flux) → inter-onset autocorrelation → BPM
+  with confidence; octave ambiguity is the STORY. Verification: point
+  it at the metronome — the pair validates itself.
+
 - **Conference badge** — Mastodon/Bluesky public endpoints (no API keys),
   wearable on the cased 1.75-B. Best if there's an event to wear it at.
 - **Compass** — blocked: no magnetometer on any board. Unblocks with the
