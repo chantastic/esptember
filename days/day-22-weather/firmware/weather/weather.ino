@@ -17,6 +17,9 @@
 #include <Preferences.h>
 #include "wifi_portal.h"
 
+static WifiPortal settingsPage;
+static bool settingsUp = false;
+
 static Preferences prefs;
 
 // --- Weather state -------------------------------------------------------------
@@ -52,6 +55,7 @@ static bool fetchWeather() {
            "&forecast_hours=12&forecast_days=1&timezone=auto",
            lat, lon);
   HTTPClient http;
+  http.useHTTP10(true); // chunked responses garble stream parsing
   http.begin(url); // Open-Meteo's cert chain is public CA; esp32 core
                    // bundles the roots when available, else falls back
   http.setTimeout(10000);
@@ -254,6 +258,12 @@ void loop() {
   } else {
     chordSince = 0;
   }
+
+  if (WiFi.status() == WL_CONNECTED && !settingsUp) {
+    settingsUp = true;
+    settingsPage.beginSettings(prefs, prefs, nullptr, 0);
+  }
+  if (settingsUp) settingsPage.handleLoop();
 
   handleSerial();
 

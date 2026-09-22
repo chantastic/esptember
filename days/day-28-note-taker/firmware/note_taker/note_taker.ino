@@ -25,6 +25,13 @@
 #define CHUNK 512
 
 static Preferences wifiPrefs, notePrefs;
+
+// One field list serves both the setup portal and the settings page.
+static const PortalField DGFIELDS[] = {
+    {"dgkey", "Deepgram API key", true},
+};
+static WifiPortal settingsPage;
+static bool settingsUp = false;
 static int16_t *recording; // PSRAM
 static size_t recorded = 0;
 
@@ -39,6 +46,7 @@ static bool transcribe(String &text) {
   const String key = notePrefs.getString("dgkey", "");
   if (!key.length()) { snprintf(statusLine, sizeof(statusLine), "no dgkey"); return false; }
   HTTPClient http;
+  http.useHTTP10(true); // chunked responses garble stream parsing
   http.begin("https://api.deepgram.com/v1/listen?encoding=linear16&"
              "sample_rate=8000&channels=1&smart_format=true");
   http.addHeader("Authorization", "Token " + key);
@@ -174,9 +182,14 @@ static void render() {
     if (lineBuf[0]) canvas.drawString(lineBuf, 233, y);
   }
 
-  char foot[32];
+  char foot[48];
   snprintf(foot, sizeof(foot), "%d notes filed", notesSaved);
-  canvas.drawString(foot, 233, 420);
+  canvas.drawString(foot, 233, 402);
+  if (WiFi.status() == WL_CONNECTED) {
+    snprintf(foot, sizeof(foot), "settings: %s",
+             WiFi.localIP().toString().c_str());
+    canvas.drawString(foot, 233, 430);
+  }
   canvas.pushSprite(0, 0);
 }
 
@@ -252,11 +265,8 @@ void setup() {
     canvas.setTextColor(TFT_DARKGRAY, TFT_BLACK);
     canvas.drawString("the setup page opens itself", 233, 300);
     canvas.pushSprite(0, 0);
-    static const PortalField fields[] = {
-        {"dgkey", "Deepgram API key", true},
-    };
     WifiPortal portal;
-    portal.run(wifiPrefs, notePrefs, fields, 1); // reboots on save
+    portal.run(wifiPrefs, notePrefs, DGFIELDS, 1); // reboots on save
   }
   WiFi.mode(WIFI_STA);
   WiFi.begin(ssid.c_str(), wifiPrefs.getString("pass", "").c_str());
@@ -360,6 +370,15 @@ void loop() {
   }
 
   handleSerial();
+
+  // The settings page rides the station IP the moment Wi-Fi is up —
+  // the portal form, reachable any time, no chord required.
+  if (WiFi.status() == WL_CONNECTED && !settingsUp) {
+    settingsUp = true;
+    settingsPage.beginSettings(wifiPrefs, notePrefs, DGFIELDS, 1);
+    if (state == State::Idle) render(); // show the settings URL
+  }
+  if (settingsUp) settingsPage.handleLoop();
 
   // Redraw the idle screen when Wi-Fi state changes (it joins seconds
   // after boot; a once-drawn "no Wi-Fi" frame would lie forever).

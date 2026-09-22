@@ -13,6 +13,9 @@
 #include <Preferences.h>
 #include "wifi_portal.h"
 
+static WifiPortal settingsPage;
+static bool settingsUp = false;
+
 #define RELAY_HOST "esptember-walkie-relay.chantastic.workers.dev"
 #define SAMPLE_RATE 8000
 #define FRAME_SAMPLES 120
@@ -229,6 +232,12 @@ void loop() {
   } else {
     chordSince = 0;
   }
+
+  if (WiFi.status() == WL_CONNECTED && !settingsUp) {
+    settingsUp = true;
+    settingsPage.beginSettings(prefs, prefs, nullptr, 0);
+  }
+  if (settingsUp) settingsPage.handleLoop();
 
   handleSerial();
   if (millis() - lastRender > 1000) {

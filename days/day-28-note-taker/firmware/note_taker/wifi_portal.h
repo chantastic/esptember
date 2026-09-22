@@ -20,19 +20,13 @@ struct PortalField {
 
 class WifiPortal {
  public:
-  // wifiPrefs: the shared "day22" namespace. extraPrefs/fields: this
-  // day's own keys. Blocks forever (reboots on save).
+  // Setup mode: no saved Wi-Fi. Blocks forever (reboots on save).
   void run(Preferences &wifiPrefs, Preferences &extraPrefs,
            const PortalField *fields, int fieldCount) {
-    wifiPrefs_ = &wifiPrefs;
-    extraPrefs_ = &extraPrefs;
-    fields_ = fields;
-    fieldCount_ = fieldCount;
-
+    bind(wifiPrefs, extraPrefs, fields, fieldCount);
     WiFi.mode(WIFI_AP_STA); // STA half powers the network scan
     WiFi.softAP("esptember-setup");
     dns_.start(53, "*", WiFi.softAPIP());
-
     server_.onNotFound([this]() { handle(); });
     server_.begin();
     Serial.printf("PORTAL_UP ssid=esptember-setup ip=%s\n",
@@ -43,6 +37,22 @@ class WifiPortal {
       delay(2);
     }
   }
+
+  // Settings mode: connected. The SAME form stays reachable at the
+  // device's station IP, forever — no chord, no serial, no ceremony.
+  // Call beginSettings() after Wi-Fi connects and handleLoop() every
+  // loop() pass.
+  void beginSettings(Preferences &wifiPrefs, Preferences &extraPrefs,
+                     const PortalField *fields, int fieldCount) {
+    bind(wifiPrefs, extraPrefs, fields, fieldCount);
+    settingsMode_ = true;
+    server_.onNotFound([this]() { handle(); });
+    server_.begin();
+    Serial.printf("SETTINGS_UP url=http://%s/\n",
+                  WiFi.localIP().toString().c_str());
+  }
+
+  void handleLoop() { server_.handleClient(); }
 
  private:
   void handle() {
@@ -68,12 +78,22 @@ class WifiPortal {
         "<form method=post action=/save>"
         "<label>Network<br><select name=ssid style='width:100%;padding:8px;"
         "font-size:16px'>";
+    const String saved = wifiPrefs_->getString("ssid", "");
     const int n = WiFi.scanNetworks();
-    for (int i = 0; i < n && i < 12; i++)
-      page += "<option>" + WiFi.SSID(i) + "</option>";
+    bool listed = false;
+    for (int i = 0; i < n && i < 12; i++) {
+      const bool sel = WiFi.SSID(i) == saved;
+      listed |= sel;
+      page += String("<option") + (sel ? " selected" : "") + ">" +
+              WiFi.SSID(i) + "</option>";
+    }
+    if (saved.length() && !listed)
+      page += "<option selected>" + saved + "</option>";
     page +=
-        "</select></label><br><br><label>Password<br>"
-        "<input name=pass type=password style='width:100%;padding:8px;"
+        "</select></label><br><br><label>Password";
+    if (settingsMode_) page += " <small>(blank = keep current)</small>";
+    page +=
+        "<br><input name=pass type=password style='width:100%;padding:8px;"
         "font-size:16px'></label>";
     for (int i = 0; i < fieldCount_; i++) {
       page += "<br><br><label>";
@@ -95,8 +115,13 @@ class WifiPortal {
   }
 
   void save() {
-    wifiPrefs_->putString("ssid", server_.arg("ssid"));
-    wifiPrefs_->putString("pass", server_.arg("pass"));
+    // In settings mode an empty password means "keep the old one" —
+    // people change API keys far more often than networks.
+    const String ssid = server_.arg("ssid");
+    const String pass = server_.arg("pass");
+    if (ssid.length()) wifiPrefs_->putString("ssid", ssid);
+    if (pass.length() || !settingsMode_)
+      wifiPrefs_->putString("pass", pass);
     for (int i = 0; i < fieldCount_; i++) {
       const String value = server_.arg(fields_[i].key);
       if (value.length()) extraPrefs_->putString(fields_[i].key, value);
@@ -110,6 +135,15 @@ class WifiPortal {
     ESP.restart();
   }
 
+  void bind(Preferences &wifiPrefs, Preferences &extraPrefs,
+            const PortalField *fields, int fieldCount) {
+    wifiPrefs_ = &wifiPrefs;
+    extraPrefs_ = &extraPrefs;
+    fields_ = fields;
+    fieldCount_ = fieldCount;
+  }
+
+  bool settingsMode_ = false;
   Preferences *wifiPrefs_ = nullptr;
   Preferences *extraPrefs_ = nullptr;
   const PortalField *fields_ = nullptr;

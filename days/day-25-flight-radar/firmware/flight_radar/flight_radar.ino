@@ -15,6 +15,9 @@
 #include <Preferences.h>
 #include "wifi_portal.h"
 
+static WifiPortal settingsPage;
+static bool settingsUp = false;
+
 #define RADIUS_NM 25
 #define FETCH_MS 8000
 
@@ -43,6 +46,7 @@ static bool fetchAircraft() {
   snprintf(url, sizeof(url), "https://api.adsb.lol/v2/point/%.4f/%.4f/%d",
            lat, lon, RADIUS_NM);
   HTTPClient http;
+  http.useHTTP10(true); // chunked responses garble stream parsing
   http.begin(url);
   http.setTimeout(8000);
   const int code = http.GET();
@@ -253,6 +257,12 @@ void loop() {
   } else {
     chordSince = 0;
   }
+
+  if (WiFi.status() == WL_CONNECTED && !settingsUp) {
+    settingsUp = true;
+    settingsPage.beginSettings(prefs, prefs, nullptr, 0);
+  }
+  if (settingsUp) settingsPage.handleLoop();
 
   handleSerial();
   static uint32_t lastFrame = 0;
