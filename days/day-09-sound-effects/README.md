@@ -194,7 +194,16 @@ All eight configured paths started and completed, the Asteroid Crash and Power U
 The device is reset to page one for hand review.
 Perceived sound quality, physical pusher feel, and physical touch alignment still require direct observation.
 
-## Next exercise: Sampler + Voice Changer
+## Next exercise: Drum Looper
+
+Keep the four-pad view, but turn it into a 16-bar, 4/4 looper with independent Kick, Snare, Hi-Hat, and Crash tracks.
+There is no record mode: while the loop plays, the first tap on a pad clears only that pad's old track and opens a full 16-bar replacement window for that instrument.
+
+![Round-screen acceptance reference for the Drum Looper](https://esptember.com/images/day-09-sound-effects/drum-looper-reference.png)
+
+The [Drum Looper exercise](https://github.com/chantastic/esptember/tree/main/days/day-09-sound-effects/extensions/drum-looper) specifies its 256-step loop, per-track replacement rule, tap tempo, play/pause and clear controls, musical clock, tests, and hand review.
+
+## After that: Sampler + Voice Changer
 
 Record one sound with the Stopwatch microphone, then use the same two-page pad layout to hear it as Clean, Chipmunk, Monster, Robot, Echo, Reverse, Stutter, and Alien.
 

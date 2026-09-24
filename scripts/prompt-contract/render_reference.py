@@ -44,10 +44,12 @@ def main() -> int:
     elif kind == "pads":
         pads = visual.get("pads", [])[:4]
         positions = ((84, 88), (252, 88), (84, 246), (252, 246))
+        status_colors = {"empty": "#555560", "stored": "#ffffff", "replacing": "#ff3b30"}
         decorations = ''.join(
             f'<rect x="{x}" y="{y}" width="132" height="118" rx="20" fill="{pad.get("color", accent)}"/>'
             f'<rect x="{x + 8}" y="{y + 8}" width="116" height="102" rx="15" fill="#fff" opacity=".08"/>'
             f'<text x="{x + 66}" y="{y + 137}" class="padlabel">{text(pad.get("label", f"PAD {i + 1}"))}</text>'
+            + (f'<circle cx="{x + 119}" cy="{y + 132}" r="4" fill="{status_colors.get(pad.get("status"), "#555560")}"/>' if pad.get("status") else '')
             for i, (pad, (x, y)) in enumerate(zip(pads, positions))
         )
     line_svg = ''.join(f'<text x="234" y="{270 + i * 34}" class="line">{text(line)}</text>' for i, line in enumerate(lines))
@@ -61,8 +63,8 @@ def main() -> int:
         footer_one = f"A {action_label(controls['left'])}   ·   B {action_label(controls['right'])}"
         footer_two = f"Both {action_label(controls['enter'])}   ·   Hold {action_label(controls['back'])}"
     if kind == "pads":
-        footer_one = f"A  ◀     {visual.get('page', '1 / 2')}     ▶  B"
-        footer_two = ""
+        footer_one = visual.get("footer", f"A  ◀     {visual.get('page', '1 / 2')}     ▶  B")
+        footer_two = visual.get("footer_two", "")
         line_svg = ""
         header = f'''<text x="234" y="38" class="eyebrow">{text(visual.get("eyebrow", contract["title"].upper()))}</text>
 <text x="234" y="65" class="padpage">{text(visual.get("title", "PAGE 1"))}</text>'''
