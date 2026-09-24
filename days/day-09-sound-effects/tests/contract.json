@@ -34,26 +34,30 @@
       "type": "enum",
       "default": "none",
       "values": [
-        "none",
-        "laser",
-        "coin",
         "jump",
-        "explosion",
-        "powerup",
-        "blip"
+        "coin",
+        "death",
+        "mario_powerup",
+        "shoot",
+        "explode",
+        "crash",
+        "asteroid_powerup",
+        "none"
       ]
     },
     "last_trigger": {
       "type": "enum",
       "default": "none",
       "values": [
-        "none",
-        "laser",
-        "coin",
         "jump",
-        "explosion",
-        "powerup",
-        "blip"
+        "coin",
+        "death",
+        "mario_powerup",
+        "shoot",
+        "explode",
+        "crash",
+        "asteroid_powerup",
+        "none"
       ]
     },
     "plays": {
@@ -70,8 +74,8 @@
         {
           "action": "pad1_down",
           "expect": {
-            "active": "laser",
-            "last_trigger": "laser",
+            "active": "jump",
+            "last_trigger": "jump",
             "plays": 1
           }
         },
@@ -79,7 +83,7 @@
           "action": "audio_done",
           "expect": {
             "active": "none",
-            "last_trigger": "laser",
+            "last_trigger": "jump",
             "plays": 1
           }
         }
@@ -88,8 +92,8 @@
     {
       "name": "immediate retrigger",
       "given": {
-        "active": "laser",
-        "last_trigger": "laser",
+        "active": "jump",
+        "last_trigger": "jump",
         "plays": 1
       },
       "steps": [
@@ -104,8 +108,8 @@
         {
           "action": "pad4_down",
           "expect": {
-            "active": "explosion",
-            "last_trigger": "explosion",
+            "active": "mario_powerup",
+            "last_trigger": "mario_powerup",
             "plays": 3
           }
         }
@@ -143,23 +147,23 @@
         {
           "action": "pad1_down",
           "expect": {
-            "active": "powerup",
-            "last_trigger": "powerup",
+            "active": "shoot",
+            "last_trigger": "shoot",
             "plays": 1
           }
         },
         {
           "action": "pad2_down",
           "expect": {
-            "active": "blip",
-            "last_trigger": "blip",
+            "active": "explode",
+            "last_trigger": "explode",
             "plays": 2
           }
         }
       ]
     },
     {
-      "name": "empty slot",
+      "name": "complete asteroid group",
       "given": {
         "page": "page2"
       },
@@ -168,9 +172,18 @@
           "action": "pad3_down",
           "expect": {
             "page": "page2",
-            "active": "none",
-            "last_trigger": "none",
-            "plays": 0
+            "active": "crash",
+            "last_trigger": "crash",
+            "plays": 1
+          }
+        },
+        {
+          "action": "pad4_down",
+          "expect": {
+            "page": "page2",
+            "active": "asteroid_powerup",
+            "last_trigger": "asteroid_powerup",
+            "plays": 2
           }
         }
       ]
@@ -221,11 +234,11 @@
   "visual": {
     "kind": "pads",
     "eyebrow": "SOUND BOARD",
-    "title": "PAGE 1",
+    "title": "MARIO",
     "metric": "",
     "pads": [
       {
-        "label": "LASER",
+        "label": "JUMP",
         "color": "#ff5b04"
       },
       {
@@ -233,12 +246,12 @@
         "color": "#29c7d8"
       },
       {
-        "label": "JUMP",
-        "color": "#9bdd32"
+        "label": "DEATH",
+        "color": "#9b6cff"
       },
       {
-        "label": "EXPLOSION",
-        "color": "#e852a0"
+        "label": "POWER UP",
+        "color": "#55c96f"
       }
     ],
     "page": "1 / 2",

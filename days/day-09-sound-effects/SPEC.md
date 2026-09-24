@@ -6,8 +6,10 @@ Build a fast, two-page drum-pad instrument for the M5Stack Stopwatch.
 Each page shows four colored square pads in a 2 × 2 grid.
 The left and right pushers change pages; touching a pad triggers its sound immediately.
 
-The board has eight configurable slots.
-The default set is Laser, Coin, Jump, Explosion, Power Up, and Blip, followed by two empty slots.
+The board has eight configurable slots arranged as two coherent game-sound kits.
+The Mario page contains Jump, Coin, Death, and Power Up.
+The Asteroid page contains Shoot, Explode, Crash, and Power Up.
+The two Power Up slots have separate recipes appropriate to their page.
 
 ## Shared platform contract
 
@@ -48,14 +50,15 @@ Each page contains four 132 × 118 colored pads arranged at `(84,88)`, `(252,88)
 The pad is the color field; its name appears in small text immediately underneath.
 Do not put large words, icons, focus rings, counters, or instructions inside a pad.
 
-The page title stays above the grid.
+The page title stays above the grid and names the active kit: `MARIO` or `ASTEROID`.
 The footer shows `A ◀`, `page / count`, and `▶ B`.
 All pad corners and text remain inside the radius-226 safe area around `(234,233)`.
 The screen uses rows 0–465 only and leaves no bottom strip.
 
 Use distinct colors with sufficient luminance contrast on the black background.
-The defaults are orange, cyan, lime, magenta, yellow, and blue.
-Empty slots remain visible as dim gray pads labeled `EMPTY` so the grid never changes shape.
+The Mario defaults are orange, cyan, purple, and green.
+The Asteroid defaults are cyan, orange, red, and blue.
+All eight default slots are configured, so both pages remain complete 2 × 2 instruments.
 
 ## Sound configuration
 
@@ -83,7 +86,7 @@ Preserve the original file outside generated build output.
 Reject unreadable input, clips longer than two seconds, decoded data larger than the configured PSRAM budget, and a silent result.
 Do not decode MP3, FLAC, OGG, or resample audio inside a touch callback.
 
-Empty slots are valid.
+Empty slots remain valid for a customized manifest, but the default manifest has none.
 Changing labels, colors, descriptions, or files regenerates a disposable candidate; it does not change the hardware or interaction contract.
 
 ## Fast trigger path
@@ -109,11 +112,11 @@ No single measured trigger may exceed 50 ms.
 
 ## Required scenarios
 
-- **primary flow:** touch pad 1, then complete playback;
-- **immediate retrigger:** touch pad 2 and pad 4 while another clip is active; each replaces it immediately;
+- **primary flow:** trigger Mario Jump, then complete playback;
+- **immediate retrigger:** trigger Mario Coin and Power Up while another clip is active; each replaces it immediately;
 - **pusher paging:** right, left, then wrapping left;
-- **second page sounds:** trigger Power Up and Blip through page 2;
-- **empty slot:** touching an unconfigured slot is a visible press with no audio or play-count change.
+- **Asteroid page:** trigger Shoot, Explode, Crash, and Power Up through page 2;
+- **kit identity:** the visible page title and every pad label match the active page's four-slot manifest.
 
 The JSON contract contains the exact intermediate expected state for every action.
 It is normative when prose and a disposable candidate disagree.

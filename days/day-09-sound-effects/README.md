@@ -3,7 +3,7 @@ board: m5stack-stopwatch
 day: 9
 title: Sound Effects Board
 toolchain: Arduino ESP32 3.3.10 + M5Unified 0.2.19 + M5GFX 0.2.26 + LVGL 9.3.0
-summary: "Eight configurable drum pads, two instant page pushers, and sounds made from descriptions or audio files."
+summary: "Two four-pad game sound kits, instant page pushers, and sounds made from descriptions or audio files."
 verification: "Host, compile, injected-device, latency, and framebuffer checks passed; physical sound and control review pending"
 ---
 
@@ -13,8 +13,10 @@ Build a pocket drum machine with four colored pads per page.
 Touch a pad and it sounds immediately.
 Use the left and right pushers to move between pages.
 
-The board has eight slots.
-The defaults fill six of them with Laser, Coin, Jump, Explosion, Power Up, and Blip; the last two are ready for your sounds.
+The board has eight slots grouped as two complete game kits.
+The Mario page has Jump, Coin, Death, and Power Up.
+The Asteroid page has Shoot, Explode, Crash, and its own Power Up.
+The page name sits above the pads so every sound has a clear context.
 
 The durable source is this prompt, [SPEC.md](https://github.com/chantastic/esptember/blob/main/days/day-09-sound-effects/SPEC.md), the machine-readable contract, and its layered acceptance criteria.
 Generated firmware is a disposable candidate.
@@ -43,12 +45,14 @@ The build turns a description into explicit numbers, then renders the whole buff
 
 The defaults use:
 
-- **Laser:** a falling 1,800 Hz to 200 Hz sine sweep with a 300 ms decay.
-- **Coin:** two square-wave notes, 988 Hz then 1,319 Hz.
-- **Jump:** a rising sine sweep shaped by a rounded attack and release.
-- **Explosion:** explicitly seeded noise through a one-pole low-pass filter and exponential decay.
-- **Power Up:** a rising sine sweep with amplitude modulation.
-- **Blip:** a short 720 Hz sine with a fast exponential decay.
+- **Mario · Jump:** a rising 220 Hz to 1,220 Hz sine sweep with a rounded envelope.
+- **Mario · Coin:** two square-wave notes, 988 Hz then 1,319 Hz.
+- **Mario · Death:** four descending square-wave notes with an exponential fade.
+- **Mario · Power Up:** a bright rising four-note triangle-wave arpeggio.
+- **Asteroid · Shoot:** a short 1,600 Hz to 420 Hz electronic shot with a noise click.
+- **Asteroid · Explode:** explicitly seeded noise through a one-pole low-pass filter and exponential decay.
+- **Asteroid · Crash:** a seeded metallic noise burst layered with a falling low tone.
+- **Asteroid · Power Up:** a rising 180 Hz to 1,380 Hz sine sweep with amplitude modulation.
 
 The recipe is deterministic.
 The same settings produce the same PCM hash on every build.
@@ -129,7 +133,8 @@ Localized controls and layout
 - Show four 132 × 118 colored squares in a 2 × 2 grid at the exact bounds in contract.json.
 - Put each short pad label in small text directly underneath its square. Do not put large text or icons inside a pad.
 - Show A with a left pager arrow, the page count, and a right pager arrow with B at the bottom.
-- Page 1 contains Laser, Coin, Jump, and Explosion. Page 2 contains Power Up, Blip, and two visible dim EMPTY slots unless the user configures them.
+- Name the active kit above the grid: MARIO on page 1 and ASTEROID on page 2.
+- Page 1 contains Jump, Coin, Death, and Power Up. Page 2 contains Shoot, Explode, Crash, and a distinct Power Up.
 
 Sound configuration
 
@@ -166,26 +171,26 @@ Never describe reference rendering or injected input as physical proof.
 
 ## Required behavior
 
-- Four colored square pads per page, with short labels underneath.
+- Four colored square pads per page, with short labels underneath and the active game kit named above them.
 - BtnA pages left and BtnB pages right; the footer shows both pager arrows.
 - Pads fire on touch-down and immediately retrigger one voice.
-- Eight configurable slots accept described recipes or supplied audio files.
+- The default Mario and Asteroid kits fill all eight slots; every slot still accepts a described recipe or supplied audio file.
 - Audio is prepared before interaction and meets the measured latency limits in [SPEC.md](https://github.com/chantastic/esptember/blob/main/days/day-09-sound-effects/SPEC.md).
 
 ## Recorded evidence
 
-The revised shared contract validates Stopwatch geometry, calibration ownership, localized pager controls, deterministic state, immediate retriggering, four round-safe pad bounds, and 10,000 generated actions against three disposable reducer shapes.
+The revised shared contract validates Stopwatch geometry, calibration ownership, localized pager controls, both four-sound kit manifests, deterministic state, immediate retriggering, four round-safe pad bounds, and 10,000 generated actions against three disposable reducer shapes.
 A deliberately mutated reducer must fail.
 
-The selected portable core passed 300,065 domain assertions, including deterministic PCM hashes and bounds for all six generated sounds.
-The target build used 914,419 bytes of flash and 31,352 bytes of static RAM, then an application-only update preserved touch-map version 2, generation 2.
+The selected portable core passed 300,080 domain assertions, including deterministic PCM hashes and bounds for all eight generated sounds.
+The target build used 915,363 bytes of flash and 31,384 bytes of static RAM, then an application-only update preserved touch-map version 2, generation 2.
 
-On the attached Stopwatch, all six prepared PCM buffers occupied 94,372 bytes of PSRAM.
-Both physical pusher paths changed page state in about 1.1 ms.
-Across 100 injected LVGL touch-downs, pad-to-speaker-start latency had a 334 µs median, 496 µs 95th percentile, and 1,334 µs maximum—well inside the 30 ms and 50 ms limits.
-Rapid Laser → Coin → Explosion input replaced the active voice immediately, with the replacement starts measured at 272 µs and 288 µs.
+On the attached Stopwatch, all eight prepared PCM buffers occupied 149,498 bytes of PSRAM.
+The injected left and right pusher paths changed page state in 1,242 µs and 1,197 µs.
+Across 100 injected LVGL touch-downs, pad-to-speaker-start latency had a 329 µs median, 347 µs 95th percentile, and 542 µs maximum—well inside the 30 ms and 50 ms limits.
+Rapid Jump → Coin → Mario Power Up input replaced the active voice immediately, with starts measured at 1,223 µs, 426 µs, and 272 µs.
 
-Both empty slots remained silent, all six configured paths started and completed, and 20 two-page round trips left free heap and PSRAM unchanged.
+All eight configured paths started and completed, the Asteroid Crash and Power Up pads resolved independently, and 20 two-page round trips left free heap and PSRAM unchanged.
 The device is reset to page one for hand review.
 Perceived sound quality, physical pusher feel, and physical touch alignment still require direct observation.
 

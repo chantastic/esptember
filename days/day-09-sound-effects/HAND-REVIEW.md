@@ -12,10 +12,12 @@ Reviewer: ____________________  Date: ____________________
 - [ ] Text and primary values are readable through the round aperture.
 - [ ] Sound, vibration, sensor, radio, network, and persistence behavior claimed by this lesson was physically observed where applicable.
 - [ ] Any failure names itself and offers the documented recovery.
-- [ ] Laser, Coin, Jump, Explosion, Power Up, and Blip are distinct and comfortable at the installed volume.
+- [ ] The MARIO page contains Jump, Coin, Death, and Power Up; all four sounds are distinct and comfortable at the installed volume.
+- [ ] The ASTEROID page contains Shoot, Explode, Crash, and Power Up; all four sounds are distinct and comfortable at the installed volume.
+- [ ] The two Power Up pads sound different enough to fit their respective game kits.
 - [ ] Touching a pad feels immediate and fires on touch-down rather than release.
 - [ ] Triggering several pads quickly replaces the current sound immediately with the newest pad.
-- [ ] The two EMPTY slots on page two are visible but produce no sound or play-count change.
+- [ ] Both pages retain the same four-pad geometry with no empty default slots.
 
 Observed differences from the prompt/spec:
 
