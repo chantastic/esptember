@@ -196,15 +196,15 @@ Perceived sound quality, physical pusher feel, and physical touch alignment stil
 
 ## Next exercise: Drum Looper
 
-Keep the four-pad view, but turn it into a 16-bar, 4/4 looper with independent Kick, Snare, Hi-Hat, and Crash tracks.
-There is no record mode: while the loop plays, the first tap on a pad clears only that pad's old track and opens a full 16-bar replacement window for that instrument.
+Keep the four-pad view, but turn it into a four-measure, 4/4 looper with 16 quarter notes total and independent Kick, Snare, Hi-Hat, and Crash tracks.
+There is no record mode: while the loop plays, the first tap on a pad clears only that pad's old track and opens a full four-measure replacement window for that instrument.
 An audible quarter-note click, with a higher beat-one accent, supplies the grid even before any drum track exists.
 
 ![Drum Looper running on the M5Stack Stopwatch](https://esptember.com/images/day-09-sound-effects/drum-looper-device.png)
 
 This framebuffer was captured from the generated device candidate after its injected-device checks, reset to an empty loop at 120 BPM.
 
-The [Drum Looper exercise](https://github.com/chantastic/esptember/tree/main/days/day-09-sound-effects/extensions/drum-looper) specifies its 256-step loop, per-track replacement rule, tap tempo, play/pause and clear controls, musical clock, tests, and hand review.
+The [Drum Looper exercise](https://github.com/chantastic/esptember/tree/main/days/day-09-sound-effects/extensions/drum-looper) specifies its 64-step loop, per-track replacement rule, tap tempo, play/pause and clear controls, musical clock, tests, and hand review.
 
 ## After that: Sampler + Voice Changer
 

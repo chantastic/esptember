@@ -11,9 +11,9 @@ It proves the declared workflow is internally consistent; it does not prove musi
 
 A generated candidate adds domain fixtures for:
 
-- 16 bars × 4 beats × 4 subdivisions and exact 0–255 indexing;
-- quantization immediately before, at, and after a half-step, including the step-255 wrap;
-- four independent 256-bit tracks, duplicate-hit collapse, and independently anchored 256-step replacement windows;
+- four measures × 4 beats × 4 subdivisions and exact 0–63 indexing;
+- quantization immediately before, at, and after a half-step, including the step-63 wrap;
+- four independent 64-bit tracks, duplicate-hit collapse, and independently anchored 64-step replacement windows;
 - pause/resume fractional phase and absolute-deadline scheduling across timer rollover;
 - median tap tempo with valid, invalid, stale, minimum, and maximum intervals;
 - simultaneous multi-track dispatch on one boundary and explicit lateness accounting;
@@ -23,7 +23,7 @@ A generated candidate adds domain fixtures for:
 - reset clearing patterns while preserving BPM and the shared calibration record.
 
 On an instrumented Stopwatch, exercise real LVGL hit testing and the audio mixer with injected timestamps.
-Measure 100 immediate pad auditions, 16-bar scheduling under UI load, 100 complete loop passes, repeated replace/clear cycles, memory stability, framebuffer captures, and touch-map preservation.
+Measure 100 immediate pad auditions, four complete loop passes under UI load, 100 accelerated loop passes, repeated replace/clear cycles, memory stability, framebuffer captures, and touch-map preservation.
 
 Finish with [HAND-REVIEW.md](HAND-REVIEW.md).
 Only a person playing and listening can establish groove, tap-tempo feel, drum balance, and thumb/index ergonomics.

@@ -14,10 +14,10 @@ Reviewer: ____________________  Date: ____________________
 - [ ] The first Kick tap in a pass removes the old Kick pattern while Snare, Hi-Hat, and Crash continue unchanged.
 - [ ] Additional Kick taps in that pass build the replacement pattern.
 - [ ] Starting a Snare replacement does not stop or erase the Kick replacement.
-- [ ] A replacement started mid-loop continues across bar 16 and ends only after that track has captured a full 16 bars.
+- [ ] A replacement started mid-loop continues across measure 4 and ends only after that track has captured four complete measures.
 - [ ] After a track's full replacement window ends, its next playing tap replaces that track again.
 - [ ] Simultaneous scheduled drums sound together without obvious dropping or flamming.
-- [ ] The 16-bar loop returns to bar 1 cleanly and stays rhythmically stable.
+- [ ] The four-measure loop returns to measure 1 cleanly and stays rhythmically stable.
 - [ ] Holding both pushers clears the loop, stops at bar 1, and preserves the chosen tempo.
 - [ ] Track-state dots clearly distinguish empty, stored, and currently replacing tracks.
 - [ ] Pads remain responsive around the whole face; labels, focus states, and footer do not clip.

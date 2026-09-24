@@ -3,7 +3,7 @@
 ## Objective
 
 Build a four-pad, four-track drum looper on the M5Stack Stopwatch.
-The loop is 4/4, 16 bars, and quantized to sixteenth notes.
+The loop is 4/4, four measures (16 quarter notes total), and quantized to sixteenth notes.
 Kick, Snare, Hi-Hat, and Crash are recorded and replaced independently without a dedicated record mode.
 
 ## Shared platform contract
@@ -28,8 +28,8 @@ A short both-button chord has no runtime action.
 ## Musical grid
 
 The meter is fixed at 4/4.
-The loop contains exactly 16 bars, four beats per bar, and four sixteenth subdivisions per beat.
-There are 16 steps per bar and 256 steps per loop, indexed 0–255.
+The loop contains exactly four measures, four beats per measure, and four sixteenth subdivisions per beat.
+There are 16 steps per measure and 64 steps per loop, indexed 0–63.
 
 For step `s`:
 
@@ -37,7 +37,7 @@ For step `s`:
 - beat is `floor((s mod 16) / 4) + 1`; and
 - subdivision is `(s mod 4) + 1`.
 
-Each track is a 256-bit set.
+Each track is a 64-bit set.
 Memory and runtime must remain bounded regardless of performance length.
 
 ## Portable state
@@ -45,7 +45,7 @@ Memory and runtime must remain bounded regardless of performance length.
 The normative fields and exact scenarios live in `tests/contract.json`.
 Portable state includes transport, BPM, step, pass, four hit counts, four replacement flags, four replacement-step counters, last pad, total live taps, and a bounded error enum.
 
-The real portable core additionally owns the four 256-bit patterns, the absolute transport anchor, fractional paused phase, tap-tempo interval window, and deterministic quantization helpers.
+The real portable core additionally owns the four 64-bit patterns, the absolute transport anchor, fractional paused phase, tap-tempo interval window, and deterministic quantization helpers.
 Reducers never mutate their input.
 
 ## Transport and scheduling
@@ -60,9 +60,9 @@ Handle the platform timer's unsigned rollover with wrap-safe differences.
 Play starts or resumes from the retained step and fractional phase.
 Pause freezes both.
 The first-ever play begins at step 0.
-Advancing from step 255 wraps to step 0 and increments the pass counter.
+Advancing from step 63 wraps to step 0 and increments the pass counter.
 It does not end a replacement merely because global step 0 was crossed.
-Each track ends independently after 256 musical steps have elapsed from its own replacement start.
+Each track ends independently after 64 musical steps have elapsed from its own replacement start.
 
 If two or more tracks contain a hit on one scheduled step, start them on that same boundary through a bounded mixer or independent prepared channels.
 Track overlap must not serialize or drop a hit.
@@ -94,13 +94,13 @@ Every touch-down starts the pad's resident drum sound immediately.
 This live audition path does not wait for quantization, transport scheduling, release, synthesis, allocation, or storage.
 
 While paused, no pattern changes.
-While playing, quantize the touch timestamp to the nearest sixteenth boundary in the current 256-step loop.
+While playing, quantize the touch timestamp to the nearest sixteenth boundary in the current 64-step loop.
 An exact half-step tie resolves forward to the later step.
-Quantization across the step-255 boundary may write step 0 of the next pass; that write belongs to the next pass and must use its replacement state.
+Quantization across the step-63 boundary may write step 0 of the next pass; that write belongs to the next pass and must use its replacement state.
 
 For the selected track and quantized target tick:
 
-1. If the track is not already replacing, clear all 256 old bits for that track only, mark it replacing, and set its exclusive end tick to `target_tick + 256`.
+1. If the track is not already replacing, clear all 64 old bits for that track only, mark it replacing, and set its exclusive end tick to `target_tick + 64`.
 2. Set the quantized step bit.
 3. If that bit was already set, keep one hit.
 4. Leave every other track's pattern, hit count, and replacement flag unchanged.
@@ -138,9 +138,9 @@ Reuse the four Day 09 pad bounds:
 - `(84,246,132,118)` Hi-Hat; and
 - `(252,246,132,118)` Crash.
 
-Show `DRUM LOOPER` above the pads, followed by BPM, PLAYING or PAUSED, and `BAR nn / 16` with beat and subdivision.
+Show `DRUM LOOPER` above the pads, followed by BPM, PLAYING or PAUSED, and `BAR nn / 4` with beat and subdivision.
 Keep pad labels small and directly underneath their color fields.
-A compact dot beside each label is dim for empty, white for a stored pattern, and red during that track's independent 256-step replacement window.
+A compact dot beside each label is dim for empty, white for a stored pattern, and red during that track's independent 64-step replacement window.
 Flash the pressed pad briefly without moving or resizing it.
 
 The footer shows `A TEMPO`, `B PLAY` or `B PAUSE`, and `HOLD BOTH: CLEAR`.
@@ -170,7 +170,7 @@ The `espt-touch` namespace remains read-only outside calibration.
 - first Snare tap independently clears only Snare while Kick is already replacing;
 - paused pad audition changes no pattern;
 - duplicate hits on one quantized step collapse;
-- step 255 wraps to step 0 without truncating a track's independent 256-step replacement window;
+- step 63 wraps to step 0 without truncating a track's independent 64-step replacement window;
 - both-button hold clears every track but preserves BPM; and
 - simultaneous scheduled track hits share one musical boundary.
 - an empty 120 BPM loop produces 24 clicks and 96 sixteenth steps in 12 seconds; and

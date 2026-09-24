@@ -24,20 +24,20 @@
   "state": {
     "transport": {"type": "enum", "default": "paused", "values": ["paused", "playing"]},
     "bpm": {"type": "int", "default": 120, "min": 60, "max": 200},
-    "step": {"type": "int", "default": 0, "min": 0, "max": 255},
+    "step": {"type": "int", "default": 0, "min": 0, "max": 63},
     "pass": {"type": "int", "default": 0, "min": 0, "max": 9999},
-    "kick_hits": {"type": "int", "default": 0, "min": 0, "max": 256},
-    "snare_hits": {"type": "int", "default": 0, "min": 0, "max": 256},
-    "hihat_hits": {"type": "int", "default": 0, "min": 0, "max": 256},
-    "crash_hits": {"type": "int", "default": 0, "min": 0, "max": 256},
+    "kick_hits": {"type": "int", "default": 0, "min": 0, "max": 64},
+    "snare_hits": {"type": "int", "default": 0, "min": 0, "max": 64},
+    "hihat_hits": {"type": "int", "default": 0, "min": 0, "max": 64},
+    "crash_hits": {"type": "int", "default": 0, "min": 0, "max": 64},
     "kick_replacing": {"type": "enum", "default": "no", "values": ["no", "yes"]},
     "snare_replacing": {"type": "enum", "default": "no", "values": ["no", "yes"]},
     "hihat_replacing": {"type": "enum", "default": "no", "values": ["no", "yes"]},
     "crash_replacing": {"type": "enum", "default": "no", "values": ["no", "yes"]},
-    "kick_replace_remaining": {"type": "int", "default": 0, "min": 0, "max": 256},
-    "snare_replace_remaining": {"type": "int", "default": 0, "min": 0, "max": 256},
-    "hihat_replace_remaining": {"type": "int", "default": 0, "min": 0, "max": 256},
-    "crash_replace_remaining": {"type": "int", "default": 0, "min": 0, "max": 256},
+    "kick_replace_remaining": {"type": "int", "default": 0, "min": 0, "max": 64},
+    "snare_replace_remaining": {"type": "int", "default": 0, "min": 0, "max": 64},
+    "hihat_replace_remaining": {"type": "int", "default": 0, "min": 0, "max": 64},
+    "crash_replace_remaining": {"type": "int", "default": 0, "min": 0, "max": 64},
     "last_pad": {"type": "enum", "default": "none", "values": ["none", "kick", "snare", "hihat", "crash"]},
     "live_taps": {"type": "int", "default": 0, "min": 0, "max": 9999},
     "metronome_clicks": {"type": "int", "default": 0, "min": 0, "max": 9999},
@@ -84,37 +84,37 @@
       "name": "kick replacement begins on first playing tap",
       "given": {"transport": "playing", "step": 20, "pass": 3, "kick_hits": 12, "snare_hits": 8, "hihat_hits": 32, "crash_hits": 2},
       "steps": [
-        {"action": "kick_down", "expect": {"kick_hits": 1, "kick_replacing": "yes", "kick_replace_remaining": 256, "snare_hits": 8, "hihat_hits": 32, "crash_hits": 2, "last_pad": "kick", "live_taps": 1}},
-        {"action": "kick_down_new_step", "expect": {"kick_hits": 2, "kick_replacing": "yes", "kick_replace_remaining": 256, "snare_hits": 8, "hihat_hits": 32, "crash_hits": 2, "last_pad": "kick", "live_taps": 2}},
-        {"action": "kick_down_same_step", "expect": {"kick_hits": 2, "kick_replacing": "yes", "kick_replace_remaining": 256, "live_taps": 3}}
+        {"action": "kick_down", "expect": {"kick_hits": 1, "kick_replacing": "yes", "kick_replace_remaining": 64, "snare_hits": 8, "hihat_hits": 32, "crash_hits": 2, "last_pad": "kick", "live_taps": 1}},
+        {"action": "kick_down_new_step", "expect": {"kick_hits": 2, "kick_replacing": "yes", "kick_replace_remaining": 64, "snare_hits": 8, "hihat_hits": 32, "crash_hits": 2, "last_pad": "kick", "live_taps": 2}},
+        {"action": "kick_down_same_step", "expect": {"kick_hits": 2, "kick_replacing": "yes", "kick_replace_remaining": 64, "live_taps": 3}}
       ]
     },
     {
       "name": "tracks replace independently in one pass",
-      "given": {"transport": "playing", "step": 64, "pass": 4, "kick_hits": 2, "kick_replacing": "yes", "kick_replace_remaining": 203, "snare_hits": 8, "hihat_hits": 32, "crash_hits": 2},
+      "given": {"transport": "playing", "step": 12, "pass": 4, "kick_hits": 2, "kick_replacing": "yes", "kick_replace_remaining": 51, "snare_hits": 8, "hihat_hits": 32, "crash_hits": 2},
       "steps": [
-        {"action": "snare_down", "expect": {"kick_hits": 2, "kick_replacing": "yes", "kick_replace_remaining": 203, "snare_hits": 1, "snare_replacing": "yes", "snare_replace_remaining": 256, "hihat_hits": 32, "crash_hits": 2, "last_pad": "snare", "live_taps": 1}},
-        {"action": "hihat_down", "expect": {"kick_hits": 2, "kick_replacing": "yes", "kick_replace_remaining": 203, "snare_hits": 1, "snare_replacing": "yes", "snare_replace_remaining": 256, "hihat_hits": 1, "hihat_replacing": "yes", "hihat_replace_remaining": 256, "crash_hits": 2, "last_pad": "hihat", "live_taps": 2}}
+        {"action": "snare_down", "expect": {"kick_hits": 2, "kick_replacing": "yes", "kick_replace_remaining": 51, "snare_hits": 1, "snare_replacing": "yes", "snare_replace_remaining": 64, "hihat_hits": 32, "crash_hits": 2, "last_pad": "snare", "live_taps": 1}},
+        {"action": "hihat_down", "expect": {"kick_hits": 2, "kick_replacing": "yes", "kick_replace_remaining": 51, "snare_hits": 1, "snare_replacing": "yes", "snare_replace_remaining": 64, "hihat_hits": 1, "hihat_replacing": "yes", "hihat_replace_remaining": 64, "crash_hits": 2, "last_pad": "hihat", "live_taps": 2}}
       ]
     },
     {
       "name": "paused pads audition without recording",
-      "given": {"transport": "paused", "step": 91, "kick_hits": 12, "snare_hits": 8, "hihat_hits": 32, "crash_hits": 2},
+      "given": {"transport": "paused", "step": 27, "kick_hits": 12, "snare_hits": 8, "hihat_hits": 32, "crash_hits": 2},
       "steps": [
-        {"action": "crash_down", "expect": {"transport": "paused", "step": 91, "kick_hits": 12, "snare_hits": 8, "hihat_hits": 32, "crash_hits": 2, "crash_replacing": "no", "last_pad": "crash", "live_taps": 1}}
+        {"action": "crash_down", "expect": {"transport": "paused", "step": 27, "kick_hits": 12, "snare_hits": 8, "hihat_hits": 32, "crash_hits": 2, "crash_replacing": "no", "last_pad": "crash", "live_taps": 1}}
       ]
     },
     {
       "name": "loop wrap preserves independent replacement windows",
-      "given": {"transport": "playing", "step": 255, "pass": 8, "kick_hits": 4, "snare_hits": 4, "kick_replacing": "yes", "snare_replacing": "yes", "kick_replace_remaining": 129, "snare_replace_remaining": 1},
+      "given": {"transport": "playing", "step": 63, "pass": 8, "kick_hits": 4, "snare_hits": 4, "kick_replacing": "yes", "snare_replacing": "yes", "kick_replace_remaining": 33, "snare_replace_remaining": 1},
       "steps": [
-        {"action": "advance_one", "expect": {"step": 0, "pass": 9, "kick_hits": 4, "snare_hits": 4, "kick_replacing": "yes", "snare_replacing": "no", "kick_replace_remaining": 128, "snare_replace_remaining": 0, "hihat_replacing": "no", "crash_replacing": "no"}},
-        {"action": "snare_down_after_completion", "expect": {"step": 0, "pass": 9, "kick_hits": 4, "snare_hits": 1, "kick_replacing": "yes", "snare_replacing": "yes", "kick_replace_remaining": 128, "snare_replace_remaining": 256, "last_pad": "snare", "live_taps": 1}}
+        {"action": "advance_one", "expect": {"step": 0, "pass": 9, "kick_hits": 4, "snare_hits": 4, "kick_replacing": "yes", "snare_replacing": "no", "kick_replace_remaining": 32, "snare_replace_remaining": 0, "hihat_replacing": "no", "crash_replacing": "no"}},
+        {"action": "snare_down_after_completion", "expect": {"step": 0, "pass": 9, "kick_hits": 4, "snare_hits": 1, "kick_replacing": "yes", "snare_replacing": "yes", "kick_replace_remaining": 32, "snare_replace_remaining": 64, "last_pad": "snare", "live_taps": 1}}
       ]
     },
     {
       "name": "hold both clears loop and preserves tempo",
-      "given": {"transport": "playing", "bpm": 147, "step": 199, "pass": 12, "kick_hits": 4, "snare_hits": 8, "hihat_hits": 16, "crash_hits": 2, "kick_replacing": "yes", "kick_replace_remaining": 73, "last_pad": "kick", "live_taps": 31},
+      "given": {"transport": "playing", "bpm": 147, "step": 51, "pass": 12, "kick_hits": 4, "snare_hits": 8, "hihat_hits": 16, "crash_hits": 2, "kick_replacing": "yes", "kick_replace_remaining": 19, "last_pad": "kick", "live_taps": 31},
       "steps": [
         {"action": "back", "expect": {"transport": "paused", "bpm": 147, "step": 0, "pass": 0, "kick_hits": 0, "snare_hits": 0, "hihat_hits": 0, "crash_hits": 0, "kick_replacing": "no", "snare_replacing": "no", "hihat_replacing": "no", "crash_replacing": "no", "kick_replace_remaining": 0, "snare_replace_remaining": 0, "hihat_replace_remaining": 0, "crash_replace_remaining": 0, "last_pad": "none", "live_taps": 0, "metronome_clicks": 0}}
       ]
@@ -133,7 +133,7 @@
   "visual": {
     "kind": "pads",
     "eyebrow": "DRUM LOOPER",
-    "title": "120 BPM · PLAYING · BAR 01/16",
+    "title": "120 BPM · PLAYING · BAR 01/04",
     "metric": "",
     "pads": [
       {"label": "KICK", "color": "#ff5b04", "status": "replacing"},
