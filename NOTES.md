@@ -32,6 +32,34 @@
   code puts start/stop on left/A and lap/reset on right/B; review those sides
   against the intended stopwatch convention when reworking that day.
 
+- **Days 09–33 prompt-contract migration · September 23** — all 25 lessons now
+  use a detailed build prompt, lesson-specific `SPEC.md`, machine-readable
+  contract, three disposable reducer shapes, generated action sequences,
+  deliberate mutation rejection, reference frame, and a hand-review sheet.
+  Historical implementations and build products are local evidence under
+  ignored `.build/` directories; they are no longer the published source.
+- **Evidence taxonomy is a project invariant** — call deterministic artwork a
+  reference frame, portable state checks host-contract evidence, target-library
+  builds compile evidence, scripted input on the real app injected-device
+  evidence, and direct human operation physical evidence. Do not let one label
+  imply another. Every Day 09–33 post now uses that vocabulary.
+- **Generic contracts need domain companions** — the shared runner catches
+  incomplete state machines, mutation, invalid bounds, layout overflow, and
+  control-map drift. It cannot establish signal processing, timing math,
+  packet formats, storage encodings, or calibration quality. Day 13's retained
+  workout, progress, summary, and 98-assertion button suites are the model for
+  adding focused tests beside the common contract.
+- **Hand review is specification work** — each lesson now has a deterministic
+  review path and a place to classify findings as lesson-specific,
+  Stopwatch-wide, or process-wide. Change the narrowest durable owner, add an
+  observable check, regenerate a disposable candidate, and record only the
+  evidence layer that was rerun.
+- **Repeated product decisions extracted during migration** — use identical
+  Stopwatches for peer roles in Yo, local/internet walkie-talkie, and trivia;
+  keep the calibrated touch record device-owned and updateable at runtime;
+  use C25K's four gestures by default; let established activities such as a
+  stopwatch, Morse key, or metronome document a localized control grammar.
+
 - **Pending hands-on checks (autonomous run, Sep 21)** — day 09 speaker
   ear check; day 11 cue discrimination in-pocket; day 12 pusher feel;
   day 14 keying feel per WPM; day 17 multi-day aging + evolution +

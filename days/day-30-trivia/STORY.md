@@ -1,6 +1,12 @@
 ---
 title: Trivia
 ---
+## The prompt-first pass
+
+The original build below records how this idea first worked.
+The durable lesson now targets the M5Stack Stopwatch and lives in the prompt, behavior contract, generalized tests, and hand-review checklist.
+Generated firmware is evidence for those sources, not the source itself.
+
 
 This lesson was originally slotted eleven days earlier, right after the first ESP-NOW day, and it kept getting pushed back — correctly, it turns out.
 Trivia looked simple and was actually five lessons in a trenchcoat: packet design, game state sync, input grammar, feedback cues, and a fairness problem.

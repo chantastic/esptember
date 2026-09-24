@@ -1,6 +1,12 @@
 ---
 title: Connected
 ---
+## The prompt-first pass
+
+The original build below records how this idea first worked.
+The durable lesson now targets the M5Stack Stopwatch and lives in the prompt, behavior contract, generalized tests, and hand-review checklist.
+Generated firmware is evidence for those sources, not the source itself.
+
 
 Day 31 ended on a trophy screen: AUTHORIZED, your email, done.
 Then someone asked the board "are you connected?" and the honest answer was *historically* — the sign-in had happened, the session existed server-side, and the firmware had kept nothing at all.

@@ -1,0 +1,192 @@
+{
+  "schema": 1,
+  "lesson": "day-32-connected",
+  "title": "Connected",
+  "hardware": {
+    "board": "m5stack-stopwatch",
+    "width": 468,
+    "height": 466,
+    "offset_x": 6,
+    "offset_y": 0,
+    "rotation": 0,
+    "touch_map": "espt-touch/record"
+  },
+  "controls": {
+    "profile": "c25k",
+    "left_button": "BtnA",
+    "right_button": "BtnB",
+    "left": "previous_or_decrease",
+    "right": "next_or_increase",
+    "enter": "short_both",
+    "back": "hold_both_600ms"
+  },
+  "state": {
+    "screen": {
+      "type": "enum",
+      "default": "boot",
+      "values": [
+        "boot",
+        "card",
+        "claims",
+        "signout_confirm",
+        "error"
+      ]
+    },
+    "focus": {
+      "type": "enum",
+      "default": "card",
+      "values": [
+        "card",
+        "claims",
+        "signout"
+      ]
+    },
+    "expires_s": {
+      "type": "int",
+      "default": 0,
+      "min": 0,
+      "max": 86400
+    },
+    "refreshes": {
+      "type": "int",
+      "default": 0,
+      "min": 0,
+      "max": 999
+    },
+    "resident": {
+      "type": "bool",
+      "default": false
+    }
+  },
+  "scenarios": [
+    {
+      "name": "primary flow",
+      "steps": [
+        {
+          "action": {
+            "type": "refresh_ok",
+            "expires_s": 300
+          },
+          "expect": {
+            "screen": "card",
+            "expires_s": 300,
+            "refreshes": 1,
+            "resident": true
+          }
+        },
+        {
+          "action": {
+            "type": "second"
+          },
+          "expect": {
+            "expires_s": 299
+          }
+        }
+      ]
+    },
+    {
+      "name": "claims",
+      "steps": [
+        {
+          "action": "right",
+          "expect": {
+            "focus": "claims"
+          }
+        },
+        {
+          "action": "enter",
+          "expect": {
+            "screen": "claims"
+          }
+        },
+        {
+          "action": "back",
+          "expect": {
+            "screen": "card"
+          }
+        }
+      ],
+      "given": {
+        "screen": "card",
+        "resident": true,
+        "expires_s": 240
+      }
+    },
+    {
+      "name": "guarded signout",
+      "steps": [
+        {
+          "action": "right",
+          "expect": {
+            "focus": "signout"
+          }
+        },
+        {
+          "action": "enter",
+          "expect": {
+            "screen": "signout_confirm"
+          }
+        },
+        {
+          "action": "back",
+          "expect": {
+            "screen": "card",
+            "resident": true
+          }
+        }
+      ],
+      "given": {
+        "screen": "card",
+        "focus": "claims",
+        "resident": true,
+        "expires_s": 200
+      }
+    }
+  ],
+  "layout": {
+    "safe_radius": 226,
+    "focus_inset": 3,
+    "controls": [
+      {
+        "id": "card",
+        "bounds": [
+          104,
+          110,
+          260,
+          48
+        ]
+      },
+      {
+        "id": "claims",
+        "bounds": [
+          104,
+          178,
+          260,
+          48
+        ]
+      },
+      {
+        "id": "signout",
+        "bounds": [
+          104,
+          246,
+          260,
+          48
+        ]
+      }
+    ]
+  },
+  "visual": {
+    "kind": "card",
+    "eyebrow": "CONNECTED",
+    "title": "user@example.com",
+    "metric": "04:38",
+    "lines": [
+      "Acme \u00b7 member",
+      "renewed silently"
+    ],
+    "accent": "#48ef8b",
+    "scenario": "primary flow",
+    "evidence": "reference"
+  }
+}

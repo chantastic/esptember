@@ -26,8 +26,7 @@
 - With the lanyard loop at the bottom, **M5.BtnA is left** and **M5.BtnB is
   right**. Use those physical names in instructions. Do not infer sides from
   A/B order, button colors, or earlier examples calling a button the crown.
-- Default to the four gestures in [C25K's spec](days/day-13-c25k/SPEC.md#3-input-grammar)
-  and [button implementation](days/day-13-c25k/firmware/c25k/buttons.h):
+- Default to the four gestures in [C25K's spec](days/day-13-c25k/SPEC.md#3-input-grammar):
   left/A = previous or decrease; right/B = next or increase; both briefly
   pressed and released = select/enter; both held for 600 ms = back/escape.
   A chord joins within 80 ms and overlaps for at least 80 ms. Consume its

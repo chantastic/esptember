@@ -1,6 +1,12 @@
 ---
 title: Note Taker
 ---
+## The prompt-first pass
+
+The original build below records how this idea first worked.
+The durable lesson now targets the M5Stack Stopwatch and lives in the prompt, behavior contract, generalized tests, and hand-review checklist.
+Generated firmware is evidence for those sources, not the source itself.
+
 
 The plan for this day once said "LVGL keyboard."
 Sixty-some keys on a 1.75-inch circle, hunt-and-peck with a fingertip, to capture a thought before it evaporates.

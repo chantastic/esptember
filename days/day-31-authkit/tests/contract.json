@@ -1,0 +1,177 @@
+{
+  "schema": 1,
+  "lesson": "day-31-authkit",
+  "title": "WorkOS AuthKit",
+  "hardware": {
+    "board": "m5stack-stopwatch",
+    "width": 468,
+    "height": 466,
+    "offset_x": 6,
+    "offset_y": 0,
+    "rotation": 0,
+    "touch_map": "espt-touch/record"
+  },
+  "controls": {
+    "profile": "c25k",
+    "left_button": "BtnA",
+    "right_button": "BtnB",
+    "left": "previous_or_decrease",
+    "right": "next_or_increase",
+    "enter": "short_both",
+    "back": "hold_both_600ms"
+  },
+  "state": {
+    "screen": {
+      "type": "enum",
+      "default": "setup",
+      "values": [
+        "setup",
+        "code",
+        "polling",
+        "authorized",
+        "error"
+      ]
+    },
+    "focus": {
+      "type": "enum",
+      "default": "retry",
+      "values": [
+        "retry",
+        "cancel"
+      ]
+    },
+    "polls": {
+      "type": "int",
+      "default": 0,
+      "min": 0,
+      "max": 999
+    },
+    "user_code": {
+      "type": "string",
+      "default": "",
+      "max_length": 16
+    },
+    "email": {
+      "type": "string",
+      "default": "",
+      "max_length": 96
+    }
+  },
+  "scenarios": [
+    {
+      "name": "primary flow",
+      "steps": [
+        {
+          "action": {
+            "type": "code",
+            "value": "ABCD-EFGH"
+          },
+          "expect": {
+            "screen": "code",
+            "user_code": "ABCD-EFGH"
+          }
+        },
+        {
+          "action": {
+            "type": "poll"
+          },
+          "expect": {
+            "screen": "polling",
+            "polls": 1
+          }
+        },
+        {
+          "action": {
+            "type": "authorized",
+            "email": "user@example.com"
+          },
+          "expect": {
+            "screen": "authorized",
+            "email": "user@example.com"
+          }
+        }
+      ]
+    },
+    {
+      "name": "slow down",
+      "steps": [
+        {
+          "action": {
+            "type": "poll"
+          },
+          "expect": {
+            "polls": 2
+          }
+        },
+        {
+          "action": {
+            "type": "slow_down"
+          },
+          "expect": {
+            "screen": "polling"
+          }
+        }
+      ],
+      "given": {
+        "screen": "polling",
+        "polls": 1,
+        "user_code": "ABCD-EFGH"
+      }
+    },
+    {
+      "name": "cancel",
+      "steps": [
+        {
+          "action": "back",
+          "expect": {
+            "screen": "setup",
+            "user_code": "",
+            "polls": 0
+          }
+        }
+      ],
+      "given": {
+        "screen": "polling",
+        "polls": 3,
+        "user_code": "ABCD-EFGH"
+      }
+    }
+  ],
+  "layout": {
+    "safe_radius": 226,
+    "focus_inset": 3,
+    "controls": [
+      {
+        "id": "retry",
+        "bounds": [
+          104,
+          110,
+          260,
+          48
+        ]
+      },
+      {
+        "id": "cancel",
+        "bounds": [
+          104,
+          178,
+          260,
+          48
+        ]
+      }
+    ]
+  },
+  "visual": {
+    "kind": "card",
+    "eyebrow": "SIGN IN",
+    "title": "SCAN WITH PHONE",
+    "metric": "\u25a6",
+    "lines": [
+      "ABCD-EFGH",
+      "waiting for approval"
+    ],
+    "accent": "#00d9ff",
+    "scenario": "primary flow",
+    "evidence": "reference"
+  }
+}

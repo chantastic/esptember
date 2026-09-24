@@ -22,11 +22,15 @@ src/                 # Astro site; renders days/*/README.md
 public/firmware/     # collected merged .bin files, served by the site
 ```
 
-Each day's `README.md` is the single source of truth: GitHub renders it in
-the repo, and the Astro site renders it at `esptember.com/day/<slug>/`.
+Each day's `README.md` is the published guide: GitHub renders it in the repo,
+and the Astro site renders it at `esptember.com/day/<slug>/`.
 The same body is served at `/day/<slug>/guide.md` for agents and offline reading.
 `STORY.md` renders at `/day/<slug>/story/`; the guide owns current operating
 instructions, while the story records the investigation.
+For prompt-first lessons, `README.md`, `SPEC.md`, `tests/contract.json`, and
+`HAND-REVIEW.md` form the durable source. `TESTING.md` explains the evidence
+layers and `RESULTS.md` records actual runs. Reference frames express visual
+intent; they are not device screenshots.
 The heading map comes from Astro’s rendered headings, with a sticky desktop
 outline and a collapsible menu below 1050px.
 `/llms.txt` indexes only published guides.
@@ -74,7 +78,7 @@ pnpm install
 pnpm dev
 ```
 
-## Build a day's firmware
+## Build a retained firmware project
 
 ```sh
 cd days/day-01-hello-world/firmware
@@ -84,7 +88,9 @@ idf.py build merge-bin   # merge-bin produces build/merged-binary.bin
 
 `pnpm build` runs `scripts/collect-firmware.sh`, which copies each day's
 `build/merged-binary.bin` to `public/firmware/<day>.bin` before Astro builds.
-Only directories with a published `README.md` are collected.
+Only lessons with both a published `README.md` and a `firmware:` frontmatter
+entry are collected. Prompt-first lessons intentionally omit that field until
+a generated candidate is explicitly retained as a release artifact.
 
 Run `pnpm check:site` after building to verify guide/Markdown parity, heading
 anchors, code excerpts, firmware manifests, and draft exclusion.
@@ -101,6 +107,15 @@ Use absolute web links so Markdown works outside the site.
 Preserve the actual debugging experience in `STORY.md`. Avoid duplicating
 current flashing instructions there; link to the guide. Days without a
 published README stay outside the site and the agent index.
+
+For a prompt-first embedded lesson, follow
+[`prompt-first-embedded-lessons`](.agents/skills/prompt-first-embedded-lessons/SKILL.md).
+For M5Stack Stopwatch work, also follow
+[`build-stopwatch-lessons`](.agents/skills/build-stopwatch-lessons/SKILL.md).
+Run `tests/run.sh` in each lesson to exercise three disposable reducer shapes,
+generated action sequences, and the required mutation rejection. Add focused
+domain tests whenever the activity includes numerical algorithms, clocks,
+parsers, packet formats, storage records, audio, or sensor processing.
 
 ## Deploy
 

@@ -1,1 +1,0 @@
-idf_component_register(SRCS "main.c" "portal.c" PRIV_REQUIRES esp_wifi nvs_flash esp_timer esp_http_server esp_http_client esp-tls esp_netif driver json mbedtls)

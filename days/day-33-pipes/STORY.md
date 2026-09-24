@@ -1,6 +1,12 @@
 ---
 title: Pipes
 ---
+## The prompt-first pass
+
+The original build below records how this idea first worked.
+The durable lesson now targets the M5Stack Stopwatch and lives in the prompt, behavior contract, generalized tests, and hand-review checklist.
+Generated firmware is evidence for those sources, not the source itself.
+
 
 The question that started this day sounded simple: *"post-auth, can the device show my connections?"*
 The answer took a Worker, three wrong assumptions, and one humbling grep through production code.

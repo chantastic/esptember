@@ -1,105 +1,98 @@
 ---
-board: waveshare-amoled-18-v2
+board: m5stack-stopwatch
 day: 31
 title: WorkOS AuthKit
-toolchain: ESP-IDF v5.5 + Waveshare BSP (LVGL)
-firmware: /firmware/day-31-authkit.bin
-summary: "The finale: a keyboardless device signs a real user into a real identity provider — the OAuth device flow, on a wrist-sized screen."
-verification: "Full device-grant sign-in verified on hardware: QR, phone approval, AUTHORIZED"
+toolchain: Arduino ESP32 3.3.10 + M5Unified 0.2.19 + M5GFX 0.2.26 + LVGL 9.3.0
+summary: "OAuth device authorization on a keyboardless Stopwatch with explicit polling and secret boundaries."
+verification: "Prompt contract and reference frame verified; generated hardware candidate awaits hand review"
 ---
 
-## The result
+## The assignment
 
-The finale: a device with no keyboard and no browser signs a real user into a real identity provider.
-The board asks WorkOS for a code pair, shows a QR of the verification URL and the human-readable code beneath it, and polls until you approve on your phone — then greets you by email address.
-This is the OAuth 2.0 Device Authorization Grant (RFC 8628), the flow your TV apps use, running on a wrist-sized AMOLED.
-No secrets ship in this firmware: the client ID is public by design, entered once over serial; Wi-Fi arrives through day 22's portal.
-Each day is a standalone firmware image; you can start here without flashing earlier days.
+Sign a real user in from a device with no keyboard or browser using the OAuth device flow.
 
-## What you need
+The durable source is this prompt, [SPEC.md](https://github.com/chantastic/esptember/blob/main/days/day-31-authkit/SPEC.md), the machine-readable contract, and its layered acceptance criteria.
+Generated firmware is a disposable candidate.
 
-- **Board:** Waveshare ESP32-S3-Touch-AMOLED-1.8 **V2**.
-- **Connection:** a USB data cable, a phone for the setup + approval, and a free [WorkOS](https://workos.com) account with AuthKit and the device grant enabled (the dashboard gives you a `client_01...` id).
-- **For the download:** [uv](https://docs.astral.sh/uv/getting-started/installation/) supplies the `uvx` command below.
-- **For source builds:** [ESP-IDF v5.5](https://docs.espressif.com/projects/esp-idf/en/stable/esp32s3/get-started/) with its environment activated.
+## Reference frame
 
-The display is 368 × 448 pixels.
-Flashing replaces the firmware currently on the board.
+![Round-screen acceptance reference for WorkOS AuthKit](https://esptember.com/images/day-31-authkit/reference.png)
 
-## Run it
+This is a deterministic screenshot of the visual acceptance model.
+It defines the intended hierarchy and safe-area use; only a later framebuffer capture from the attached Stopwatch can count as device rendering evidence.
 
-Download [day-31-authkit.bin](https://esptember.com/firmware/day-31-authkit.bin) and flash it at `0x0`:
+## The build prompt
 
-```sh
-uvx esptool --chip esp32s3 --port PORT \
-  write-flash 0x0 day-31-authkit.bin
+```text
+Build ESPtember Day 31: WorkOS AuthKit for the M5Stack Stopwatch Dev Kit (C152).
+
+Read these before writing code:
+- .agents/skills/build-stopwatch-lessons/SKILL.md
+- .agents/skills/prompt-first-embedded-lessons/SKILL.md
+- days/day-07-touch-calibration/SPEC.md
+- days/day-31-authkit/SPEC.md
+- days/day-31-authkit/tests/contract.json
+
+Treat the prompt, spec, tests, and acceptance criteria as source.
+Put deterministic behavior in a portable core and keep Arduino, LVGL, M5Unified, storage, network, audio, and sensor adapters outside it.
+Run scripts/prompt-contract/validate_day.sh days/day-31-authkit before compiling a device candidate.
+Do not edit the contract or tests to make a candidate pass.
+
+Hardware and shared platform
+
+- Target board_M5StopWatch on ESP32-S3 with OPI PSRAM.
+- Hold the device with the lanyard loop at the bottom: BtnA is physical left and BtnB is physical right.
+- Immediately after M5.begin(), set panel width 468, height 466, offset_x 6, offset_y 0, then rotation 0.
+- Never draw rows 466 or 467. Keep focus decoration inset and every interactive bound inside the round safe area.
+- Load Preferences namespace espt-touch, blob key record, after display setup and before touch input.
+- Accept and validate Day 07 version 1 and version 2 records. Read raw touch, apply the complete shared warp, clamp once, then feed the mapped point to the application.
+- Provide the shared runtime calibration entry path. App-only installation must preserve the record.
+- Allocate retained frames and large working buffers in PSRAM; fail visibly and over serial when required hardware or memory is unavailable.
+
+Controls
+
+Use the default grammar: BtnA/left is Previous or Decrease; BtnB/right is Next or Increase; short both is Enter; hold both for 600 ms is Back. Preserve the 80 ms join and overlap rules and consume chord clicks.
+Touch must dispatch the same semantic actions as physical controls.
+
+Lesson behavior
+
+- Provision only the public client id; never ship a client secret or WorkOS API key to the device.
+- Request a device code, show a scannable QR plus human code, and poll at the server-provided interval.
+- Handle authorization_pending, slow_down, access_denied, expired_token, network failure, and success by name.
+- Left/right focus Retry and Cancel; Enter acts; Back cancels polling and returns to setup.
+- Redact tokens from logs and captures; display only safe identity claims after signature/trust checks appropriate to the flow.
+
+Diagnostics and acceptance
+
+- Prefix serial protocol lines with D31_ and implement status, reset, action, capture, and touchlog commands.
+- Report hardware identity, corrected geometry, touch-map version and generation, current portable state, memory headroom, and last named error.
+- Injected actions must use the same reducer, hit testing, callbacks, and control recognizer as physical input.
+- Retain the exact RGB565 pixels sent to M5GFX and stream captures in bounded chunks without blocking the watchdog.
+- Run every scenario in tests/contract.json, generated deterministic sequences, the deliberate mutation, and the lesson-specific checks in SPEC.md.
+- Complete 20 largest-state round trips without reset or growing heap/PSRAM use.
+- Confirm the active touch-map version and generation remain unchanged.
+- Physically review touch alignment, BtnA/BtnB direction, chord behavior, cues, clipping, lower-edge use, and the absence of a black bar.
+
+Record host, compile, injected-device, and physical evidence separately.
+Never describe reference rendering or injected input as physical proof.
 ```
 
-Two one-time setup steps:
-Wi-Fi via the captive portal (join `esptember-setup`, fill the form), then your public client id over serial:
+## Required behavior
 
-```
-client client_01XXXXXXXXXXXXXXXXXXXXXXXXX
-```
+- Provision only the public client id; never ship a client secret or WorkOS API key to the device.
+- Request a device code, show a scannable QR plus human code, and poll at the server-provided interval.
+- Handle authorization_pending, slow_down, access_denied, expired_token, network failure, and success by name.
+- Left/right focus Retry and Cancel; Enter acts; Back cancels polling and returns to setup.
+- Redact tokens from logs and captures; display only safe identity claims after signature/trust checks appropriate to the flow.
 
-The board reboots into the flow: QR, code, approve on your phone, greeted by name.
+## Recorded evidence
 
-## How it works
+The shared contract runner validates Stopwatch geometry, touch-map ownership, control metadata, state types and ranges, deterministic scenarios, round-face control bounds, and 10,000 generated actions against three disposable reducer shapes.
+A deliberately mutated reducer must fail.
 
-The device flow is two HTTP calls and patience.
-
-First, the board trades its client id for a code pair:
-
-```c
-#define AUTHORIZE_URL "https://api.workos.com/user_management/authorize/device"
-```
-
-The response carries a `user_code` for human eyes, a `verification_uri_complete` for the QR (LVGL renders it with one widget), a `device_code` the board keeps private, and a polling `interval`.
-
-Then the board polls the token endpoint with the device-code grant:
-
-```c
-#define GRANT_TYPE "urn:ietf:params:oauth:grant-type:device_code"
-```
-
-Three answers are possible, and handling all three is the lesson: `authorization_pending` (keep waiting), `slow_down` (RFC 8628's speeding ticket — the board adds five seconds and behaves), and `200` with a user object (signed in).
-Codes expire; an expired pair is thrown away and a fresh one fetched, new QR and all.
-
-The security shape is worth staring at: the *user code* travels through the human, the *device code* never leaves the board, the client id is public, and no password ever exists anywhere near this firmware.
-The phone does the authenticating on WorkOS's pages; the board only ever learns the verdict.
-
-## Check the result
-
-- Fresh flash: the portal, then the client-id prompt, each state named on screen.
-- With both set: **SIGN IN** with a scannable QR and an eight-character code.
-- Scanning opens AuthKit on your phone; approving flips the board to **AUTHORIZED — signed in as you@example.com** within one poll interval.
-- Declining shows **DENIED**; letting the code expire fetches a fresh pair automatically.
+Historical implementation evidence from before the prompt-first Stopwatch migration follows.
 
 **Recorded evidence · September 22, 2026:** The complete flow was verified live on hardware: the board requested a code pair from WorkOS (`D30_CODE user_code=TXVL-DDCF`), displayed the QR and code, and — after approval on a phone — reported `D30_AUTHORIZED` with the signed-in user's email, all observed over serial while it happened.
 
-## Used resources
-
-- [RFC 8628](https://datatracker.ietf.org/doc/html/rfc8628) — OAuth 2.0 Device Authorization Grant, including the `slow_down` contract.
-- [WorkOS AuthKit](https://workos.com/docs) user management endpoints: `authorize/device` and `authenticate`.
-- Day 22's portal (lifted verbatim) and LVGL's QR widget.
-
-## Build and change it
-
-Clone the repository once:
-
-```sh
-git clone https://github.com/chantastic/esptember.git
-cd esptember
-```
-
-With the ESP-IDF environment activated, run from the repository root:
-
-```sh
-cd days/day-31-authkit/firmware
-idf.py build
-idf.py -p PORT flash monitor
-```
-
-To create the single downloadable image, run `idf.py merge-bin` in the same firmware directory.
-Keep `pmu_init()` and `panel_reset_release()` before display startup when changing the UI.
-The natural sequel is what the sign-in *unlocks*: the response carries tokens, and every service day in this series is one `Authorization: Bearer` header away from being per-user.
+The reference screenshot is acceptance-model evidence.
+The next hardware pass must replace or supplement it with a framebuffer capture and a hand-review record.

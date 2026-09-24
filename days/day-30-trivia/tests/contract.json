@@ -1,0 +1,184 @@
+{
+  "schema": 1,
+  "lesson": "day-30-trivia",
+  "title": "Trivia",
+  "hardware": {
+    "board": "m5stack-stopwatch",
+    "width": 468,
+    "height": 466,
+    "offset_x": 6,
+    "offset_y": 0,
+    "rotation": 0,
+    "touch_map": "espt-touch/record"
+  },
+  "controls": {
+    "profile": "localized",
+    "left_button": "BtnA",
+    "right_button": "BtnB",
+    "left": "answer_true",
+    "right": "answer_false",
+    "enter": "host_next",
+    "back": "leave_game",
+    "rationale": "True and False must be immediate one-button answers."
+  },
+  "state": {
+    "role": {
+      "type": "enum",
+      "default": "choose",
+      "values": [
+        "choose",
+        "host",
+        "player"
+      ]
+    },
+    "screen": {
+      "type": "enum",
+      "default": "lobby",
+      "values": [
+        "lobby",
+        "question",
+        "locked",
+        "verdict",
+        "final"
+      ]
+    },
+    "qid": {
+      "type": "int",
+      "default": 0,
+      "min": 0,
+      "max": 12
+    },
+    "score": {
+      "type": "int",
+      "default": 0,
+      "min": 0,
+      "max": 12
+    },
+    "answer": {
+      "type": "enum",
+      "default": "none",
+      "values": [
+        "none",
+        "true",
+        "false"
+      ]
+    }
+  },
+  "scenarios": [
+    {
+      "name": "primary flow",
+      "steps": [
+        {
+          "action": {
+            "type": "role",
+            "value": "player"
+          },
+          "expect": {
+            "role": "player"
+          }
+        },
+        {
+          "action": {
+            "type": "question",
+            "qid": 1
+          },
+          "expect": {
+            "screen": "question",
+            "qid": 1
+          }
+        },
+        {
+          "action": "left",
+          "expect": {
+            "screen": "locked",
+            "answer": "true"
+          }
+        },
+        {
+          "action": {
+            "type": "verdict",
+            "correct": true
+          },
+          "expect": {
+            "screen": "verdict",
+            "score": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "first answer wins",
+      "steps": [
+        {
+          "action": "right",
+          "expect": {
+            "screen": "locked",
+            "answer": "false"
+          }
+        },
+        {
+          "action": "left",
+          "expect": {
+            "answer": "false"
+          }
+        }
+      ],
+      "given": {
+        "role": "player",
+        "screen": "question",
+        "qid": 3
+      }
+    },
+    {
+      "name": "stale verdict ignored",
+      "steps": [
+        {
+          "action": {
+            "type": "verdict",
+            "qid": 4,
+            "correct": true
+          },
+          "expect": {
+            "score": 2
+          }
+        }
+      ],
+      "given": {
+        "role": "player",
+        "screen": "locked",
+        "qid": 5,
+        "score": 2,
+        "answer": "true"
+      }
+    }
+  ],
+  "layout": {
+    "safe_radius": 226,
+    "focus_inset": 3,
+    "controls": [
+      {
+        "id": "primary",
+        "bounds": [
+          104,
+          110,
+          260,
+          48
+        ]
+      }
+    ]
+  },
+  "visual": {
+    "kind": "card",
+    "eyebrow": "TRIVIA \u00b7 Q 7/12",
+    "title": "TRUE OR FALSE?",
+    "metric": "?",
+    "lines": [
+      "ESP-NOW needs",
+      "a Wi-Fi router.",
+      "A TRUE \u00b7 B FALSE"
+    ],
+    "accent": "#ffcf33",
+    "scenario": "primary flow",
+    "evidence": "reference"
+  }
+}

@@ -2,117 +2,97 @@
 board: m5stack-stopwatch
 day: 29
 title: Note Taker
-toolchain: Arduino CLI (esp32 core) + M5Unified + ArduinoJson
-firmware: /firmware/day-29-note-taker.bin
-summary: "A voice recorder that writes: hold, speak, release — transcribed and filed locally, browsable on the pusher."
-verification: "Boot, portal provisioning, and PTT states verified on Wi-Fi; live transcription pending a Deepgram key"
+toolchain: Arduino ESP32 3.3.10 + M5Unified 0.2.19 + M5GFX 0.2.26 + LVGL 9.3.0
+summary: "Hold-to-record voice notes, explicit transcription states, and a durable local ring."
+verification: "Prompt contract and reference frame verified; generated hardware candidate awaits hand review"
 ---
 
-## The result
+## The assignment
 
-A voice recorder that writes.
-Hold the crown and speak — up to thirty seconds into PSRAM — release, and the clip goes to Deepgram for transcription; the text files itself **locally**, into a ring of twenty notes that survive power loss and browse on the second pusher, newest first.
-The screen walks the pipeline by name: recording, transcribing, saving, **SAVED** with the note's text.
-No keyboard ever existed and none was missed — and no backend either: cloud filing is the extended-options section below.
-Each day is a standalone firmware image; you can start here without flashing earlier days.
+Record a short memo, transcribe it, and keep the result locally browsable even when the network later disappears.
 
-## What you need
+The durable source is this prompt, [SPEC.md](https://github.com/chantastic/esptember/blob/main/days/day-29-note-taker/SPEC.md), the machine-readable contract, and its layered acceptance criteria.
+Generated firmware is a disposable candidate.
 
-- **Board:** M5Stack Stopwatch Dev Kit (ESP32-S3, C152): mic, PSRAM, battery — the pocketable one, which is the point.
-- **Connection:** a USB data cable for one-time provisioning.
-- **A service:** one free [Deepgram](https://console.deepgram.com) key for the speech-to-text. Nothing else — notes live on the device.
-- **For the download:** [uv](https://docs.astral.sh/uv/getting-started/installation/) supplies the `uvx` command below.
-- **For source builds:** [arduino-cli](https://arduino.github.io/arduino-cli/) with the esp32 core, M5Unified, and ArduinoJson.
+## Reference frame
 
-The display is 466 × 466 pixels behind a circular aperture.
-Flashing replaces the firmware currently on the board.
+![Round-screen acceptance reference for Note Taker](https://esptember.com/images/day-29-note-taker/reference.png)
 
-## Run it
+This is a deterministic screenshot of the visual acceptance model.
+It defines the intended hierarchy and safe-area use; only a later framebuffer capture from the attached Stopwatch can count as device rendering evidence.
 
-Download [day-29-note-taker.bin](https://esptember.com/firmware/day-29-note-taker.bin) and flash it at `0x0`:
+## The build prompt
 
-```sh
-uvx esptool --chip esp32s3 --port PORT \
-  write-flash 0x0 day-29-note-taker.bin
+```text
+Build ESPtember Day 29: Note Taker for the M5Stack Stopwatch Dev Kit (C152).
+
+Read these before writing code:
+- .agents/skills/build-stopwatch-lessons/SKILL.md
+- .agents/skills/prompt-first-embedded-lessons/SKILL.md
+- days/day-07-touch-calibration/SPEC.md
+- days/day-29-note-taker/SPEC.md
+- days/day-29-note-taker/tests/contract.json
+
+Treat the prompt, spec, tests, and acceptance criteria as source.
+Put deterministic behavior in a portable core and keep Arduino, LVGL, M5Unified, storage, network, audio, and sensor adapters outside it.
+Run scripts/prompt-contract/validate_day.sh days/day-29-note-taker before compiling a device candidate.
+Do not edit the contract or tests to make a candidate pass.
+
+Hardware and shared platform
+
+- Target board_M5StopWatch on ESP32-S3 with OPI PSRAM.
+- Hold the device with the lanyard loop at the bottom: BtnA is physical left and BtnB is physical right.
+- Immediately after M5.begin(), set panel width 468, height 466, offset_x 6, offset_y 0, then rotation 0.
+- Never draw rows 466 or 467. Keep focus decoration inset and every interactive bound inside the round safe area.
+- Load Preferences namespace espt-touch, blob key record, after display setup and before touch input.
+- Accept and validate Day 07 version 1 and version 2 records. Read raw touch, apply the complete shared warp, clamp once, then feed the mapped point to the application.
+- Provide the shared runtime calibration entry path. App-only installation must preserve the record.
+- Allocate retained frames and large working buffers in PSRAM; fail visibly and over serial when required hardware or memory is unavailable.
+
+Controls
+
+Use a localized control scheme because Push-to-record must follow a held pusher; browsing remains one-handed. BtnA/left: record hold. BtnB/right: browse next. Short both: open selected. Hold both: return idle.
+Touch must dispatch the same semantic actions as physical controls.
+
+Lesson behavior
+
+- BtnA records only while held, discards presses under 500 ms, and stops at 30 seconds without overflow.
+- Show Recording, Transcribing, Saving, Saved, and Failed as distinct states with elapsed time or a named reason.
+- Store at most 20 notes in a crash-safe ring with timestamp and text; BtnB browses newest first.
+- Never store or log the transcription key. Keep PCM in PSRAM and free it on every success or failure path.
+- A failed upload retains no phantom note and can retry without recording again while PCM remains available.
+
+Diagnostics and acceptance
+
+- Prefix serial protocol lines with D29_ and implement status, reset, action, capture, and touchlog commands.
+- Report hardware identity, corrected geometry, touch-map version and generation, current portable state, memory headroom, and last named error.
+- Injected actions must use the same reducer, hit testing, callbacks, and control recognizer as physical input.
+- Retain the exact RGB565 pixels sent to M5GFX and stream captures in bounded chunks without blocking the watchdog.
+- Run every scenario in tests/contract.json, generated deterministic sequences, the deliberate mutation, and the lesson-specific checks in SPEC.md.
+- Complete 20 largest-state round trips without reset or growing heap/PSRAM use.
+- Confirm the active touch-map version and generation remain unchanged.
+- Physically review touch alignment, BtnA/BtnB direction, chord behavior, cues, clipping, lower-edge use, and the absence of a black bar.
+
+Record host, compile, injected-device, and physical evidence separately.
+Never describe reference rendering or injected input as physical proof.
 ```
 
-On first boot the board hosts the `esptember-setup` portal: join it from a phone and one form collects Wi-Fi and the Deepgram key (day 22's pattern, with per-day fields).
-**Holding both pushers for two seconds** at any time forgets Wi-Fi and reopens the portal — reconfiguration never needs a computer.
-Serial remains the power-user path at 115200:
+## Required behavior
 
-```
-wifi YOUR_SSID YOUR_PASSWORD
-dgkey YOUR_DEEPGRAM_KEY
-```
+- BtnA records only while held, discards presses under 500 ms, and stops at 30 seconds without overflow.
+- Show Recording, Transcribing, Saving, Saved, and Failed as distinct states with elapsed time or a named reason.
+- Store at most 20 notes in a crash-safe ring with timestamp and text; BtnB browses newest first.
+- Never store or log the transcription key. Keep PCM in PSRAM and free it on every success or failure path.
+- A failed upload retains no phantom note and can retry without recording again while PCM remains available.
 
-Everything persists in NVS; the Wi-Fi entry is day 23's shared namespace, so an already-provisioned board skips setup entirely.
+## Recorded evidence
 
-## How it works
+The shared contract runner validates Stopwatch geometry, touch-map ownership, control metadata, state types and ranges, deterministic scenarios, round-face control bounds, and 10,000 generated actions against three disposable reducer shapes.
+A deliberately mutated reducer must fail.
 
-This is day 28's pipeline restructured around a moment instead of a stream.
-Captions wanted words *during* speech; a memo wants them *after* — so instead of streaming, the crown records the whole clip into PSRAM (30 seconds of 8 kHz mono is 480 KB, pocket change against 8 MB), and release fires a one-shot pipeline:
-
-Deepgram's **prerecorded** endpoint takes the raw buffer in a single POST — same honest audio-as-audio contract as the live socket, same `smart_format` punctuation.
-The transcript then files into a local ring — twenty NVS slots and a cursor:
-
-```c
-static bool saveNoteLocal(const String &text) {
-```
-
-Local-first was a deliberate reversal: notes you dictate on a walk shouldn't depend on a server being reachable, and the B pusher browsing the ring makes the device complete by itself.
-
-The pipeline runs blocking, by choice — a memo is a moment, and the moment can wait two seconds while the screen narrates `transcribing... → saving... → SAVED`.
-Sub-half-second presses are discarded as pocket noise.
-Failures name themselves on screen (`deepgram HTTP 401`, `no memos config`) because a device that files paperwork must also file its excuses.
-
-## Check the result
-
-- Idle: `hold A to speak`. Holding shows a red dot and a live seconds count; release shows the pipeline states in order.
-- **SAVED** displays the transcribed text, word-wrapped, and the filed-notes counter increments.
-- B cycles through saved notes, newest first; notes survive a power cycle.
-- Too-short presses return quietly to idle; a wrong key shows `FAILED` with the reason. B dismisses.
+Historical implementation evidence from before the prompt-first Stopwatch migration follows.
 
 **Recorded evidence · September 22, 2026:** Boot, the captive-portal provisioning (completed on the bench — the board holds Wi-Fi), and the PTT state machine were verified over serial (`D28_STATUS wifi=1`). Live transcription awaits a Deepgram key, noted in NOTES.md.
 
-## Extended options: filing to a cloud
-
-The local ring is the shipped core; every option below is one `saveNote` function away, and the migration prompt from day 27 applies with the obvious substitutions.
-
-- **[Notion](https://developers.notion.com)** — the one most people already have: an internal integration token + one shared database; notes become rows. The strongest "real notes app" target.
-- **[Telegram bot](https://core.telegram.org/bots/api#sendmessage)** — free forever, two strings (bot token, chat id), and every memo arrives on your phone with a notification, permanently searchable.
-- **Discord webhook** — one URL, zero auth code, notes in a private channel.
-- **[Memos](https://usememos.com)** — self-hosted timeline, `POST /api/v1/memos` with a bearer token; a Docker one-liner on any box you own.
-- **Your own Worker** — Cloudflare Workers + D1 is SQLite at the edge; ~120 lines makes `memo.your.dev`, and keeping Memos' API shape means this firmware wouldn't know the difference.
-- **Apple Notes** — has no API at all; the honest bridge is a queue (the Worker above) drained by a Mac running `osascript` into Notes.app, which iCloud then syncs everywhere. The notes app with no API gets one anyway.
-
-## Used resources
-
-- [Deepgram prerecorded API](https://developers.deepgram.com/docs/pre-recorded-audio) — raw linear16 in one POST.
-- Days 22 and 27: the shared Wi-Fi namespace and the transcription contract.
-
-## Build and change it
-
-Clone the repository once:
-
-```sh
-git clone https://github.com/chantastic/esptember.git
-cd esptember
-```
-
-Install the toolchain pieces (once):
-
-```sh
-arduino-cli core install esp32:esp32
-arduino-cli lib install M5Unified ArduinoJson
-```
-
-Build and flash from the repository root:
-
-```sh
-cd days/day-29-note-taker
-./scripts/build.sh
-./scripts/flash.sh PORT
-```
-
-The merged image lands in `.build/firmware/note_taker.ino.merged.bin`.
-Natural extensions: a cloud backend from the list above, tags by hold-duration, or export-over-serial for backing the ring up.
+The reference screenshot is acceptance-model evidence.
+The next hardware pass must replace or supplement it with a framebuffer capture and a hand-review record.

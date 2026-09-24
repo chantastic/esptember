@@ -2,91 +2,97 @@
 board: m5stack-stopwatch
 day: 30
 title: Trivia
-toolchain: Arduino CLI + M5Unified / ESP-IDF v5.5 + Waveshare BSP (one half each)
-firmware: /firmware/day-30-trivia.bin
-summary: "The capstone: a two-board quiz show composing the month's packets, buttons, tones, and fairness rules."
-verification: "Full 12-question game machine-verified across both boards: 10/12 with two deliberate wrongs"
+toolchain: Arduino ESP32 3.3.10 + M5Unified 0.2.19 + M5GFX 0.2.26 + LVGL 9.3.0
+summary: "A multi-Stopwatch quiz with host election, timestamped answers, dedupe, and visible verdicts."
+verification: "Prompt contract and reference frame verified; generated hardware candidate awaits hand review"
 ---
 
-## The result
+## The assignment
 
-A quiz show across two boards: the Waveshare 1.8 hosts — statement on screen, deck in flash, the truth in its pocket — and the StopWatch buzzes in: **A for TRUE, B for FALSE**.
-Right answers chirp and buzz in your hand; wrong ones groan.
-Scores track on both screens, and every answer packet carries the *press timestamp*, the fairness rule that keeps radio latency out of tie-breaking when more buzzers join.
-This is the capstone day: ESP-NOW from day 21, button grammar and cues from day 11, and the cross-brand discipline the month kept sharpening.
-This day has two firmware images, one per board.
+Run a fair true/false quiz using identical M5Stack Stopwatches as host and buzzers.
 
-## What you need
+The durable source is this prompt, [SPEC.md](https://github.com/chantastic/esptember/blob/main/days/day-30-trivia/SPEC.md), the machine-readable contract, and its layered acceptance criteria.
+Generated firmware is a disposable candidate.
 
-- **Boards:** the M5 StopWatch (buzzer) and the Waveshare AMOLED 1.8 (host).
-- **Connection:** USB data cables for flashing. No network — the deck bakes into flash.
-- **For the download:** [uv](https://docs.astral.sh/uv/getting-started/installation/) supplies the `uvx` command below.
-- **For source builds:** arduino-cli + M5Unified for the buzzer; ESP-IDF v5.5 for the host.
+## Reference frame
 
-Flashing replaces the firmware currently on each board.
+![Round-screen acceptance reference for Trivia](https://esptember.com/images/day-30-trivia/reference.png)
 
-## Run it
+This is a deterministic screenshot of the visual acceptance model.
+It defines the intended hierarchy and safe-area use; only a later framebuffer capture from the attached Stopwatch can count as device rendering evidence.
 
-Download both images:
-[day-30-trivia.bin](https://esptember.com/firmware/day-30-trivia.bin) (StopWatch buzzer) and
-[day-30-trivia-waveshare.bin](https://esptember.com/firmware/day-30-trivia-waveshare.bin) (AMOLED 1.8 host).
+## The build prompt
 
-Flash each at `0x0`:
+```text
+Build ESPtember Day 30: Trivia for the M5Stack Stopwatch Dev Kit (C152).
 
-```sh
-uvx esptool --chip esp32s3 --port STOPWATCH_PORT \
-  write-flash 0x0 day-30-trivia.bin
-uvx esptool --chip esp32s3 --port WAVESHARE_PORT \
-  write-flash 0x0 day-30-trivia-waveshare.bin
+Read these before writing code:
+- .agents/skills/build-stopwatch-lessons/SKILL.md
+- .agents/skills/prompt-first-embedded-lessons/SKILL.md
+- days/day-07-touch-calibration/SPEC.md
+- days/day-30-trivia/SPEC.md
+- days/day-30-trivia/tests/contract.json
+
+Treat the prompt, spec, tests, and acceptance criteria as source.
+Put deterministic behavior in a portable core and keep Arduino, LVGL, M5Unified, storage, network, audio, and sensor adapters outside it.
+Run scripts/prompt-contract/validate_day.sh days/day-30-trivia before compiling a device candidate.
+Do not edit the contract or tests to make a candidate pass.
+
+Hardware and shared platform
+
+- Target board_M5StopWatch on ESP32-S3 with OPI PSRAM.
+- Hold the device with the lanyard loop at the bottom: BtnA is physical left and BtnB is physical right.
+- Immediately after M5.begin(), set panel width 468, height 466, offset_x 6, offset_y 0, then rotation 0.
+- Never draw rows 466 or 467. Keep focus decoration inset and every interactive bound inside the round safe area.
+- Load Preferences namespace espt-touch, blob key record, after display setup and before touch input.
+- Accept and validate Day 07 version 1 and version 2 records. Read raw touch, apply the complete shared warp, clamp once, then feed the mapped point to the application.
+- Provide the shared runtime calibration entry path. App-only installation must preserve the record.
+- Allocate retained frames and large working buffers in PSRAM; fail visibly and over serial when required hardware or memory is unavailable.
+
+Controls
+
+Use a localized control scheme because True and False must be immediate one-button answers. BtnA/left: answer true. BtnB/right: answer false. Short both: host next. Hold both: leave game.
+Touch must dispatch the same semantic actions as physical controls.
+
+Lesson behavior
+
+- Choose Host or Player at startup. Hosts own the deck and qid; players answer True on BtnA and False on BtnB.
+- Timestamp the physical press locally, lock after the first answer, and reject duplicate or stale qids.
+- Use versioned ESP-NOW question, answer, verdict, score, and presence messages between identical Stopwatches.
+- Resolve ties by a documented clock-offset/round-trip method or declare them tied; never rank by packet arrival alone.
+- Run all twelve baked questions, keep scores consistent, and recover a player that briefly loses the host.
+
+Diagnostics and acceptance
+
+- Prefix serial protocol lines with D30_ and implement status, reset, action, capture, and touchlog commands.
+- Report hardware identity, corrected geometry, touch-map version and generation, current portable state, memory headroom, and last named error.
+- Injected actions must use the same reducer, hit testing, callbacks, and control recognizer as physical input.
+- Retain the exact RGB565 pixels sent to M5GFX and stream captures in bounded chunks without blocking the watchdog.
+- Run every scenario in tests/contract.json, generated deterministic sequences, the deliberate mutation, and the lesson-specific checks in SPEC.md.
+- Complete 20 largest-state round trips without reset or growing heap/PSRAM use.
+- Confirm the active touch-map version and generation remain unchanged.
+- Physically review touch alignment, BtnA/BtnB direction, chord behavior, cues, clipping, lower-edge use, and the absence of a black bar.
+
+Record host, compile, injected-device, and physical evidence separately.
+Never describe reference rendering or injected input as physical proof.
 ```
 
-Tap the host's screen to start; the statement appears on both boards; answer on the pushers.
+## Required behavior
 
-## How it works
+- Choose Host or Player at startup. Hosts own the deck and qid; players answer True on BtnA and False on BtnB.
+- Timestamp the physical press locally, lock after the first answer, and reject duplicate or stale qids.
+- Use versioned ESP-NOW question, answer, verdict, score, and presence messages between identical Stopwatches.
+- Resolve ties by a documented clock-offset/round-trip method or declare them tied; never rank by packet arrival alone.
+- Run all twelve baked questions, keep scores consistent, and recover a player that briefly loses the host.
 
-One packet type family runs the whole game — question, answer, verdict — and the answer's payload is the day's idea:
+## Recorded evidence
 
-```c
-  tr_msg_t msg = {TR_MAGIC, 1, currentQid, (uint8_t)(truthy ? 1 : 0), 0,
-                  millis(), {0}};
-```
+The shared contract runner validates Stopwatch geometry, touch-map ownership, control metadata, state types and ranges, deterministic scenarios, round-face control bounds, and 10,000 generated actions against three disposable reducer shapes.
+A deliberately mutated reducer must fail.
 
-That `millis()` is the **press timestamp**: the moment the thumb hit the pusher, on the player's own clock.
-With one buzzer it's bookkeeping; with several it's justice — the host can rank *presses* instead of *packet arrivals*, so a buzzer with a slow radio path never loses a tie it won physically.
-The plan called this latency fairness; the implementation is one field.
-
-The host owns the deck and the truth.
-Twelve original true/false statements bake into flash — several of them auditing this very series ("At 100 Hz tick rate, a 5 ms FreeRTOS delay rounds to zero": *true*, day 24 has the scars).
-Answers are ruled on arrival, verdicts unicast back, and the buzzer's feedback comes from day 11's vocabulary: rising chirp + haptic for right, low groan for wrong.
-
-Duplicate and stale answers are dropped by qid — mash the pushers all you like, the first answer per question is the answer.
-
-## Check the result
-
-- Host boots to a lobby; the buzzer says `waiting for host...`.
-- Tap the host: the statement appears on both screens within a beat.
-- Answering locks the buzzer (`locked in`), the host shows the ruling and the press time, and the buzzer chirps or groans with matching haptics.
-- Twelve questions in, the host shows the final score and offers a new game.
+Historical implementation evidence from before the prompt-first Stopwatch migration follows.
 
 **Recorded evidence · September 22, 2026:** A complete 12-question game was played under script control across both consoles — twelve questions broadcast, twelve answers ruled, twelve verdicts delivered with press timestamps, final score 10/12 exactly matching the two deliberately wrong answers injected by the script.
 
-## Used resources
-
-- Days 20 and 10: the ESP-NOW contract discipline and the feedback vocabulary, composed rather than re-learned.
-- M5Stack's TriviaPOD — the commercial prior art on this same hardware family; closed content, so the deck here is original.
-- [Open Trivia DB](https://opentdb.com/) — the keyless question source for the networked sequel.
-
-## Build and change it
-
-Clone the repository once:
-
-```sh
-git clone https://github.com/chantastic/esptember.git
-cd esptember/days/day-30-trivia
-```
-
-Buzzer half: `./scripts/build-stopwatch.sh`, upload as in day 21.
-Host half: `cd firmware/waveshare && idf.py build flash`.
-
-The deck is a struct array — edit `DECK[]` and reflash.
-The obvious extensions: more buzzers (the press timestamp is already there to rank them), and swapping the baked deck for live Open Trivia DB questions via day 22's provisioning.
+The reference screenshot is acceptance-model evidence.
+The next hardware pass must replace or supplement it with a framebuffer capture and a hand-review record.

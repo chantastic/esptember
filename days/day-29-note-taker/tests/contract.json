@@ -1,0 +1,174 @@
+{
+  "schema": 1,
+  "lesson": "day-29-note-taker",
+  "title": "Note Taker",
+  "hardware": {
+    "board": "m5stack-stopwatch",
+    "width": 468,
+    "height": 466,
+    "offset_x": 6,
+    "offset_y": 0,
+    "rotation": 0,
+    "touch_map": "espt-touch/record"
+  },
+  "controls": {
+    "profile": "localized",
+    "left_button": "BtnA",
+    "right_button": "BtnB",
+    "left": "record_hold",
+    "right": "browse_next",
+    "enter": "open_selected",
+    "back": "return_idle",
+    "rationale": "Push-to-record must follow a held pusher; browsing remains one-handed."
+  },
+  "state": {
+    "screen": {
+      "type": "enum",
+      "default": "idle",
+      "values": [
+        "idle",
+        "recording",
+        "transcribing",
+        "saved",
+        "browse",
+        "error"
+      ]
+    },
+    "notes": {
+      "type": "int",
+      "default": 0,
+      "min": 0,
+      "max": 20
+    },
+    "selected": {
+      "type": "int",
+      "default": 0,
+      "min": 0,
+      "max": 19
+    },
+    "duration_ms": {
+      "type": "int",
+      "default": 0,
+      "min": 0,
+      "max": 30000
+    },
+    "text": {
+      "type": "string",
+      "default": "",
+      "max_length": 160
+    }
+  },
+  "scenarios": [
+    {
+      "name": "primary flow",
+      "steps": [
+        {
+          "action": {
+            "type": "record",
+            "down": true
+          },
+          "expect": {
+            "screen": "recording"
+          }
+        },
+        {
+          "action": {
+            "type": "record",
+            "down": false,
+            "duration_ms": 2200
+          },
+          "expect": {
+            "screen": "transcribing",
+            "duration_ms": 2200
+          }
+        },
+        {
+          "action": {
+            "type": "transcript",
+            "text": "Buy coffee."
+          },
+          "expect": {
+            "screen": "saved",
+            "notes": 1,
+            "text": "Buy coffee."
+          }
+        }
+      ]
+    },
+    {
+      "name": "discard pocket noise",
+      "steps": [
+        {
+          "action": {
+            "type": "record",
+            "down": true
+          },
+          "expect": {
+            "screen": "recording"
+          }
+        },
+        {
+          "action": {
+            "type": "record",
+            "down": false,
+            "duration_ms": 300
+          },
+          "expect": {
+            "screen": "idle",
+            "duration_ms": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "browse",
+      "steps": [
+        {
+          "action": "right",
+          "expect": {
+            "screen": "browse",
+            "selected": 0
+          }
+        },
+        {
+          "action": "right",
+          "expect": {
+            "selected": 1
+          }
+        }
+      ],
+      "given": {
+        "notes": 3
+      }
+    }
+  ],
+  "layout": {
+    "safe_radius": 226,
+    "focus_inset": 3,
+    "controls": [
+      {
+        "id": "primary",
+        "bounds": [
+          104,
+          110,
+          260,
+          48
+        ]
+      }
+    ]
+  },
+  "visual": {
+    "kind": "card",
+    "eyebrow": "VOICE NOTE",
+    "title": "SAVED",
+    "metric": "\u2713",
+    "lines": [
+      "Buy coffee on",
+      "the way home.",
+      "note 12 of 20"
+    ],
+    "accent": "#48ef8b",
+    "scenario": "primary flow",
+    "evidence": "reference"
+  }
+}

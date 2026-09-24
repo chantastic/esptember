@@ -1,0 +1,173 @@
+{
+  "schema": 1,
+  "lesson": "day-33-pipes",
+  "title": "Pipes",
+  "hardware": {
+    "board": "m5stack-stopwatch",
+    "width": 468,
+    "height": 466,
+    "offset_x": 6,
+    "offset_y": 0,
+    "rotation": 0,
+    "touch_map": "espt-touch/record"
+  },
+  "controls": {
+    "profile": "c25k",
+    "left_button": "BtnA",
+    "right_button": "BtnB",
+    "left": "previous_or_decrease",
+    "right": "next_or_increase",
+    "enter": "short_both",
+    "back": "hold_both_600ms"
+  },
+  "state": {
+    "screen": {
+      "type": "enum",
+      "default": "list",
+      "values": [
+        "list",
+        "detail",
+        "connect",
+        "error"
+      ]
+    },
+    "providers": {
+      "type": "int",
+      "default": 0,
+      "min": 0,
+      "max": 16
+    },
+    "selected": {
+      "type": "int",
+      "default": 0,
+      "min": 0,
+      "max": 15
+    },
+    "connected": {
+      "type": "int",
+      "default": 0,
+      "min": 0,
+      "max": 16
+    },
+    "stale": {
+      "type": "bool",
+      "default": false
+    }
+  },
+  "scenarios": [
+    {
+      "name": "primary flow",
+      "steps": [
+        {
+          "action": {
+            "type": "providers",
+            "count": 7,
+            "connected": 6
+          },
+          "expect": {
+            "providers": 7,
+            "connected": 6
+          }
+        },
+        {
+          "action": "right",
+          "expect": {
+            "selected": 1
+          }
+        },
+        {
+          "action": "enter",
+          "expect": {
+            "screen": "detail"
+          }
+        },
+        {
+          "action": "back",
+          "expect": {
+            "screen": "list"
+          }
+        }
+      ]
+    },
+    {
+      "name": "connect flow",
+      "steps": [
+        {
+          "action": "enter",
+          "expect": {
+            "screen": "connect"
+          }
+        },
+        {
+          "action": {
+            "type": "connected"
+          },
+          "expect": {
+            "screen": "detail",
+            "connected": 7
+          }
+        }
+      ],
+      "given": {
+        "providers": 7,
+        "connected": 6,
+        "selected": 6
+      }
+    },
+    {
+      "name": "stale gateway",
+      "steps": [
+        {
+          "action": {
+            "type": "refresh_failed"
+          },
+          "expect": {
+            "screen": "error",
+            "stale": true
+          }
+        },
+        {
+          "action": "back",
+          "expect": {
+            "screen": "list",
+            "stale": true
+          }
+        }
+      ],
+      "given": {
+        "providers": 7,
+        "connected": 6
+      }
+    }
+  ],
+  "layout": {
+    "safe_radius": 226,
+    "focus_inset": 3,
+    "controls": [
+      {
+        "id": "primary",
+        "bounds": [
+          104,
+          110,
+          260,
+          48
+        ]
+      }
+    ]
+  },
+  "visual": {
+    "kind": "list",
+    "eyebrow": "PIPES \u00b7 6/7 LIVE",
+    "title": "YOUR PROVIDERS",
+    "metric": "",
+    "lines": [
+      "GitHub \u00b7 connected",
+      "YouTube \u00b7 connected",
+      "LinkedIn \u00b7 connect",
+      "X \u00b7 connected"
+    ],
+    "accent": "#48ef8b",
+    "scenario": "primary flow",
+    "evidence": "reference"
+  }
+}
