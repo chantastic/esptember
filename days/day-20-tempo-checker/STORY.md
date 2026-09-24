@@ -1,6 +1,12 @@
 ---
 title: Tempo Checker
 ---
+## The prompt-first pass
+
+The original build below records how this idea first worked.
+The durable lesson now targets the M5Stack Stopwatch and lives in the prompt, behavior contract, generalized tests, and hand-review checklist.
+Generated firmware is evidence for those sources, not the source itself.
+
 
 Day 19 built the clock that speaks.
 Day 20 builds the ear that listens back — and the two verify each other, which is the real reason they shipped as a pair.

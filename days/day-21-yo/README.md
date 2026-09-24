@@ -2,115 +2,97 @@
 board: m5stack-stopwatch
 day: 21
 title: Yo
-toolchain: Arduino CLI + M5Unified / ESP-IDF v5.5 + Waveshare BSP (one half each)
-firmware: /firmware/day-21-yo.bin
-summary: "Two boards from different vendors find each other over ESP-NOW and poke. The protocol is the only contract."
-verification: "Bidirectional poke exchange machine-verified over both serial consoles"
+toolchain: Arduino ESP32 3.3.10 + M5Unified 0.2.19 + M5GFX 0.2.26 + LVGL 9.3.0
+summary: "A one-tap nearby message between identical Stopwatches over ESP-NOW."
+verification: "Prompt contract and reference frame verified; generated hardware candidate awaits hand review"
 ---
 
-## The result
+## The assignment
 
-The single-tap social network, on radios: every board broadcasts a hello, builds a roster of who's nearby, and one press sends a **YO** that buzzes the other device with your name.
-It runs across two *different* boards — the M5 StopWatch under Arduino and the Waveshare AMOLED 1.8 under ESP-IDF — because ESP-NOW lives below every framework: no router, no credentials, no TCP, just MAC addresses and small frames.
-Nothing above the packet is shared between the two halves, and none of it matters to the radio.
-This day has two firmware images, one per board.
+Use two or more M5Stack Stopwatches to discover peers and send one tiny social signal.
 
-## What you need
+The durable source is this prompt, [SPEC.md](https://github.com/chantastic/esptember/blob/main/days/day-21-yo/SPEC.md), the machine-readable contract, and its layered acceptance criteria.
+Generated firmware is a disposable candidate.
 
-- **Boards:** any two (or more) of the series' ESP32-S3 kits — the StopWatch half is the featured image; the Waveshare 1.8 half is linked below.
-- **Connection:** USB data cables and a computer with access to the serial ports.
-- **For the download:** [uv](https://docs.astral.sh/uv/getting-started/installation/) supplies the `uvx` command below.
-- **For source builds:** arduino-cli + M5Unified for the StopWatch half; ESP-IDF v5.5 for the Waveshare half.
+## Reference frame
 
-Flashing replaces the firmware currently on each board.
+![Round-screen acceptance reference for Yo](https://esptember.com/images/day-21-yo/reference.png)
 
-## Run it
+This is a deterministic screenshot of the visual acceptance model.
+It defines the intended hierarchy and safe-area use; only a later framebuffer capture from the attached Stopwatch can count as device rendering evidence.
 
-Download both images:
-[day-21-yo.bin](https://esptember.com/firmware/day-21-yo.bin) (StopWatch) and
-[day-21-yo-waveshare.bin](https://esptember.com/firmware/day-21-yo-waveshare.bin) (AMOLED 1.8).
+## The build prompt
 
-Find your serial ports:
+```text
+Build ESPtember Day 21: Yo for the M5Stack Stopwatch Dev Kit (C152).
 
-```sh
-# macOS
-ls /dev/cu.usbmodem*
-# Linux
-ls /dev/ttyACM*
+Read these before writing code:
+- .agents/skills/build-stopwatch-lessons/SKILL.md
+- .agents/skills/prompt-first-embedded-lessons/SKILL.md
+- days/day-07-touch-calibration/SPEC.md
+- days/day-21-yo/SPEC.md
+- days/day-21-yo/tests/contract.json
+
+Treat the prompt, spec, tests, and acceptance criteria as source.
+Put deterministic behavior in a portable core and keep Arduino, LVGL, M5Unified, storage, network, audio, and sensor adapters outside it.
+Run scripts/prompt-contract/validate_day.sh days/day-21-yo before compiling a device candidate.
+Do not edit the contract or tests to make a candidate pass.
+
+Hardware and shared platform
+
+- Target board_M5StopWatch on ESP32-S3 with OPI PSRAM.
+- Hold the device with the lanyard loop at the bottom: BtnA is physical left and BtnB is physical right.
+- Immediately after M5.begin(), set panel width 468, height 466, offset_x 6, offset_y 0, then rotation 0.
+- Never draw rows 466 or 467. Keep focus decoration inset and every interactive bound inside the round safe area.
+- Load Preferences namespace espt-touch, blob key record, after display setup and before touch input.
+- Accept and validate Day 07 version 1 and version 2 records. Read raw touch, apply the complete shared warp, clamp once, then feed the mapped point to the application.
+- Provide the shared runtime calibration entry path. App-only installation must preserve the record.
+- Allocate retained frames and large working buffers in PSRAM; fail visibly and over serial when required hardware or memory is unavailable.
+
+Controls
+
+Use the default grammar: BtnA/left is Previous or Decrease; BtnB/right is Next or Increase; short both is Enter; hold both for 600 ms is Back. Preserve the 80 ms join and overlap rules and consume chord clicks.
+Touch must dispatch the same semantic actions as physical controls.
+
+Lesson behavior
+
+- Every Stopwatch broadcasts presence with a stable local id and display name, then expires silent peers.
+- Left and right choose a peer; Enter sends YO; Back returns to discovery and clears no identity.
+- Deduplicate messages by sender and sequence, acknowledge delivery, and never echo a received YO.
+- A received YO names the sender and emits one nonblocking sound/haptic cue.
+- Use versioned, length-checked packets and reject unknown versions or malformed names.
+
+Diagnostics and acceptance
+
+- Prefix serial protocol lines with D21_ and implement status, reset, action, capture, and touchlog commands.
+- Report hardware identity, corrected geometry, touch-map version and generation, current portable state, memory headroom, and last named error.
+- Injected actions must use the same reducer, hit testing, callbacks, and control recognizer as physical input.
+- Retain the exact RGB565 pixels sent to M5GFX and stream captures in bounded chunks without blocking the watchdog.
+- Run every scenario in tests/contract.json, generated deterministic sequences, the deliberate mutation, and the lesson-specific checks in SPEC.md.
+- Complete 20 largest-state round trips without reset or growing heap/PSRAM use.
+- Confirm the active touch-map version and generation remain unchanged.
+- Physically review touch alignment, BtnA/BtnB direction, chord behavior, cues, clipping, lower-edge use, and the absence of a black bar.
+
+Record host, compile, injected-device, and physical evidence separately.
+Never describe reference rendering or injected input as physical proof.
 ```
 
-Flash each board with its image at `0x0`:
+## Required behavior
 
-```sh
-uvx esptool --chip esp32s3 --port STOPWATCH_PORT \
-  write-flash 0x0 day-21-yo.bin
-uvx esptool --chip esp32s3 --port WAVESHARE_PORT \
-  write-flash 0x0 day-21-yo-waveshare.bin
-```
+- Every Stopwatch broadcasts presence with a stable local id and display name, then expires silent peers.
+- Left and right choose a peer; Enter sends YO; Back returns to discovery and clears no identity.
+- Deduplicate messages by sender and sequence, acknowledge delivery, and never echo a received YO.
+- A received YO names the sender and emits one nonblocking sound/haptic cue.
+- Use versioned, length-checked packets and reject unknown versions or malformed names.
 
-Within a few seconds of both booting, each board's roster shows the other.
+## Recorded evidence
 
-## How it works
+The shared contract runner validates Stopwatch geometry, touch-map ownership, control metadata, state types and ranges, deterministic scenarios, round-face control bounds, and 10,000 generated actions against three disposable reducer shapes.
+A deliberately mutated reducer must fail.
 
-The entire contract between the two codebases is 24 bytes:
-
-```c
-typedef struct __attribute__((packed)) {
-  uint32_t magic;
-  uint8_t type; // 0 = hello, 1 = poke
-  char name[12];
-} yo_msg_t;
-```
-
-Both halves pin the radio to channel 1 in station mode with no connection, broadcast a hello every three seconds, and treat any valid hello as roster material.
-Hearing a broadcast requires nothing; *sending back* requires registering the sender as a peer — that asymmetry is ESP-NOW's one etiquette rule, handled on first contact.
-
-A poke is the same struct, `type = 1`, unicast to a chosen MAC.
-The send callback reports link-layer delivery — `sent` is not `received` until the radio says acked — and both consoles print the verdict on every frame.
-
-Reception differs by hardware, which is the point: the StopWatch answers a poke with vibration and a tone (day 11's channel), the Waveshare floods its touchscreen orange.
-Same packet, native manners.
-
-One cross-framework trap earned its comment: the ESP-NOW receive callback runs on the Wi-Fi task, and M5Unified's vibration is an I²C write — feedback fires from the main loop via a flag, never from the callback.
-
-## Check the result
-
-- Both boards list each other by name within ~6 seconds of boot.
-- StopWatch: A selects a peer, B sends YO. Waveshare: tap the peer's row.
-- The poked StopWatch buzzes, beeps, and shows `YO! <name>`; the poked Waveshare flashes a full-screen orange `YO! from <name>`.
-- Unplug one board: within 10 seconds the other marks it `(gone)`.
+Historical implementation evidence from before the prompt-first Stopwatch migration follows.
 
 **Recorded evidence · September 22, 2026:** The full exchange was machine-verified over both serial consoles simultaneously: mutual roster discovery (`D20_PEER`), StopWatch→Waveshare poke and Waveshare→StopWatch poke each received within the same second (`D20_POKE`/`D20_POKED` pairs), all frames link-acked (`D20_SENT acked`).
 
-## Used resources
-
-- [ESP-NOW](https://docs.espressif.com/projects/esp-idf/en/stable/esp32s3/api-reference/network/esp_now.html) — Espressif's connectionless peer-to-peer protocol, identical under Arduino and ESP-IDF.
-- The app **Yo** (2014): the single-tap message as a design ceiling worth respecting.
-
-## Build and change it
-
-Clone the repository once:
-
-```sh
-git clone https://github.com/chantastic/esptember.git
-cd esptember/days/day-21-yo
-```
-
-StopWatch half:
-
-```sh
-./scripts/build-stopwatch.sh
-arduino-cli upload --fqbn 'esp32:esp32:esp32s3:USBMode=hwcdc,CDCOnBoot=cdc,FlashSize=16M,PartitionScheme=app3M_fat9M_16MB,PSRAM=opi' \
-  --port PORT --input-dir .build/firmware firmware/stopwatch/yo_stopwatch
-```
-
-Waveshare half (ESP-IDF environment activated):
-
-```sh
-cd firmware/waveshare
-idf.py build
-idf.py -p PORT flash
-```
-
-Change `MY_NAME` in each half and flash more boards — the roster holds eight.
-The 24-byte struct has room to grow: an emoji field is the obvious v2.
+The reference screenshot is acceptance-model evidence.
+The next hardware pass must replace or supplement it with a framebuffer capture and a hand-review record.

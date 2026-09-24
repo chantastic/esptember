@@ -1,0 +1,162 @@
+{
+  "schema": 1,
+  "lesson": "day-20-tempo-checker",
+  "title": "Tempo Checker",
+  "hardware": {
+    "board": "m5stack-stopwatch",
+    "width": 468,
+    "height": 466,
+    "offset_x": 6,
+    "offset_y": 0,
+    "rotation": 0,
+    "touch_map": "espt-touch/record"
+  },
+  "controls": {
+    "profile": "c25k",
+    "left_button": "BtnA",
+    "right_button": "BtnB",
+    "left": "previous_or_decrease",
+    "right": "next_or_increase",
+    "enter": "short_both",
+    "back": "hold_both_600ms"
+  },
+  "state": {
+    "focus": {
+      "type": "enum",
+      "default": "reset",
+      "values": [
+        "reset",
+        "range"
+      ]
+    },
+    "status": {
+      "type": "enum",
+      "default": "listening",
+      "values": [
+        "listening",
+        "locked"
+      ]
+    },
+    "bpm": {
+      "type": "int",
+      "default": 0,
+      "min": 0,
+      "max": 240
+    },
+    "confidence": {
+      "type": "int",
+      "default": 0,
+      "min": 0,
+      "max": 100
+    },
+    "onsets": {
+      "type": "int",
+      "default": 0,
+      "min": 0,
+      "max": 64
+    }
+  },
+  "scenarios": [
+    {
+      "name": "primary flow",
+      "steps": [
+        {
+          "action": {
+            "type": "onset",
+            "interval_ms": 500
+          },
+          "expect": {
+            "onsets": 1
+          }
+        },
+        {
+          "action": {
+            "type": "estimate",
+            "bpm": 120,
+            "confidence": 82
+          },
+          "expect": {
+            "status": "locked",
+            "bpm": 120,
+            "confidence": 82
+          }
+        }
+      ]
+    },
+    {
+      "name": "reset",
+      "steps": [
+        {
+          "action": "enter",
+          "expect": {
+            "status": "listening",
+            "bpm": 0,
+            "confidence": 0,
+            "onsets": 0
+          }
+        }
+      ],
+      "given": {
+        "status": "locked",
+        "bpm": 128,
+        "confidence": 90,
+        "onsets": 12
+      }
+    },
+    {
+      "name": "reject uncertainty",
+      "steps": [
+        {
+          "action": {
+            "type": "estimate",
+            "bpm": 97,
+            "confidence": 22
+          },
+          "expect": {
+            "status": "listening",
+            "bpm": 0,
+            "confidence": 22
+          }
+        }
+      ]
+    }
+  ],
+  "layout": {
+    "safe_radius": 226,
+    "focus_inset": 3,
+    "controls": [
+      {
+        "id": "reset",
+        "bounds": [
+          104,
+          110,
+          260,
+          48
+        ]
+      },
+      {
+        "id": "range",
+        "bounds": [
+          104,
+          178,
+          260,
+          48
+        ]
+      }
+    ]
+  },
+  "visual": {
+    "kind": "meter",
+    "eyebrow": "TEMPO CHECKER",
+    "title": "LOCKED",
+    "metric": "120 BPM",
+    "lines": [
+      "confidence 82%",
+      "8 onsets"
+    ],
+    "accent": "#00d9ff",
+    "level": 0.82,
+    "scenario": "primary flow",
+    "evidence": "reference"
+  }
+}

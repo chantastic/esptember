@@ -1,9 +1,0 @@
-{
-  "additionalFiles": "",
-  "compiler.optimization_flags": "-Os",
-  "customBuildProperties": "",
-  "fqbn": "esp32:esp32:esp32s3:USBMode=hwcdc,CDCOnBoot=cdc,FlashSize=16M,PartitionScheme=app3M_fat9M_16MB,PSRAM=opi",
-  "hardwareFolders": "/Users/chan/Library/Arduino15/packages/esp32/hardware/esp32/3.3.10,/Users/chan/Library/Arduino15/packages/esp32/hardware/esp32/3.3.10",
-  "otherLibrariesFolders": "/Users/chan/Documents/Arduino/libraries",
-  "sketchLocation": "/Users/chan/Developer/esptember/days/day-18-metronome/firmware/metronome"
-}

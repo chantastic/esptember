@@ -1,0 +1,166 @@
+{
+  "schema": 1,
+  "lesson": "day-19-metronome",
+  "title": "Metronome",
+  "hardware": {
+    "board": "m5stack-stopwatch",
+    "width": 468,
+    "height": 466,
+    "offset_x": 6,
+    "offset_y": 0,
+    "rotation": 0,
+    "touch_map": "espt-touch/record"
+  },
+  "controls": {
+    "profile": "localized",
+    "left_button": "BtnA",
+    "right_button": "BtnB",
+    "left": "start_stop",
+    "right": "tap_tempo",
+    "enter": "edit_selected",
+    "back": "return_to_tempo",
+    "rationale": "Start/stop and tap tempo have established musical meanings."
+  },
+  "state": {
+    "mode": {
+      "type": "enum",
+      "default": "stopped",
+      "values": [
+        "stopped",
+        "running"
+      ]
+    },
+    "bpm": {
+      "type": "int",
+      "default": 120,
+      "min": 40,
+      "max": 240
+    },
+    "meter": {
+      "type": "enum",
+      "default": "4/4",
+      "values": [
+        "2/4",
+        "3/4",
+        "4/4",
+        "5/4",
+        "6/8"
+      ]
+    },
+    "beat": {
+      "type": "int",
+      "default": 1,
+      "min": 1,
+      "max": 6
+    },
+    "taps": {
+      "type": "int",
+      "default": 0,
+      "min": 0,
+      "max": 8
+    }
+  },
+  "scenarios": [
+    {
+      "name": "primary flow",
+      "steps": [
+        {
+          "action": "left",
+          "expect": {
+            "mode": "running"
+          }
+        },
+        {
+          "action": {
+            "type": "beat"
+          },
+          "expect": {
+            "beat": 2
+          }
+        },
+        {
+          "action": "left",
+          "expect": {
+            "mode": "stopped"
+          }
+        }
+      ]
+    },
+    {
+      "name": "tap tempo",
+      "steps": [
+        {
+          "action": {
+            "type": "tap",
+            "interval_ms": 500
+          },
+          "expect": {
+            "taps": 1,
+            "bpm": 120
+          }
+        },
+        {
+          "action": {
+            "type": "tap",
+            "interval_ms": 600
+          },
+          "expect": {
+            "taps": 2,
+            "bpm": 109
+          }
+        }
+      ]
+    },
+    {
+      "name": "tempo bounds",
+      "steps": [
+        {
+          "action": {
+            "type": "set_bpm",
+            "value": 500
+          },
+          "expect": {
+            "bpm": 240
+          }
+        },
+        {
+          "action": {
+            "type": "set_bpm",
+            "value": 10
+          },
+          "expect": {
+            "bpm": 40
+          }
+        }
+      ]
+    }
+  ],
+  "layout": {
+    "safe_radius": 226,
+    "focus_inset": 3,
+    "controls": [
+      {
+        "id": "primary",
+        "bounds": [
+          104,
+          110,
+          260,
+          48
+        ]
+      }
+    ]
+  },
+  "visual": {
+    "kind": "radial",
+    "eyebrow": "METRONOME 4/4",
+    "title": "RUNNING",
+    "metric": "120",
+    "lines": [
+      "BPM",
+      "beat 1"
+    ],
+    "accent": "#ff5b04",
+    "scenario": "primary flow",
+    "evidence": "reference"
+  }
+}

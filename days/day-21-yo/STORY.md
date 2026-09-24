@@ -1,6 +1,12 @@
 ---
 title: Yo
 ---
+## The prompt-first pass
+
+The original build below records how this idea first worked.
+The durable lesson now targets the M5Stack Stopwatch and lives in the prompt, behavior contract, generalized tests, and hand-review checklist.
+Generated firmware is evidence for those sources, not the source itself.
+
 
 The plan for this day assumed three identical boards.
 Reality supplied two different ones — an M5 StopWatch running Arduino and a Waveshare AMOLED running ESP-IDF — and that constraint improved the lesson, because it forces the honest question: what do two devices actually need to share to talk?

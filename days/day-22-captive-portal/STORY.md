@@ -1,6 +1,12 @@
 ---
 title: Captive Portal
 ---
+## The prompt-first pass
+
+The original build below records how this idea first worked.
+The durable lesson now targets the M5Stack Stopwatch and lives in the prompt, behavior contract, generalized tests, and hand-review checklist.
+Generated firmware is evidence for those sources, not the source itself.
+
 
 Twenty days in, the series hits the wall every public firmware repo hits: the next ten lessons need Wi-Fi, and Wi-Fi needs a password, and the repository is public.
 Hardcoding credentials is out.

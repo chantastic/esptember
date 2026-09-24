@@ -1,0 +1,154 @@
+{
+  "schema": 1,
+  "lesson": "day-21-yo",
+  "title": "Yo",
+  "hardware": {
+    "board": "m5stack-stopwatch",
+    "width": 468,
+    "height": 466,
+    "offset_x": 6,
+    "offset_y": 0,
+    "rotation": 0,
+    "touch_map": "espt-touch/record"
+  },
+  "controls": {
+    "profile": "c25k",
+    "left_button": "BtnA",
+    "right_button": "BtnB",
+    "left": "previous_or_decrease",
+    "right": "next_or_increase",
+    "enter": "short_both",
+    "back": "hold_both_600ms"
+  },
+  "state": {
+    "screen": {
+      "type": "enum",
+      "default": "discover",
+      "values": [
+        "discover",
+        "peer",
+        "received"
+      ]
+    },
+    "peers": {
+      "type": "int",
+      "default": 0,
+      "min": 0,
+      "max": 32
+    },
+    "selected": {
+      "type": "int",
+      "default": 0,
+      "min": 0,
+      "max": 31
+    },
+    "sent": {
+      "type": "int",
+      "default": 0,
+      "min": 0,
+      "max": 9999
+    },
+    "received": {
+      "type": "int",
+      "default": 0,
+      "min": 0,
+      "max": 9999
+    }
+  },
+  "scenarios": [
+    {
+      "name": "primary flow",
+      "steps": [
+        {
+          "action": {
+            "type": "peer_seen"
+          },
+          "expect": {
+            "peers": 1,
+            "screen": "peer"
+          }
+        },
+        {
+          "action": "enter",
+          "expect": {
+            "sent": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "peer navigation",
+      "steps": [
+        {
+          "action": "right",
+          "expect": {
+            "selected": 1
+          }
+        },
+        {
+          "action": "left",
+          "expect": {
+            "selected": 0
+          }
+        }
+      ],
+      "given": {
+        "peers": 3,
+        "screen": "peer"
+      }
+    },
+    {
+      "name": "receive dedupe",
+      "steps": [
+        {
+          "action": {
+            "type": "receive",
+            "sequence": 7
+          },
+          "expect": {
+            "screen": "received",
+            "received": 1
+          }
+        },
+        {
+          "action": {
+            "type": "receive",
+            "sequence": 7
+          },
+          "expect": {
+            "received": 1
+          }
+        }
+      ]
+    }
+  ],
+  "layout": {
+    "safe_radius": 226,
+    "focus_inset": 3,
+    "controls": [
+      {
+        "id": "primary",
+        "bounds": [
+          104,
+          110,
+          260,
+          48
+        ]
+      }
+    ]
+  },
+  "visual": {
+    "kind": "list",
+    "eyebrow": "YO \u00b7 3 NEARBY",
+    "title": "CHOOSE SOMEONE",
+    "metric": "",
+    "lines": [
+      "Alice",
+      "Bench 2",
+      "Blue watch"
+    ],
+    "accent": "#ff5b04",
+    "scenario": "primary flow",
+    "evidence": "reference"
+  }
+}

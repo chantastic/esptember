@@ -1,6 +1,12 @@
 ---
 title: Metronome
 ---
+## The prompt-first pass
+
+The original build below records how this idea first worked.
+The durable lesson now targets the M5Stack Stopwatch and lives in the prompt, behavior contract, generalized tests, and hand-review checklist.
+Generated firmware is evidence for those sources, not the source itself.
+
 
 A metronome is a stopwatch with opinions about when to speak.
 

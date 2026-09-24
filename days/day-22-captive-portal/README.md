@@ -1,108 +1,98 @@
 ---
-board: waveshare-amoled-18-v2
+board: m5stack-stopwatch
 day: 22
 title: Captive Portal
-toolchain: ESP-IDF v5.5 + Waveshare BSP (LVGL)
-firmware: /firmware/day-22-captive-portal.bin
-summary: "No credentials in the repo, ever: the board becomes its own setup page. A liar's DNS and an HTTP form."
-verification: "Portal AP + DNS + HTTP verified over serial; phone-join flow pending hands-on"
+toolchain: Arduino ESP32 3.3.10 + M5Unified 0.2.19 + M5GFX 0.2.26 + LVGL 9.3.0
+summary: "Credential-free source, guided Wi-Fi provisioning, explicit retries, and shared NVS."
+verification: "Prompt contract and reference frame verified; generated hardware candidate awaits hand review"
 ---
 
-## The result
+## The assignment
 
-The gateway lesson: every internet-facing day after this one assumes the board can get online **without credentials in the repository**.
-No saved Wi-Fi → the board becomes an open access point named `esptember-setup`; join it from a phone and the setup page opens by itself, listing the networks the board can see.
-Pick one, type the password, and the board saves it to NVS and reboots onto your network — showing its SSID, IP, and signal strength on screen.
-Hold **BOOT** during power-up to forget everything and start over.
-Each day is a standalone firmware image; you can start here without flashing earlier days.
+Give every network lesson a reusable way to join Wi-Fi without putting credentials in source.
 
-## What you need
+The durable source is this prompt, [SPEC.md](https://github.com/chantastic/esptember/blob/main/days/day-22-captive-portal/SPEC.md), the machine-readable contract, and its layered acceptance criteria.
+Generated firmware is a disposable candidate.
 
-- **Board:** Waveshare ESP32-S3-Touch-AMOLED-1.8 **V2**: ESP32-S3, CO5300 panel, 16 MB flash, 8 MB PSRAM.
-- **Connection:** a USB data cable, plus any phone or laptop for the setup flow.
-- **For the download:** [uv](https://docs.astral.sh/uv/getting-started/installation/) supplies the `uvx` command below. ESP-IDF is not needed.
-- **For source builds:** [ESP-IDF v5.5](https://docs.espressif.com/projects/esp-idf/en/stable/esp32s3/get-started/) with its environment activated.
+## Reference frame
 
-The display is 368 × 448 pixels.
-Flashing replaces the firmware currently on the board.
+![Round-screen acceptance reference for Captive Portal](https://esptember.com/images/day-22-captive-portal/reference.png)
 
-## Run it
+This is a deterministic screenshot of the visual acceptance model.
+It defines the intended hierarchy and safe-area use; only a later framebuffer capture from the attached Stopwatch can count as device rendering evidence.
 
-Download [day-22-captive-portal.bin](https://esptember.com/firmware/day-22-captive-portal.bin) and open a terminal in the download directory.
-This is a merged image containing the bootloader, partition table, and application.
+## The build prompt
 
-Find your serial port:
+```text
+Build ESPtember Day 22: Captive Portal for the M5Stack Stopwatch Dev Kit (C152).
 
-```sh
-# macOS
-ls /dev/cu.usbmodem*
-# Linux
-ls /dev/ttyACM*
+Read these before writing code:
+- .agents/skills/build-stopwatch-lessons/SKILL.md
+- .agents/skills/prompt-first-embedded-lessons/SKILL.md
+- days/day-07-touch-calibration/SPEC.md
+- days/day-22-captive-portal/SPEC.md
+- days/day-22-captive-portal/tests/contract.json
+
+Treat the prompt, spec, tests, and acceptance criteria as source.
+Put deterministic behavior in a portable core and keep Arduino, LVGL, M5Unified, storage, network, audio, and sensor adapters outside it.
+Run scripts/prompt-contract/validate_day.sh days/day-22-captive-portal before compiling a device candidate.
+Do not edit the contract or tests to make a candidate pass.
+
+Hardware and shared platform
+
+- Target board_M5StopWatch on ESP32-S3 with OPI PSRAM.
+- Hold the device with the lanyard loop at the bottom: BtnA is physical left and BtnB is physical right.
+- Immediately after M5.begin(), set panel width 468, height 466, offset_x 6, offset_y 0, then rotation 0.
+- Never draw rows 466 or 467. Keep focus decoration inset and every interactive bound inside the round safe area.
+- Load Preferences namespace espt-touch, blob key record, after display setup and before touch input.
+- Accept and validate Day 07 version 1 and version 2 records. Read raw touch, apply the complete shared warp, clamp once, then feed the mapped point to the application.
+- Provide the shared runtime calibration entry path. App-only installation must preserve the record.
+- Allocate retained frames and large working buffers in PSRAM; fail visibly and over serial when required hardware or memory is unavailable.
+
+Controls
+
+Use the default grammar: BtnA/left is Previous or Decrease; BtnB/right is Next or Increase; short both is Enter; hold both for 600 ms is Back. Preserve the 80 ms join and overlap rules and consume chord clicks.
+Touch must dispatch the same semantic actions as physical controls.
+
+Lesson behavior
+
+- When no valid credentials exist, host esptember-setup and a captive portal that lists scanned networks.
+- Accept credentials only through the portal or explicit serial command, save atomically, and redact passwords from logs.
+- Show Setup, Connecting, Online, and Error with SSID, IP, and signal where appropriate.
+- Back from Error retries setup. A deliberate confirmed action forgets Wi-Fi without erasing touch calibration.
+- Bound scan results, HTML bodies, request sizes, connection deadlines, and retry backoff.
+
+Diagnostics and acceptance
+
+- Prefix serial protocol lines with D22_ and implement status, reset, action, capture, and touchlog commands.
+- Report hardware identity, corrected geometry, touch-map version and generation, current portable state, memory headroom, and last named error.
+- Injected actions must use the same reducer, hit testing, callbacks, and control recognizer as physical input.
+- Retain the exact RGB565 pixels sent to M5GFX and stream captures in bounded chunks without blocking the watchdog.
+- Run every scenario in tests/contract.json, generated deterministic sequences, the deliberate mutation, and the lesson-specific checks in SPEC.md.
+- Complete 20 largest-state round trips without reset or growing heap/PSRAM use.
+- Confirm the active touch-map version and generation remain unchanged.
+- Physically review touch alignment, BtnA/BtnB direction, chord behavior, cues, clipping, lower-edge use, and the absence of a black bar.
+
+Record host, compile, injected-device, and physical evidence separately.
+Never describe reference rendering or injected input as physical proof.
 ```
 
-On Windows, use the board's COM port from Device Manager.
-Replace `PORT` with your port, then flash the image at `0x0`:
+## Required behavior
 
-```sh
-uvx esptool --chip esp32s3 --port PORT \
-  write-flash 0x0 day-22-captive-portal.bin
-```
+- When no valid credentials exist, host esptember-setup and a captive portal that lists scanned networks.
+- Accept credentials only through the portal or explicit serial command, save atomically, and redact passwords from logs.
+- Show Setup, Connecting, Online, and Error with SSID, IP, and signal where appropriate.
+- Back from Error retries setup. A deliberate confirmed action forgets Wi-Fi without erasing touch calibration.
+- Bound scan results, HTML bodies, request sizes, connection deadlines, and retry backoff.
 
-When flashing completes, the screen says **SETUP** and the network `esptember-setup` appears.
+## Recorded evidence
 
-## How it works
+The shared contract runner validates Stopwatch geometry, touch-map ownership, control metadata, state types and ranges, deterministic scenarios, round-face control bounds, and 10,000 generated actions against three disposable reducer shapes.
+A deliberately mutated reducer must fail.
 
-The trick that makes phones pop the setup page automatically is a **DNS server that lies**: it answers every query with the board's own address.
-
-```c
-        buf[p++] = 192; buf[p++] = 168; buf[p++] = 4; buf[p++] = 1;
-```
-
-A phone joining any network probes a known URL to test connectivity.
-The probe's DNS lookup lands on the liar, the HTTP request reaches the board instead of the internet, the phone sees an unexpected page — and offers it as a captive portal.
-That's the entire mechanism; the rest is a 404 handler that redirects strays to the form.
-
-The board runs **AP+STA** mode so the portal page can scan for networks while hosting one — the dropdown you pick from is a live scan taken as the page loads.
-
-The form posts back, credentials go to NVS, the board reboots and becomes a normal station.
-Reconnect logic retries forever, and the **BOOT-hold escape hatch** exists precisely because "forever" is the wrong answer to a typo'd password.
-
-Later days reuse this as a library: `portal.c` exposes load/save/clear and the portal itself, and NVS is the only place secrets ever live.
-
-## Check the result
-
-- Fresh flash: the screen reads **SETUP**, and `esptember-setup` shows up in your phone's Wi-Fi list.
-- Joining it pops the portal automatically (or browse to `192.168.4.1`), with your real networks in the dropdown.
-- Submitting reboots the board; the screen walks CONNECTING → **ONLINE** with SSID, IP, and RSSI.
-- Power-cycling keeps the connection — the credentials survived.
-- Holding BOOT while plugging in returns to SETUP with the slate wiped.
+Historical implementation evidence from before the prompt-first Stopwatch migration follows.
 
 **Recorded evidence · September 22, 2026:** Portal mode, the DNS responder, and the HTTP server were verified running over serial (`D21_PORTAL up`). The phone-join, form-submit, and station handoff await a hands-on pass, noted in NOTES.md.
 
-## Used resources
-
-- The captive-portal detection dance: OS connectivity probes (`captive.apple.com` and friends) + DNS interception, as documented across RFC 8910 and a decade of hotspot lore.
-- [WiFiManager](https://github.com/tzapu/WiFiManager) — the Arduino-world prior art this lesson builds from scratch instead of wrapping.
-- ESP-IDF `esp_http_server`, `esp_wifi` AP+STA mode, and NVS.
-
-## Build and change it
-
-Clone the repository once:
-
-```sh
-git clone https://github.com/chantastic/esptember.git
-cd esptember
-```
-
-With the ESP-IDF environment activated, run from the repository root:
-
-```sh
-cd days/day-22-captive-portal/firmware
-idf.py build
-idf.py -p PORT flash monitor
-```
-
-To create the single downloadable image, run `idf.py merge-bin` in the same firmware directory.
-The output is `build/merged-binary.bin`.
-Keep `pmu_init()` and `panel_reset_release()` before display startup when changing the UI.
-`portal.c` is deliberately reusable — later days lift it whole. Adding an API-key field to the form is one input and one NVS write.
+The reference screenshot is acceptance-model evidence.
+The next hardware pass must replace or supplement it with a framebuffer capture and a hand-review record.

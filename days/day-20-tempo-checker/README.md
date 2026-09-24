@@ -2,114 +2,97 @@
 board: m5stack-stopwatch
 day: 20
 title: Tempo Checker
-toolchain: Arduino CLI (esp32 core) + M5Unified
-firmware: /firmware/day-20-tempo-checker.bin
-summary: "The metronome's inverse: the mic finds the beat and names the BPM, with a confidence bar that keeps it honest."
-verification: "Onset pipeline and estimator verified over serial; music session pending"
+toolchain: Arduino ESP32 3.3.10 + M5Unified 0.2.19 + M5GFX 0.2.26 + LVGL 9.3.0
+summary: "Onset detection, folded intervals, robust BPM, and confidence that admits uncertainty."
+verification: "Prompt contract and reference frame verified; generated hardware candidate awaits hand review"
 ---
 
-## The result
+## The assignment
 
-The metronome's inverse: the mic listens, onsets are detected as jumps in short-frame energy, the gaps between onsets are folded into musical range, and the median inter-onset interval becomes a BPM — with a confidence bar that keeps the number honest and a dot that nods along with the detected beat.
-Point it at day 19's metronome and the pair validates itself: no reference instrument required.
-Each day is a standalone firmware image; you can start here without flashing earlier days.
+Listen to rhythmic sound and estimate tempo without displaying false precision.
 
-## What you need
+The durable source is this prompt, [SPEC.md](https://github.com/chantastic/esptember/blob/main/days/day-20-tempo-checker/SPEC.md), the machine-readable contract, and its layered acceptance criteria.
+Generated firmware is a disposable candidate.
 
-- **Board:** M5Stack Stopwatch Dev Kit (ESP32-S3, C152): onboard microphone, 1.75″ round AMOLED, battery.
-- **Connection:** a USB data cable and a computer with access to the serial port.
-- **For the download:** [uv](https://docs.astral.sh/uv/getting-started/installation/) supplies the `uvx` command below.
-- **For source builds:** [arduino-cli](https://arduino.github.io/arduino-cli/) with the esp32 core and the M5Unified library installed.
+## Reference frame
 
-The display is 466 × 466 pixels behind a circular aperture.
-Flashing replaces the firmware currently on the board.
+![Round-screen acceptance reference for Tempo Checker](https://esptember.com/images/day-20-tempo-checker/reference.png)
 
-## Run it
+This is a deterministic screenshot of the visual acceptance model.
+It defines the intended hierarchy and safe-area use; only a later framebuffer capture from the attached Stopwatch can count as device rendering evidence.
 
-Download [day-20-tempo-checker.bin](https://esptember.com/firmware/day-20-tempo-checker.bin) and open a terminal in the download directory.
-This is a merged image containing the bootloader, partition table, and application.
+## The build prompt
 
-Find your serial port:
+```text
+Build ESPtember Day 20: Tempo Checker for the M5Stack Stopwatch Dev Kit (C152).
 
-```sh
-# macOS
-ls /dev/cu.usbmodem*
-# Linux
-ls /dev/ttyACM*
+Read these before writing code:
+- .agents/skills/build-stopwatch-lessons/SKILL.md
+- .agents/skills/prompt-first-embedded-lessons/SKILL.md
+- days/day-07-touch-calibration/SPEC.md
+- days/day-20-tempo-checker/SPEC.md
+- days/day-20-tempo-checker/tests/contract.json
+
+Treat the prompt, spec, tests, and acceptance criteria as source.
+Put deterministic behavior in a portable core and keep Arduino, LVGL, M5Unified, storage, network, audio, and sensor adapters outside it.
+Run scripts/prompt-contract/validate_day.sh days/day-20-tempo-checker before compiling a device candidate.
+Do not edit the contract or tests to make a candidate pass.
+
+Hardware and shared platform
+
+- Target board_M5StopWatch on ESP32-S3 with OPI PSRAM.
+- Hold the device with the lanyard loop at the bottom: BtnA is physical left and BtnB is physical right.
+- Immediately after M5.begin(), set panel width 468, height 466, offset_x 6, offset_y 0, then rotation 0.
+- Never draw rows 466 or 467. Keep focus decoration inset and every interactive bound inside the round safe area.
+- Load Preferences namespace espt-touch, blob key record, after display setup and before touch input.
+- Accept and validate Day 07 version 1 and version 2 records. Read raw touch, apply the complete shared warp, clamp once, then feed the mapped point to the application.
+- Provide the shared runtime calibration entry path. App-only installation must preserve the record.
+- Allocate retained frames and large working buffers in PSRAM; fail visibly and over serial when required hardware or memory is unavailable.
+
+Controls
+
+Use the default grammar: BtnA/left is Previous or Decrease; BtnB/right is Next or Increase; short both is Enter; hold both for 600 ms is Back. Preserve the 80 ms join and overlap rules and consume chord clicks.
+Touch must dispatch the same semantic actions as physical controls.
+
+Lesson behavior
+
+- Detect onsets from adaptive short-frame energy rather than a fixed room-dependent threshold.
+- Reject refractory duplicates, fold half/double-time intervals into 40–240 BPM, and use a robust median.
+- Compute confidence from interval count and dispersion; show listening instead of a number below threshold.
+- Focus Reset and Range. Enter clears samples or changes the accepted tempo range.
+- Animate the beat marker only from a confident estimate.
+
+Diagnostics and acceptance
+
+- Prefix serial protocol lines with D20_ and implement status, reset, action, capture, and touchlog commands.
+- Report hardware identity, corrected geometry, touch-map version and generation, current portable state, memory headroom, and last named error.
+- Injected actions must use the same reducer, hit testing, callbacks, and control recognizer as physical input.
+- Retain the exact RGB565 pixels sent to M5GFX and stream captures in bounded chunks without blocking the watchdog.
+- Run every scenario in tests/contract.json, generated deterministic sequences, the deliberate mutation, and the lesson-specific checks in SPEC.md.
+- Complete 20 largest-state round trips without reset or growing heap/PSRAM use.
+- Confirm the active touch-map version and generation remain unchanged.
+- Physically review touch alignment, BtnA/BtnB direction, chord behavior, cues, clipping, lower-edge use, and the absence of a black bar.
+
+Record host, compile, injected-device, and physical evidence separately.
+Never describe reference rendering or injected input as physical proof.
 ```
 
-On Windows, use the board's COM port from Device Manager.
-Replace `PORT` with your port, then flash the image at `0x0`:
+## Required behavior
 
-```sh
-uvx esptool --chip esp32s3 --port PORT \
-  write-flash 0x0 day-20-tempo-checker.bin
-```
+- Detect onsets from adaptive short-frame energy rather than a fixed room-dependent threshold.
+- Reject refractory duplicates, fold half/double-time intervals into 40–240 BPM, and use a robust median.
+- Compute confidence from interval count and dispersion; show listening instead of a number below threshold.
+- Focus Reset and Range. Enter clears samples or changes the accepted tempo range.
+- Animate the beat marker only from a confident estimate.
 
-Close any serial monitor using that port before flashing.
-When flashing completes, the board restarts into this lesson.
+## Recorded evidence
 
-## How it works
+The shared contract runner validates Stopwatch geometry, touch-map ownership, control metadata, state types and ranges, deterministic scenarios, round-face control bounds, and 10,000 generated actions against three disposable reducer shapes.
+A deliberately mutated reducer must fail.
 
-A beat is a sudden rise in energy.
-Every 16 ms frame gets an RMS energy; an onset fires when energy jumps past 1.8× a slow running average — and at least 220 ms have passed since the last onset, the refractory window that keeps one drum hit from counting twice.
-The average adapts at 2% per frame, slow enough that a beat can't raise the bar fast enough to hide its successors.
-
-Tempo comes from the gaps, not the onsets.
-Each inter-onset interval is **folded** into the 40–240 BPM window — a missed beat reads as half tempo, so out-of-range gaps double or halve until they land in range:
-
-```c
-static uint32_t foldGap(uint32_t ms) {
-  while (ms > 1500) ms /= 2;  // < 40 BPM: assume missed beats
-  while (ms < 250) ms *= 2;   // > 240 BPM: assume double-counted
-  return ms;
-}
-```
-
-The median folded gap becomes the BPM — day 19's median trick, reused against the world's sloppier taps.
-**Confidence** is the fraction of gaps that agree with the median within 12%: steady music scores high, conversation scores near zero, and the display only nods its beat-synced dot above 40%.
-
-Folding is also this lesson's honest limitation: it cannot distinguish 60 BPM from 120 — the octave problem every beat tracker fights.
-The confidence bar tells you *a* grid was found; the octave is yours to sanity-check.
-
-## Check the result
-
-- Silence or speech: `--` with a low confidence bar, occasional stray onsets flashing the rim.
-- Steady claps: the rim flashes on each clap, the BPM converges to your clapping rate, confidence climbs green.
-- Day 19's metronome at 120 BPM playing nearby: the checker reads 120 (or an octave of it), and the nodding dot pulses in step with the clicks.
-- B clears the measurement for a fresh song.
+Historical implementation evidence from before the prompt-first Stopwatch migration follows.
 
 **Recorded evidence · September 22, 2026:** The capture, onset detection, folding, and confidence pipeline were verified over serial (`D19_STATUS` reporting) against ambient room sound. The metronome loop-back session awaits a hands-on check, noted in NOTES.md.
 
-## Used resources
-
-- Onset detection by energy flux with a refractory window — the entry-level form of every beat tracker.
-- The octave problem: tempo estimators can't distinguish a tempo from its double; folding makes the ambiguity explicit.
-- Day 19's metronome as the verification instrument: the pair validates itself.
-
-## Build and change it
-
-Clone the repository once:
-
-```sh
-git clone https://github.com/chantastic/esptember.git
-cd esptember
-```
-
-Install the toolchain pieces (once):
-
-```sh
-arduino-cli core install esp32:esp32
-arduino-cli lib install M5Unified
-```
-
-Build and flash from the repository root:
-
-```sh
-cd days/day-20-tempo-checker
-./scripts/build.sh
-./scripts/flash.sh PORT
-```
-
-The merged image lands in `.build/firmware/tempo_checker.ino.merged.bin`.
-Tuning knobs: the 1.8× onset threshold, the 220 ms refractory, the 12% agreement window — every acoustic environment argues for different values, which is the fun.
+The reference screenshot is acceptance-model evidence.
+The next hardware pass must replace or supplement it with a framebuffer capture and a hand-review record.

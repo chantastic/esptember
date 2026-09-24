@@ -1,0 +1,179 @@
+{
+  "schema": 1,
+  "lesson": "day-23-weather",
+  "title": "Weather Station",
+  "hardware": {
+    "board": "m5stack-stopwatch",
+    "width": 468,
+    "height": 466,
+    "offset_x": 6,
+    "offset_y": 0,
+    "rotation": 0,
+    "touch_map": "espt-touch/record"
+  },
+  "controls": {
+    "profile": "c25k",
+    "left_button": "BtnA",
+    "right_button": "BtnB",
+    "left": "previous_or_decrease",
+    "right": "next_or_increase",
+    "enter": "short_both",
+    "back": "hold_both_600ms"
+  },
+  "state": {
+    "screen": {
+      "type": "enum",
+      "default": "current",
+      "values": [
+        "current",
+        "hourly",
+        "settings",
+        "error"
+      ]
+    },
+    "focus": {
+      "type": "enum",
+      "default": "refresh",
+      "values": [
+        "refresh",
+        "units",
+        "location"
+      ]
+    },
+    "temp": {
+      "type": "int",
+      "default": 0,
+      "min": -100,
+      "max": 150
+    },
+    "age_min": {
+      "type": "int",
+      "default": 0,
+      "min": 0,
+      "max": 10080
+    },
+    "stale": {
+      "type": "bool",
+      "default": false
+    }
+  },
+  "scenarios": [
+    {
+      "name": "primary flow",
+      "steps": [
+        {
+          "action": {
+            "type": "weather",
+            "temp": 68
+          },
+          "expect": {
+            "temp": 68,
+            "age_min": 0
+          }
+        },
+        {
+          "action": {
+            "type": "minute"
+          },
+          "expect": {
+            "age_min": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "screen navigation",
+      "steps": [
+        {
+          "action": "right",
+          "expect": {
+            "screen": "hourly"
+          }
+        },
+        {
+          "action": "right",
+          "expect": {
+            "screen": "settings"
+          }
+        },
+        {
+          "action": "back",
+          "expect": {
+            "screen": "current"
+          }
+        }
+      ]
+    },
+    {
+      "name": "stale cache",
+      "steps": [
+        {
+          "action": {
+            "type": "refresh_failed"
+          },
+          "expect": {
+            "screen": "error",
+            "stale": true
+          }
+        },
+        {
+          "action": "back",
+          "expect": {
+            "screen": "current",
+            "stale": true
+          }
+        }
+      ],
+      "given": {
+        "temp": 68,
+        "age_min": 45
+      }
+    }
+  ],
+  "layout": {
+    "safe_radius": 226,
+    "focus_inset": 3,
+    "controls": [
+      {
+        "id": "refresh",
+        "bounds": [
+          104,
+          110,
+          260,
+          48
+        ]
+      },
+      {
+        "id": "units",
+        "bounds": [
+          104,
+          178,
+          260,
+          48
+        ]
+      },
+      {
+        "id": "location",
+        "bounds": [
+          104,
+          246,
+          260,
+          48
+        ]
+      }
+    ]
+  },
+  "visual": {
+    "kind": "radial",
+    "eyebrow": "PORTLAND \u00b7 NOW",
+    "title": "PARTLY CLOUDY",
+    "metric": "68\u00b0",
+    "lines": [
+      "H 72\u00b0  L 54\u00b0",
+      "wind 7 mph"
+    ],
+    "accent": "#00d9ff",
+    "scenario": "primary flow",
+    "evidence": "reference"
+  }
+}
