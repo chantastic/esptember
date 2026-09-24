@@ -1,9 +1,10 @@
-# Follow-on exercise: Drum Looper
+# Follow-on exercise: Trap Looper
 
 ## The assignment
 
 Turn the four-pad Day 09 instrument into a four-measure drum looper: 4/4 with 16 quarter notes total.
-The pads are Kick, Snare, Hi-Hat, and Crash.
+The trap palette is Kick, Snare, Hi-Hat, and Triple Hi-Hat.
+One Triple Hi-Hat event produces a tight, tempo-locked three-stroke roll while occupying one recorded step.
 
 Start playback, then tap any pad to replace that instrument's track.
 The first tap clears only that pad's old pattern; every tap during the next full four measures becomes its replacement pattern.
@@ -15,7 +16,7 @@ Playback also supplies an audible quarter-note click, with a higher accent on be
 
 ## Reference frame
 
-![Round-screen acceptance reference for the Drum Looper](https://esptember.com/images/day-09-sound-effects/drum-looper-reference.png)
+![Round-screen acceptance reference for the Trap Looper](https://esptember.com/images/day-09-sound-effects/drum-looper-reference.png)
 
 The reference keeps Day 09's large four-pad view and adds only tempo, transport, bar position, and compact track-state cues.
 It defines visual intent rather than device proof.
@@ -33,7 +34,7 @@ Hold the Stopwatch with the lanyard down:
 ## The build prompt
 
 ```text
-Build the Drum Looper follow-on exercise for ESPtember Day 09 on the M5Stack Stopwatch Dev Kit (C152).
+Build the Trap Looper follow-on exercise for ESPtember Day 09 on the M5Stack Stopwatch Dev Kit (C152).
 
 Read these before writing code:
 - .agents/skills/build-stopwatch-lessons/SKILL.md
@@ -61,8 +62,10 @@ Loop and tracks
 
 - Use one fixed 4/4 loop containing four measures and 16 quarter notes total.
 - Quantize each track to sixteenth notes: 16 steps per measure, 64 steps per loop.
-- Keep four independent 64-bit tracks named Kick, Snare, Hi-Hat, and Crash.
+- Keep four independent 64-bit tracks named Kick, Snare, Hi-Hat, and Triple Hi-Hat.
 - Use resident deterministic PCM for all four drum sounds and one immediate-retrigger speaker voice per sound or a bounded mixer that can start coincident hits without blocking the UI.
+- Treat each Triple Hi-Hat bit as one compound event. Start its first closed-hat stroke immediately, then start strokes two and three at one-third and two-thirds of the current sixteenth-note duration. Derive all three deadlines from the event timestamp so rounding and a late loop cannot accumulate drift.
+- Record and replace the Triple Hi-Hat as one event per quantized step. Do not write three pattern bits or delay its first live stroke. Use separate prepared mixer voices for the three strokes so their short tails can overlap.
 - Keep a short resident metronome click on its own mixer channel. Sound it on every quarter note while playing, with a clearly higher accent on beat one of each bar. Do not click while paused.
 - Schedule from an absolute transport anchor. Never advance musical time by repeatedly delaying for one step.
 - At loop wrap, increment the pass counter. Each track's replacement window continues until 64 steps have elapsed from that track's own first replacement tap.
@@ -91,8 +94,8 @@ Physical controls
 
 Layout
 
-- Keep four 132 × 118 colored pads at the Day 09 positions with small labels underneath: KICK, SNARE, HI-HAT, CRASH.
-- Show DRUM LOOPER, current BPM, PLAYING or PAUSED, and BAR 1–4 with beat/subdivision progress above the pads.
+- Keep four 132 × 118 colored pads at the Day 09 positions with small labels underneath: KICK, SNARE, HI-HAT, 3X HI-HAT.
+- Show TRAP LOOPER, current BPM, PLAYING or PAUSED, and BAR 1–4 with beat/subdivision progress above the pads.
 - A compact dot by each label is dim for an empty track, white for a stored pattern, and red while that track is inside its independent 64-step replacement window.
 - Flash only the touched pad briefly. Do not animate the grid or delay its sound.
 - The footer shows A TEMPO, B PLAY or B PAUSE, and HOLD BOTH: CLEAR.
@@ -101,9 +104,10 @@ Layout
 Diagnostics and acceptance
 
 - Prefix serial lines with D09L_ and implement status, reset, action, advance, capture, touchlog, and calibrate commands.
-- Report hardware, geometry, touch-map version/generation, transport, BPM, step, bar, beat, subdivision, pass, four track hit counts, replacement flags and remaining steps, timing lateness, heap, PSRAM, stack, and the last named error.
+- Report hardware, geometry, touch-map version/generation, transport, BPM, step, bar, beat, subdivision, pass, four track hit counts, replacement flags and remaining steps, timing lateness, Triple Hi-Hat burst/stroke counts and maximum stroke lateness, heap, PSRAM, stack, and the last named error.
 - Keep the performance path independent from USB readership. Do not print a line for each tick, click, pad touch, or scheduled drum hit. Command responses and bounded error summaries must not stall touch, rendering, audio, or the musical clock when no serial monitor is attached.
 - Domain-test four-measure wrap, 64-step indexing, nearest-step quantization at both sides of a boundary and exact ties, pause/resume phase, tempo estimation, invalid tempo taps, independent replacement, duplicate-hit collapse, reset, and scheduling across timer rollover.
+- Prove one Triple Hi-Hat event produces exactly three strokes at offsets 0, one-third, and two-thirds of a sixteenth note at 60, 120, and 200 BPM. Its first live stroke follows the same latency limit as every other pad, and scheduled follow-up strokes are no more than 3 ms late under normal UI load.
 - Prove one track can be replaced without changing the other three and that two different tracks can be replaced during the same pass.
 - Over 100 injected pad touches, touch-to-audition p95 is at most 30 ms and no touch exceeds 50 ms.
 - Over four complete loop passes (16 measures), no scheduled hit begins more than 3 ms late under normal UI load; report rather than hide overruns.
@@ -119,5 +123,5 @@ Do not describe injected touches or scheduled timestamps as physical rhythm or l
 ## What this adds
 
 The Sound Effects Board plays isolated clips.
-The Drum Looper adds musical time, quantization, independent tracks, and a replacement gesture that needs no record screen or arm button.
+The Trap Looper adds musical time, quantization, independent tracks, and a replacement gesture that needs no record screen or arm button.
 The player keeps performing on the pads while each instrument independently captures one complete four-measure replacement.

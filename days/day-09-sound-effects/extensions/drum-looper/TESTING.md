@@ -1,4 +1,4 @@
-# Drum Looper testing
+# Trap Looper testing
 
 Run the portable state contract with:
 
@@ -17,13 +17,14 @@ A generated candidate adds domain fixtures for:
 - pause/resume fractional phase and absolute-deadline scheduling across timer rollover;
 - median tap tempo with valid, invalid, stale, minimum, and maximum intervals;
 - simultaneous multi-track dispatch on one boundary and explicit lateness accounting;
+- a one-bit Triple Hi-Hat event producing exactly three prepared strokes at 0, one-third, and two-thirds of a sixteenth note at 60, 120, and 200 BPM;
 - quarter-note metronome scheduling, bar-one accent, pause silence, and overlap with drums;
 - 12-second 120 BPM playback advancing 96 steps and producing 24 clicks with USB unread and disconnected;
-- deterministic Kick, Snare, Hi-Hat, and Crash PCM hashes, sample bounds, and memory budget; and
+- deterministic Kick, Snare, Hi-Hat, and Triple Hi-Hat PCM hashes, sample bounds, and memory budget; and
 - reset clearing patterns while preserving BPM and the shared calibration record.
 
 On an instrumented Stopwatch, exercise real LVGL hit testing and the audio mixer with injected timestamps.
-Measure 100 immediate pad auditions, four complete loop passes under UI load, 100 accelerated loop passes, repeated replace/clear cycles, memory stability, framebuffer captures, and touch-map preservation.
+Measure 100 immediate pad auditions, Triple Hi-Hat stroke count and lateness, four complete loop passes under UI load, 100 accelerated loop passes, repeated replace/clear cycles, memory stability, framebuffer captures, and touch-map preservation.
 
 Finish with [HAND-REVIEW.md](HAND-REVIEW.md).
 Only a person playing and listening can establish groove, tap-tempo feel, drum balance, and thumb/index ergonomics.

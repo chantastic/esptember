@@ -1,10 +1,10 @@
-# Drum Looper behavior contract
+# Trap Looper behavior contract
 
 ## Objective
 
 Build a four-pad, four-track drum looper on the M5Stack Stopwatch.
 The loop is 4/4, four measures (16 quarter notes total), and quantized to sixteenth notes.
-Kick, Snare, Hi-Hat, and Crash are recorded and replaced independently without a dedicated record mode.
+The trap palette—Kick, Snare, Hi-Hat, and Triple Hi-Hat—is recorded and replaced independently without a dedicated record mode.
 
 ## Shared platform contract
 
@@ -67,6 +67,17 @@ Each track ends independently after 64 musical steps have elapsed from its own r
 If two or more tracks contain a hit on one scheduled step, start them on that same boundary through a bounded mixer or independent prepared channels.
 Track overlap must not serialize or drop a hit.
 
+### Triple Hi-Hat compound event
+
+A Triple Hi-Hat pattern bit stores one event, not three grid hits.
+An event starts the first short closed-hat stroke at its live or scheduled event time and starts the other two at `event_time + floor(step_period / 3)` and `event_time + floor(2 × step_period / 3)`.
+Capture the step period when the event starts; a later tempo tap does not reshape a burst already in flight.
+Calculate each deadline from the original event time rather than from the preceding stroke.
+
+The three strokes use separate prepared mixer voices so their short tails may overlap.
+The scheduler is bounded, performs no allocation, services every due stroke in order, and records stroke count, late-stroke count, and maximum stroke lateness.
+A live event starts its first stroke before recording or redrawing; the two follow-up strokes continue even when the transport is paused because the audition has already begun.
+
 ## Audible grid
 
 While the transport plays, sound a short click on steps 0, 4, 8, and 12 of every bar.
@@ -112,19 +123,19 @@ Multiple tracks may be in replacement state simultaneously.
 
 ## Reset
 
-Holding both pushers for 600 ms stops transport, clears all 1,024 pattern bits, clears all replacement flags and tap history, resets step and fractional phase to zero, and clears counters related to the loop contents.
+Holding both pushers for 600 ms stops transport, clears all 256 pattern bits, clears all replacement flags and tap history, resets step and fractional phase to zero, cancels in-flight Triple Hi-Hat bursts, and clears counters related to the loop contents.
 It preserves the current BPM and the saved touch map.
 
 ## Sound contract
 
-Prepare Kick, Snare, Hi-Hat, and Crash as deterministic 22,050 Hz signed 16-bit mono PCM before enabling input.
+Prepare Kick, Snare, Hi-Hat, and Triple Hi-Hat as deterministic 22,050 Hz signed 16-bit mono PCM before enabling input.
 Keep every final buffer resident.
 Each clip is at most 750 ms and the total PCM budget is at most 256 KiB.
 
 - Kick: short low sine sweep with a transient click.
 - Snare: explicitly seeded filtered noise plus a short tonal body.
 - Hi-Hat: explicitly seeded high-passed noise with a fast decay.
-- Crash: explicitly seeded metallic/noise blend with a longer decay.
+- Triple Hi-Hat: a second explicitly seeded high-passed-noise clip with a shorter, brighter decay than the regular Hi-Hat; one event schedules three copies of this resident clip.
 
 Domain tests verify deterministic hashes, declared seeds, non-silence, sample bounds, duration, and memory.
 The touch callback performs no synthesis, decoding, allocation, file access, or long logging.
@@ -136,9 +147,9 @@ Reuse the four Day 09 pad bounds:
 - `(84,88,132,118)` Kick;
 - `(252,88,132,118)` Snare;
 - `(84,246,132,118)` Hi-Hat; and
-- `(252,246,132,118)` Crash.
+- `(252,246,132,118)` Triple Hi-Hat.
 
-Show `DRUM LOOPER` above the pads, followed by BPM, PLAYING or PAUSED, and `BAR nn / 4` with beat and subdivision.
+Show `TRAP LOOPER` above the pads, followed by BPM, PLAYING or PAUSED, and `BAR nn / 4` with beat and subdivision.
 Keep pad labels small and directly underneath their color fields.
 A compact dot beside each label is dim for empty, white for a stored pattern, and red during that track's independent 64-step replacement window.
 Flash the pressed pad briefly without moving or resizing it.
@@ -151,7 +162,7 @@ No content uses rows 466–467 and no bottom bar remains visible.
 
 Prefix serial lines with `D09L_`.
 Provide `status`, `reset`, `action`, `advance`, `capture`, `touchlog`, and `calibrate`.
-Status reports board, geometry, touch-map version/generation, transport, BPM, step, bar, beat, subdivision, pass, hit counts, replacement flags and remaining steps, last pad, live taps, late-step count/max lateness, heap, PSRAM, stack, and last error.
+Status reports board, geometry, touch-map version/generation, transport, BPM, step, bar, beat, subdivision, pass, hit counts, replacement flags and remaining steps, last pad, live taps, late-step count/max lateness, Triple Hi-Hat burst/stroke/late-stroke counts and maximum stroke lateness, heap, PSRAM, stack, and last error.
 
 Ticks, metronome clicks, pad touches, and scheduled hits emit no unsolicited serial lines.
 Diagnostic command responses are bounded and must not make musical time depend on whether a host is reading USB.
@@ -173,6 +184,7 @@ The `espt-touch` namespace remains read-only outside calibration.
 - step 63 wraps to step 0 without truncating a track's independent 64-step replacement window;
 - both-button hold clears every track but preserves BPM; and
 - simultaneous scheduled track hits share one musical boundary.
+- one Triple Hi-Hat event occupies one pattern bit and produces exactly three strokes at the declared tempo-relative offsets at 60, 120, and 200 BPM;
 - an empty 120 BPM loop produces 24 clicks and 96 sixteenth steps in 12 seconds; and
 - unread or disconnected USB does not slow touch, audio, rendering, or transport.
 
