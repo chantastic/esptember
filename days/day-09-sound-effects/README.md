@@ -188,3 +188,12 @@ Rapid Laser → Coin → Explosion input replaced the active voice immediately, 
 Both empty slots remained silent, all six configured paths started and completed, and 20 two-page round trips left free heap and PSRAM unchanged.
 The device is reset to page one for hand review.
 Perceived sound quality, physical pusher feel, and physical touch alignment still require direct observation.
+
+## Next exercise: Sampler + Voice Changer
+
+Record one sound with the Stopwatch microphone, then use the same two-page pad layout to hear it as Clean, Chipmunk, Monster, Robot, Echo, Reverse, Stutter, and Alien.
+
+![Round-screen acceptance reference for the sampler effect pads](https://esptember.com/images/day-09-sound-effects/sampler-reference.png)
+
+The [Sampler + Voice Changer exercise](https://github.com/chantastic/esptember/tree/main/days/day-09-sound-effects/extensions/sampler-voice-changer) specifies the complete recording flow, exact signal transforms, privacy boundary, performance limits, portable contract, and physical review.
+It keeps the existing Day 10 lineup intact while making the progression from generated sounds to recorded signal processing explicit.

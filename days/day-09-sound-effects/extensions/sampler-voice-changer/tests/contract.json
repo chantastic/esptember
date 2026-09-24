@@ -1,0 +1,236 @@
+{
+  "schema": 1,
+  "lesson": "day-09-sampler-voice-changer-extension",
+  "title": "Sampler + Voice Changer",
+  "hardware": {
+    "board": "m5stack-stopwatch",
+    "width": 468,
+    "height": 466,
+    "offset_x": 6,
+    "offset_y": 0,
+    "rotation": 0,
+    "touch_map": "espt-touch/record"
+  },
+  "controls": {
+    "profile": "localized",
+    "left_button": "BtnA",
+    "right_button": "BtnB",
+    "left": "previous_page_or_stop_recording",
+    "right": "next_page_or_stop_recording",
+    "enter": "touch_record_or_pad",
+    "back": "hold_both_600ms_to_rerecord",
+    "rationale": "The sampler keeps the Day 09 drum-pad controls: touch performs the sound action, the pushers page, and the familiar hold-both Back gesture returns to recording."
+  },
+  "state": {
+    "screen": {
+      "type": "enum",
+      "default": "recorder",
+      "values": ["recorder", "countdown", "recording", "processing", "pads"]
+    },
+    "page": {
+      "type": "enum",
+      "default": "page1",
+      "values": ["page1", "page2"]
+    },
+    "sample": {
+      "type": "enum",
+      "default": "empty",
+      "values": ["empty", "captured", "ready", "invalid"]
+    },
+    "recorded_samples": {
+      "type": "int",
+      "default": 0,
+      "min": 0,
+      "max": 66150
+    },
+    "active": {
+      "type": "enum",
+      "default": "none",
+      "values": ["none", "clean", "chipmunk", "monster", "robot", "echo", "reverse", "stutter", "alien"]
+    },
+    "last_trigger": {
+      "type": "enum",
+      "default": "none",
+      "values": ["none", "clean", "chipmunk", "monster", "robot", "echo", "reverse", "stutter", "alien"]
+    },
+    "takes": {
+      "type": "int",
+      "default": 0,
+      "min": 0,
+      "max": 999
+    },
+    "plays": {
+      "type": "int",
+      "default": 0,
+      "min": 0,
+      "max": 9999
+    },
+    "error": {
+      "type": "enum",
+      "default": "none",
+      "values": ["none", "too_quiet", "too_short", "too_clipped", "capture_failed", "effect_memory"]
+    }
+  },
+  "scenarios": [
+    {
+      "name": "record and prepare",
+      "steps": [
+        {
+          "action": "tap_record",
+          "expect": {"screen": "countdown"}
+        },
+        {
+          "action": "countdown_done",
+          "expect": {"screen": "recording"}
+        },
+        {
+          "action": {"type": "record_complete", "samples": 44100},
+          "expect": {"screen": "processing", "sample": "captured", "recorded_samples": 44100, "takes": 1}
+        },
+        {
+          "action": "processing_done",
+          "expect": {"screen": "pads", "sample": "ready", "recorded_samples": 44100, "takes": 1}
+        }
+      ]
+    },
+    {
+      "name": "cancel countdown",
+      "steps": [
+        {
+          "action": "tap_record",
+          "expect": {"screen": "countdown"}
+        },
+        {
+          "action": "cancel",
+          "expect": {"screen": "recorder", "sample": "empty", "takes": 0}
+        }
+      ]
+    },
+    {
+      "name": "reject quiet take",
+      "given": {"screen": "recording"},
+      "steps": [
+        {
+          "action": "record_too_quiet",
+          "expect": {"screen": "recorder", "sample": "invalid", "recorded_samples": 0, "takes": 1, "error": "too_quiet"}
+        },
+        {
+          "action": "tap_record",
+          "expect": {"screen": "countdown", "sample": "empty", "error": "none"}
+        }
+      ]
+    },
+    {
+      "name": "pusher paging",
+      "given": {"screen": "pads", "sample": "ready", "recorded_samples": 44100, "takes": 1},
+      "steps": [
+        {
+          "action": "right",
+          "expect": {"page": "page2"}
+        },
+        {
+          "action": "left",
+          "expect": {"page": "page1"}
+        },
+        {
+          "action": "left",
+          "expect": {"page": "page2"}
+        }
+      ]
+    },
+    {
+      "name": "page one effects",
+      "given": {"screen": "pads", "sample": "ready", "recorded_samples": 44100, "takes": 1},
+      "steps": [
+        {
+          "action": "pad1_down",
+          "expect": {"active": "clean", "last_trigger": "clean", "plays": 1}
+        },
+        {
+          "action": "pad2_down",
+          "expect": {"active": "chipmunk", "last_trigger": "chipmunk", "plays": 2}
+        },
+        {
+          "action": "pad3_down",
+          "expect": {"active": "monster", "last_trigger": "monster", "plays": 3}
+        },
+        {
+          "action": "pad4_down",
+          "expect": {"active": "robot", "last_trigger": "robot", "plays": 4}
+        }
+      ]
+    },
+    {
+      "name": "page two effects",
+      "given": {"screen": "pads", "page": "page2", "sample": "ready", "recorded_samples": 44100, "takes": 1},
+      "steps": [
+        {
+          "action": "pad1_down",
+          "expect": {"active": "echo", "last_trigger": "echo", "plays": 1}
+        },
+        {
+          "action": "pad2_down",
+          "expect": {"active": "reverse", "last_trigger": "reverse", "plays": 2}
+        },
+        {
+          "action": "pad3_down",
+          "expect": {"active": "stutter", "last_trigger": "stutter", "plays": 3}
+        },
+        {
+          "action": "pad4_down",
+          "expect": {"active": "alien", "last_trigger": "alien", "plays": 4}
+        }
+      ]
+    },
+    {
+      "name": "immediate retrigger",
+      "given": {"screen": "pads", "sample": "ready", "recorded_samples": 44100, "active": "monster", "last_trigger": "monster", "takes": 1, "plays": 1},
+      "steps": [
+        {
+          "action": "pad4_down",
+          "expect": {"active": "robot", "last_trigger": "robot", "plays": 2}
+        },
+        {
+          "action": "pad4_down",
+          "expect": {"active": "robot", "last_trigger": "robot", "plays": 3}
+        }
+      ]
+    },
+    {
+      "name": "rerecord clears derived audio",
+      "given": {"screen": "pads", "page": "page2", "sample": "ready", "recorded_samples": 44100, "active": "alien", "last_trigger": "alien", "takes": 1, "plays": 4},
+      "steps": [
+        {
+          "action": "back",
+          "expect": {"screen": "recorder", "page": "page1", "sample": "empty", "recorded_samples": 0, "active": "none", "last_trigger": "none", "takes": 1, "plays": 0}
+        }
+      ]
+    }
+  ],
+  "layout": {
+    "safe_radius": 226,
+    "focus_inset": 3,
+    "controls": [
+      {"id": "pad1", "bounds": [84, 88, 132, 118]},
+      {"id": "pad2", "bounds": [252, 88, 132, 118]},
+      {"id": "pad3", "bounds": [84, 246, 132, 118]},
+      {"id": "pad4", "bounds": [252, 246, 132, 118]}
+    ]
+  },
+  "visual": {
+    "kind": "pads",
+    "eyebrow": "YOUR SAMPLE",
+    "title": "PAGE 1",
+    "metric": "",
+    "pads": [
+      {"label": "CLEAN", "color": "#ff5b04"},
+      {"label": "CHIPMUNK", "color": "#29c7d8"},
+      {"label": "MONSTER", "color": "#9bdd32"},
+      {"label": "ROBOT", "color": "#e852a0"}
+    ],
+    "page": "1 / 2",
+    "accent": "#ff5b04",
+    "scenario": "page one effects",
+    "evidence": "reference"
+  }
+}
