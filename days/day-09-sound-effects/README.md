@@ -4,7 +4,7 @@ day: 9
 title: Sound Effects Board
 toolchain: Arduino ESP32 3.3.10 + M5Unified 0.2.19 + M5GFX 0.2.26 + LVGL 9.3.0
 summary: "Six synthesized sounds, one nonblocking audio queue, and controls shared by touch and the two pushers."
-verification: "Prompt contract and reference frame verified; generated hardware candidate awaits hand review"
+verification: "Host, compile, injected-device, and framebuffer checks passed; physical sound review pending"
 ---
 
 ## The assignment
@@ -20,6 +20,16 @@ Generated firmware is a disposable candidate.
 
 This is a deterministic screenshot of the visual acceptance model.
 It defines the intended hierarchy and safe-area use; only a later framebuffer capture from the attached Stopwatch can count as device rendering evidence.
+
+## Device framebuffers
+
+![Day 09 page one captured from the M5Stack Stopwatch framebuffer](https://esptember.com/images/day-09-sound-effects/device-page-1.png)
+
+![Day 09 page two captured from the M5Stack Stopwatch framebuffer](https://esptember.com/images/day-09-sound-effects/device-page-2.png)
+
+These are retained RGB565 frames from the generated candidate loaded on the attached Stopwatch.
+They establish actual LVGL layout and focus rendering at 468 × 466.
+They do not establish perceived sound quality, physical button feel, or physical touch accuracy.
 
 ## The build prompt
 
@@ -95,4 +105,5 @@ Historical implementation evidence from before the prompt-first Stopwatch migrat
 **Recorded evidence · September 21, 2026:** The playback pipeline was verified over the serial harness — pad taps queued the right effect ids, the codec-write path reported active playback, and pagination flipped pages, confirmed by screen capture. Perceived sound quality through the speaker awaits an ear check, noted in NOTES.md.
 
 The reference screenshot is acceptance-model evidence.
-The next hardware pass must replace or supplement it with a framebuffer capture and a hand-review record.
+
+**Injected-device evidence · September 24, 2026:** A disposable candidate compiled with the pinned Arduino ESP32 3.3.10, M5Unified 0.2.19, M5GFX 0.2.26, and LVGL 9.3.0 toolchain, then loaded as an application-only update. The board retained touch-map version 2, generation 2. Injected controls covered direction, wrap, Enter, Back, touch hit-testing, every synthesis path, latest-wins queuing, and 20 page round trips with stable heap and PSRAM. The two framebuffer captures above showed inset focus borders and no layout clipping. Physical sound, pushers, and touch remain for hand review.

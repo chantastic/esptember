@@ -12,6 +12,9 @@ Reviewer: ____________________  Date: ____________________
 - [ ] Text and primary values are readable through the round aperture.
 - [ ] Sound, vibration, sensor, radio, network, and persistence behavior claimed by this lesson was physically observed where applicable.
 - [ ] Any failure names itself and offers the documented recovery.
+- [ ] Laser, Coin, Jump, Explosion, Power Up, and Blip are distinct and comfortable at the installed volume.
+- [ ] Triggering several pads quickly finishes the current sound and then plays only the latest pending sound.
+- [ ] The lower Page control responds accurately and both pages remain readable through the circular aperture.
 
 Observed differences from the prompt/spec:
 
