@@ -1,6 +1,12 @@
 ---
 title: Tamagotchi
 ---
+## The prompt-first pass
+
+The original build below records how this idea first worked.
+The durable lesson now targets the M5Stack Stopwatch and lives in the prompt, behavior contract, generalized tests, and hand-review checklist.
+Generated firmware is evidence for those sources, not the source itself.
+
 
 The 1996 Tamagotchi is one of the best-documented toys ever made — the P1's timers, evolution rules, and care-mistake logic have all been reverse-engineered, and TamaLIB will run the actual ROM on a microcontroller.
 

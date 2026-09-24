@@ -2,126 +2,97 @@
 board: m5stack-stopwatch
 day: 17
 title: Tamagotchi
-toolchain: Arduino CLI (esp32 core) + M5Unified
-firmware: /firmware/day-17-tamagotchi.bin
-summary: "A clean-room virtual pet that ages in real time — including while powered off."
-verification: "Hatch, meters, and persistence verified over serial; long-term aging pending"
+toolchain: Arduino ESP32 3.3.10 + M5Unified 0.2.19 + M5GFX 0.2.26 + LVGL 9.3.0
+summary: "A persistent virtual pet with elapsed-time aging and the shared selection grammar."
+verification: "Prompt contract and reference frame verified; generated hardware candidate awaits hand review"
 ---
 
-## The result
+## The assignment
 
-A clean-room virtual pet in the 1996 P1 tradition: hunger and happiness as four hearts each, feeding, snacks, a moody play partner, poop management, and a creature that ages **in real time — including while powered off**.
-Power it down for a day and it will have grown, decayed, and possibly pooped in your absence.
-The art is original: a 16×16 one-bit creature drawn as fat green pixels in the round face.
-Each day is a standalone firmware image; you can start here without flashing earlier days.
+Build a virtual pet whose needs age correctly across sleep and power loss.
 
-## What you need
+The durable source is this prompt, [SPEC.md](https://github.com/chantastic/esptember/blob/main/days/day-17-tamagotchi/SPEC.md), the machine-readable contract, and its layered acceptance criteria.
+Generated firmware is a disposable candidate.
 
-- **Board:** M5Stack Stopwatch Dev Kit (ESP32-S3, C152): two pushers, buzzer, RTC, battery, 1.75″ round AMOLED.
-- **Connection:** a USB data cable and a computer with access to the serial port.
-- **For the download:** [uv](https://docs.astral.sh/uv/getting-started/installation/) supplies the `uvx` command below.
-- **For source builds:** [arduino-cli](https://arduino.github.io/arduino-cli/) with the esp32 core and the M5Unified library installed.
+## Reference frame
 
-The display is 466 × 466 pixels behind a circular aperture.
-Flashing replaces the firmware currently on the board.
+![Round-screen acceptance reference for Tamagotchi](https://esptember.com/images/day-17-tamagotchi/reference.png)
 
-## Run it
+This is a deterministic screenshot of the visual acceptance model.
+It defines the intended hierarchy and safe-area use; only a later framebuffer capture from the attached Stopwatch can count as device rendering evidence.
 
-Download [day-17-tamagotchi.bin](https://esptember.com/firmware/day-17-tamagotchi.bin) and open a terminal in the download directory.
-This is a merged image containing the bootloader, partition table, and application.
+## The build prompt
 
-Find your serial port:
+```text
+Build ESPtember Day 17: Tamagotchi for the M5Stack Stopwatch Dev Kit (C152).
 
-```sh
-# macOS
-ls /dev/cu.usbmodem*
-# Linux
-ls /dev/ttyACM*
+Read these before writing code:
+- .agents/skills/build-stopwatch-lessons/SKILL.md
+- .agents/skills/prompt-first-embedded-lessons/SKILL.md
+- days/day-07-touch-calibration/SPEC.md
+- days/day-17-tamagotchi/SPEC.md
+- days/day-17-tamagotchi/tests/contract.json
+
+Treat the prompt, spec, tests, and acceptance criteria as source.
+Put deterministic behavior in a portable core and keep Arduino, LVGL, M5Unified, storage, network, audio, and sensor adapters outside it.
+Run scripts/prompt-contract/validate_day.sh days/day-17-tamagotchi before compiling a device candidate.
+Do not edit the contract or tests to make a candidate pass.
+
+Hardware and shared platform
+
+- Target board_M5StopWatch on ESP32-S3 with OPI PSRAM.
+- Hold the device with the lanyard loop at the bottom: BtnA is physical left and BtnB is physical right.
+- Immediately after M5.begin(), set panel width 468, height 466, offset_x 6, offset_y 0, then rotation 0.
+- Never draw rows 466 or 467. Keep focus decoration inset and every interactive bound inside the round safe area.
+- Load Preferences namespace espt-touch, blob key record, after display setup and before touch input.
+- Accept and validate Day 07 version 1 and version 2 records. Read raw touch, apply the complete shared warp, clamp once, then feed the mapped point to the application.
+- Provide the shared runtime calibration entry path. App-only installation must preserve the record.
+- Allocate retained frames and large working buffers in PSRAM; fail visibly and over serial when required hardware or memory is unavailable.
+
+Controls
+
+Use the default grammar: BtnA/left is Previous or Decrease; BtnB/right is Next or Increase; short both is Enter; hold both for 600 ms is Back. Preserve the 80 ms join and overlap rules and consume chord clicks.
+Touch must dispatch the same semantic actions as physical controls.
+
+Lesson behavior
+
+- Use left and right to select Feed, Snack, Play, and Clean; Enter performs the focused action.
+- Age hunger, happiness, mess, health, and evolution from RTC elapsed time, including time spent powered off.
+- Clamp every meter, prevent clock rollback from granting health, and persist atomically after actions and periodic aging.
+- Hatch after one hour, evolve from care history, and require a confirmed restart after death.
+- Touch selects the same actions and uses the shared Day 07 map.
+
+Diagnostics and acceptance
+
+- Prefix serial protocol lines with D17_ and implement status, reset, action, capture, and touchlog commands.
+- Report hardware identity, corrected geometry, touch-map version and generation, current portable state, memory headroom, and last named error.
+- Injected actions must use the same reducer, hit testing, callbacks, and control recognizer as physical input.
+- Retain the exact RGB565 pixels sent to M5GFX and stream captures in bounded chunks without blocking the watchdog.
+- Run every scenario in tests/contract.json, generated deterministic sequences, the deliberate mutation, and the lesson-specific checks in SPEC.md.
+- Complete 20 largest-state round trips without reset or growing heap/PSRAM use.
+- Confirm the active touch-map version and generation remain unchanged.
+- Physically review touch alignment, BtnA/BtnB direction, chord behavior, cues, clipping, lower-edge use, and the absence of a black bar.
+
+Record host, compile, injected-device, and physical evidence separately.
+Never describe reference rendering or injected input as physical proof.
 ```
 
-On Windows, use the board's COM port from Device Manager.
-Replace `PORT` with your port, then flash the image at `0x0`:
+## Required behavior
 
-```sh
-uvx esptool --chip esp32s3 --port PORT \
-  write-flash 0x0 day-17-tamagotchi.bin
-```
+- Use left and right to select Feed, Snack, Play, and Clean; Enter performs the focused action.
+- Age hunger, happiness, mess, health, and evolution from RTC elapsed time, including time spent powered off.
+- Clamp every meter, prevent clock rollback from granting health, and persist atomically after actions and periodic aging.
+- Hatch after one hour, evolve from care history, and require a confirmed restart after death.
+- Touch selects the same actions and uses the shared Day 07 map.
 
-Close any serial monitor using that port before flashing.
-When flashing completes, an egg appears.
+## Recorded evidence
 
-## How it works
+The shared contract runner validates Stopwatch geometry, touch-map ownership, control metadata, state types and ranges, deterministic scenarios, round-face control bounds, and 10,000 generated actions against three disposable reducer shapes.
+A deliberately mutated reducer must fail.
 
-The pacing honors the 1996 original where it counts: the egg hatches in five minutes — the first-session payoff — then childhood arrives at 24 hours and adulthood at 72.
-Hunger loses a heart every 4 hours, happiness every 6 — faster if poop is on screen.
-A poop appears every 5 waking hours.
-Twenty-four consecutive hours with hunger empty and the pet is gone; both pushers held together start a new egg.
-
-The heart of the design is one function:
-
-```c
-static void simulate(uint32_t minutes) {
-```
-
-The live loop calls it with one minute at a time.
-Boot calls it with everything that happened while the power was off:
-
-```c
-    const uint32_t away = nowEpoch() - pet.lastSeen;
-    if (away > 60) simulate(away / 60);
-```
-
-Offline aging is not a special case — it's just a bigger argument.
-The RTC supplies real time, NVS keeps the pet through power loss, and every action saves.
-
-Two buttons run the whole toy, one fewer than the original's three: **A cycles** the action menu — FEED, SNACK, PLAY, CLEAN — and **B confirms**.
-Feeding fills all hunger hearts.
-Snacks buy one happiness heart, the junk-food bargain.
-Play is a coin flip against the creature's mood, exactly as capricious as the original's guessing game.
-Cleaning removes the poops that were quietly doubling the happiness decay.
-
-The creature itself is five 16-line bitmaps — egg, baby, child, adult, and one we hope you don't meet — hand-authored hex, drawn 14 pixels fat.
-
-## Check the result
-
-- First boot: an egg, `EGG 0h`, four hearts on both meters, and the toast `AN EGG APPEARED`.
-- A cycles `< FEED >` through the four actions with a tick; B fires the selected one with its own tone and toast.
-- Five minutes after first boot, the egg hatches — `IT GREW!`.
-- Power the board off overnight: on boot, the meters reflect the hours away and the age header has kept counting.
-- If the worst happens, both pushers held together lay a new egg.
+Historical implementation evidence from before the prompt-first Stopwatch migration follows.
 
 **Recorded evidence · September 21, 2026:** Egg creation, menu actions, meter changes, and NVS persistence were verified over serial (`D16_STATUS` reporting) on the installed firmware. Multi-day aging, evolution transitions, and death await calendar time, noted in NOTES.md.
 
-## Used resources
-
-- The Tamagotchi P1's documented mechanics — hearts, meal/snack split, guessing-game play, poop cadence, care mistakes — as reimplemented behavior, not copied code or art.
-- [TamaLIB](https://github.com/jcrona/tamalib) and MCUGotchi: the emulation route this lesson deliberately didn't take (the real ROM is Bandai's; this pet is ours).
-- [M5Unified](https://github.com/m5stack/M5Unified) RTC + Preferences (NVS) for time and persistence.
-
-## Build and change it
-
-Clone the repository once:
-
-```sh
-git clone https://github.com/chantastic/esptember.git
-cd esptember
-```
-
-Install the toolchain pieces (once):
-
-```sh
-arduino-cli core install esp32:esp32
-arduino-cli lib install M5Unified
-```
-
-Build and flash from the repository root:
-
-```sh
-cd days/day-17-tamagotchi
-./scripts/build.sh
-./scripts/flash.sh PORT
-```
-
-The merged image lands in `.build/firmware/tamagotchi.ino.merged.bin`.
-The bitmaps are sixteen `uint16_t` rows each — redraw the creature in a hex editor's worth of art.
-The pacing constants (`STAGE_AT_HOURS`, the decay minutes) are the difficulty knobs.
+The reference screenshot is acceptance-model evidence.
+The next hardware pass must replace or supplement it with a framebuffer capture and a hand-review record.

@@ -1,0 +1,195 @@
+{
+  "schema": 1,
+  "lesson": "day-17-tamagotchi",
+  "title": "Tamagotchi",
+  "hardware": {
+    "board": "m5stack-stopwatch",
+    "width": 468,
+    "height": 466,
+    "offset_x": 6,
+    "offset_y": 0,
+    "rotation": 0,
+    "touch_map": "espt-touch/record"
+  },
+  "controls": {
+    "profile": "c25k",
+    "left_button": "BtnA",
+    "right_button": "BtnB",
+    "left": "previous_or_decrease",
+    "right": "next_or_increase",
+    "enter": "short_both",
+    "back": "hold_both_600ms"
+  },
+  "state": {
+    "stage": {
+      "type": "enum",
+      "default": "egg",
+      "values": [
+        "egg",
+        "baby",
+        "adult",
+        "dead"
+      ]
+    },
+    "focus": {
+      "type": "enum",
+      "default": "feed",
+      "values": [
+        "feed",
+        "snack",
+        "play",
+        "clean"
+      ]
+    },
+    "hunger": {
+      "type": "int",
+      "default": 5,
+      "min": 0,
+      "max": 5
+    },
+    "happiness": {
+      "type": "int",
+      "default": 5,
+      "min": 0,
+      "max": 5
+    },
+    "mess": {
+      "type": "int",
+      "default": 0,
+      "min": 0,
+      "max": 5
+    },
+    "age_hours": {
+      "type": "int",
+      "default": 0,
+      "min": 0,
+      "max": 9999
+    }
+  },
+  "scenarios": [
+    {
+      "name": "primary flow",
+      "steps": [
+        {
+          "action": {
+            "type": "age",
+            "hours": 1
+          },
+          "expect": {
+            "stage": "baby",
+            "age_hours": 1
+          }
+        },
+        {
+          "action": "enter",
+          "expect": {
+            "hunger": 5
+          }
+        }
+      ],
+      "given": {
+        "hunger": 3
+      }
+    },
+    {
+      "name": "care menu",
+      "steps": [
+        {
+          "action": "right",
+          "expect": {
+            "focus": "snack"
+          }
+        },
+        {
+          "action": "right",
+          "expect": {
+            "focus": "play"
+          }
+        },
+        {
+          "action": "enter",
+          "expect": {
+            "happiness": 5
+          }
+        }
+      ],
+      "given": {
+        "happiness": 3
+      }
+    },
+    {
+      "name": "offline aging",
+      "steps": [
+        {
+          "action": {
+            "type": "age",
+            "hours": 12
+          },
+          "expect": {
+            "hunger": 2,
+            "happiness": 3,
+            "age_hours": 12
+          }
+        }
+      ],
+      "given": {
+        "stage": "baby"
+      }
+    }
+  ],
+  "layout": {
+    "safe_radius": 226,
+    "focus_inset": 3,
+    "controls": [
+      {
+        "id": "feed",
+        "bounds": [
+          104,
+          110,
+          260,
+          48
+        ]
+      },
+      {
+        "id": "snack",
+        "bounds": [
+          104,
+          178,
+          260,
+          48
+        ]
+      },
+      {
+        "id": "play",
+        "bounds": [
+          104,
+          246,
+          260,
+          48
+        ]
+      },
+      {
+        "id": "clean",
+        "bounds": [
+          104,
+          330,
+          260,
+          48
+        ]
+      }
+    ]
+  },
+  "visual": {
+    "kind": "card",
+    "eyebrow": "AGE 18H",
+    "title": "MOMO",
+    "metric": "\u25c9\u1d17\u25c9",
+    "lines": [
+      "\u2665\u2665\u2665\u2665\u2661   \u263a\u263a\u263a\u2661\u2661",
+      "\u2039 FEED \u203a"
+    ],
+    "accent": "#ff5b04",
+    "scenario": "primary flow",
+    "evidence": "reference"
+  }
+}

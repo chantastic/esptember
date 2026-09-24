@@ -1,125 +1,98 @@
 ---
-board: waveshare-amoled-18-v2
+board: m5stack-stopwatch
 day: 18
 title: Pokedex
-toolchain: ESP-IDF v5.5 + Waveshare BSP (LVGL) + PokeAPI build-time fetch
-firmware: /firmware/day-18-pokedex.bin
-summary: "151 creatures, 2.7 MB of sprites, one fetch script. The asset pipeline grows up."
-verification: "Boot with all 151 entries verified over serial; browsing pending hands-on"
+toolchain: Arduino ESP32 3.3.10 + M5Unified 0.2.19 + M5GFX 0.2.26 + LVGL 9.3.0
+summary: "A 151-entry local data browser with list/detail navigation and bounded assets."
+verification: "Prompt contract and reference frame verified; generated hardware candidate awaits hand review"
 ---
 
-## The result
+## The assignment
 
-The asset pipeline at scale.
-Days 03–05 converted one image by hand; today a build-time script fetches 151 sprites and their species data from PokeAPI and generates 2.7 MB of C arrays — nothing committed, nothing hand-drawn, one command.
-The UI is the list/detail pattern every data app uses: scroll the index, tap a row, meet the creature — sprite, types, size, and four stat bars.
-Each day is a standalone firmware image; you can start here without flashing earlier days.
+Build the classic list/detail application using all local data and predictable memory.
 
-## What you need
+The durable source is this prompt, [SPEC.md](https://github.com/chantastic/esptember/blob/main/days/day-18-pokedex/SPEC.md), the machine-readable contract, and its layered acceptance criteria.
+Generated firmware is a disposable candidate.
 
-- **Board:** Waveshare ESP32-S3-Touch-AMOLED-1.8 **V2**: ESP32-S3, CO5300 panel, CST816-family touch, 16 MB flash, 8 MB PSRAM.
-- **Connection:** a USB data cable and a computer with access to the serial port.
-- **For the download:** [uv](https://docs.astral.sh/uv/getting-started/installation/) supplies the `uvx` command below. ESP-IDF is not needed.
-- **For source builds:** [ESP-IDF v5.5](https://docs.espressif.com/projects/esp-idf/en/stable/esp32s3/get-started/), plus Python with `requests` and `Pillow` for the asset fetch.
+## Reference frame
 
-The display is 368 × 448 pixels.
-Flashing replaces the firmware currently on the board.
+![Round-screen acceptance reference for Pokedex](https://esptember.com/images/day-18-pokedex/reference.png)
 
-## Run it
+This is a deterministic screenshot of the visual acceptance model.
+It defines the intended hierarchy and safe-area use; only a later framebuffer capture from the attached Stopwatch can count as device rendering evidence.
 
-Download [day-18-pokedex.bin](https://esptember.com/firmware/day-18-pokedex.bin) and open a terminal in the download directory.
-This is a merged image containing the bootloader, partition table, and application.
+## The build prompt
 
-Find your serial port:
+```text
+Build ESPtember Day 18: Pokedex for the M5Stack Stopwatch Dev Kit (C152).
 
-```sh
-# macOS
-ls /dev/cu.usbmodem*
-# Linux
-ls /dev/ttyACM*
+Read these before writing code:
+- .agents/skills/build-stopwatch-lessons/SKILL.md
+- .agents/skills/prompt-first-embedded-lessons/SKILL.md
+- days/day-07-touch-calibration/SPEC.md
+- days/day-18-pokedex/SPEC.md
+- days/day-18-pokedex/tests/contract.json
+
+Treat the prompt, spec, tests, and acceptance criteria as source.
+Put deterministic behavior in a portable core and keep Arduino, LVGL, M5Unified, storage, network, audio, and sensor adapters outside it.
+Run scripts/prompt-contract/validate_day.sh days/day-18-pokedex before compiling a device candidate.
+Do not edit the contract or tests to make a candidate pass.
+
+Hardware and shared platform
+
+- Target board_M5StopWatch on ESP32-S3 with OPI PSRAM.
+- Hold the device with the lanyard loop at the bottom: BtnA is physical left and BtnB is physical right.
+- Immediately after M5.begin(), set panel width 468, height 466, offset_x 6, offset_y 0, then rotation 0.
+- Never draw rows 466 or 467. Keep focus decoration inset and every interactive bound inside the round safe area.
+- Load Preferences namespace espt-touch, blob key record, after display setup and before touch input.
+- Accept and validate Day 07 version 1 and version 2 records. Read raw touch, apply the complete shared warp, clamp once, then feed the mapped point to the application.
+- Provide the shared runtime calibration entry path. App-only installation must preserve the record.
+- Allocate retained frames and large working buffers in PSRAM; fail visibly and over serial when required hardware or memory is unavailable.
+
+Controls
+
+Use the default grammar: BtnA/left is Previous or Decrease; BtnB/right is Next or Increase; short both is Enter; hold both for 600 ms is Back. Preserve the 80 ms join and overlap rules and consume chord clicks.
+Touch must dispatch the same semantic actions as physical controls.
+
+Lesson behavior
+
+- Ship exactly 151 entries with id, name, types, height, weight, four stats, and a bounded sprite asset.
+- Left and right move one entry with wrap; Enter opens detail; Back returns to the same list position.
+- Touch rows and Back share the same reducer as buttons. Fast navigation must not allocate unbounded memory.
+- Decode only the current sprite and release or reuse its buffer before loading another.
+- Provide prefix search through a focused on-screen filter without requiring a network.
+
+Diagnostics and acceptance
+
+- Prefix serial protocol lines with D18_ and implement status, reset, action, capture, and touchlog commands.
+- Report hardware identity, corrected geometry, touch-map version and generation, current portable state, memory headroom, and last named error.
+- Injected actions must use the same reducer, hit testing, callbacks, and control recognizer as physical input.
+- Retain the exact RGB565 pixels sent to M5GFX and stream captures in bounded chunks without blocking the watchdog.
+- Run every scenario in tests/contract.json, generated deterministic sequences, the deliberate mutation, and the lesson-specific checks in SPEC.md.
+- Complete 20 largest-state round trips without reset or growing heap/PSRAM use.
+- Confirm the active touch-map version and generation remain unchanged.
+- Physically review touch alignment, BtnA/BtnB direction, chord behavior, cues, clipping, lower-edge use, and the absence of a black bar.
+
+Record host, compile, injected-device, and physical evidence separately.
+Never describe reference rendering or injected input as physical proof.
 ```
 
-On Windows, use the board's COM port from Device Manager.
-Replace `PORT` with your port, then flash the image at `0x0`:
+## Required behavior
 
-```sh
-uvx esptool --chip esp32s3 --port PORT \
-  write-flash 0x0 day-18-pokedex.bin
-```
+- Ship exactly 151 entries with id, name, types, height, weight, four stats, and a bounded sprite asset.
+- Left and right move one entry with wrap; Enter opens detail; Back returns to the same list position.
+- Touch rows and Back share the same reducer as buttons. Fast navigation must not allocate unbounded memory.
+- Decode only the current sprite and release or reuse its buffer before loading another.
+- Provide prefix search through a focused on-screen filter without requiring a network.
 
-Close any serial monitor using that port before flashing.
-When flashing completes, the board restarts into this lesson.
+## Recorded evidence
 
-## How it works
+The shared contract runner validates Stopwatch geometry, touch-map ownership, control metadata, state types and ranges, deterministic scenarios, round-face control bounds, and 10,000 generated actions against three disposable reducer shapes.
+A deliberately mutated reducer must fail.
 
-The pipeline is a script, not a ritual.
-`scripts/fetch-assets.py` downloads each sprite and species record (cached locally), composites transparency onto black, converts to RGB565, and writes three generated files: the pixel arrays, the data table, and a header.
-Generated sources are gitignored — the repo ships the pipeline, not the assets.
-
-Storage is a taught budget, not an accident: 151 sprites × 96 × 96 × 2 bytes ≈ 2.7 MB, which outgrows the default 1 MB app partition.
-The fix is a custom partition table — one CSV giving the factory app 6 MB of the 16 MB flash.
-
-The detail screen is built once and *re-dressed* per entry.
-An `lv_image_dsc_t` is just a header pointing at pixels; retarget it and the same widget shows any of the 151 sprites in flash:
-
-```c
-    sprite_dsc.data = (const uint8_t *)dex_sprites[index];
-    lv_image_set_src(detail_sprite, &sprite_dsc);
-```
-
-No allocation while browsing, no copies — the sprite draws straight out of memory-mapped flash.
-
-## What went wrong
-
-### The 64 KB heap ambush
-
-First flash: black screen, and the USB console so dead that esptool couldn't reach the chip.
-The board was crash-looping — a `LoadProhibited` panic on every boot, rebooting faster than USB could enumerate.
-
-The backtrace pointed at LVGL's theme code inside `lv_list_add_button`, on row after row of a 151-row list.
-The real culprit was one missing config line: without `CONFIG_LV_USE_CLIB_MALLOC`, LVGL allocates from its builtin 64 KB pool instead of the system heap.
-A hundred-some rows in, `lv_malloc` returned NULL and the theme applied itself to a null pointer.
-
-One line of sdkconfig later the same firmware boots with 151 entries and room to spare — the system heap reaches PSRAM.
-
-## Check the result
-
-- The index lists `#001 Bulbasaur` through `#151 Mew` in finger-sized rows; the list scrolls with a flick.
-- Tapping a row slides to the detail: sprite at double scale, name, types, height and weight, four stat bars.
-- Back returns to the list at the same scroll position.
+Historical implementation evidence from before the prompt-first Stopwatch migration follows.
 
 **Recorded evidence · September 22, 2026:** Boot with all 151 entries loaded was verified over serial after the heap fix (`D17_READY entries=151`), with the crash-loop diagnosis recorded above. Browsing and touch interaction await a hands-on check, noted in NOTES.md.
 
-## Used resources
-
-- [PokeAPI](https://pokeapi.co/) — free, keyless REST API and sprite repository. Sprite and name rights remain Nintendo/Game Freak's; assets are fetched at build time and never committed.
-- ESP-IDF [custom partition tables](https://docs.espressif.com/projects/esp-idf/en/stable/esp32s3/api-guides/partition-tables.html).
-
-## Build and change it
-
-Clone the repository once:
-
-```sh
-git clone https://github.com/chantastic/esptember.git
-cd esptember
-```
-
-Fetch the assets (once; they cache in `.build/asset-cache`):
-
-```sh
-cd days/day-18-pokedex
-python3 scripts/fetch-assets.py
-```
-
-Then, with the ESP-IDF environment activated:
-
-```sh
-cd firmware
-idf.py build
-idf.py -p PORT flash monitor
-```
-
-To create the single downloadable image, run `idf.py merge-bin` in the same firmware directory.
-The output is `build/merged-binary.bin`.
-Keep `pmu_init()` and `panel_reset_release()` before display startup when changing the UI.
-The pipeline generalizes: point the fetch script at any image set and the same three generated files feed the same UI.
+The reference screenshot is acceptance-model evidence.
+The next hardware pass must replace or supplement it with a framebuffer capture and a hand-review record.

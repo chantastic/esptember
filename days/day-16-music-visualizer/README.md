@@ -2,122 +2,97 @@
 board: m5stack-stopwatch
 day: 16
 title: Music Visualizer
-toolchain: Arduino CLI (esp32 core) + M5Unified
-firmware: /firmware/day-16-music-visualizer.bin
-summary: "A 256-point FFT and 24 radial bars: the round face becomes an equalizer that hears the room."
-verification: "Capture + FFT + band dynamics verified over serial; music session pending"
+toolchain: Arduino ESP32 3.3.10 + M5Unified 0.2.19 + M5GFX 0.2.26 + LVGL 9.3.0
+summary: "A microphone FFT rendered as stable radial bands with sensitivity and freeze controls."
+verification: "Prompt contract and reference frame verified; generated hardware candidate awaits hand review"
 ---
 
-## The result
+## The assignment
 
-The mic listens, a 256-point FFT splits the room into frequencies, and 24 bars ring the round face like a radial equalizer — bass at twelve o'clock, treble wrapping clockwise.
-Bars rise instantly and fall slowly, the decay every hardware visualizer has used since the graphic-EQ era, and their color rides the level from dim orange to white-hot.
-Each day is a standalone firmware image; you can start here without flashing earlier days.
+Build a round music visualizer whose frequency bands are mathematically testable before live audio.
 
-## What you need
+The durable source is this prompt, [SPEC.md](https://github.com/chantastic/esptember/blob/main/days/day-16-music-visualizer/SPEC.md), the machine-readable contract, and its layered acceptance criteria.
+Generated firmware is a disposable candidate.
 
-- **Board:** M5Stack Stopwatch Dev Kit (ESP32-S3, C152): onboard microphone (ES8311 codec), 1.75″ round AMOLED, battery.
-- **Connection:** a USB data cable and a computer with access to the serial port.
-- **For the download:** [uv](https://docs.astral.sh/uv/getting-started/installation/) supplies the `uvx` command below.
-- **For source builds:** [arduino-cli](https://arduino.github.io/arduino-cli/) with the esp32 core and the M5Unified library installed.
+## Reference frame
 
-The display is 466 × 466 pixels behind a circular aperture.
-Flashing replaces the firmware currently on the board.
+![Round-screen acceptance reference for Music Visualizer](https://esptember.com/images/day-16-music-visualizer/reference.png)
 
-## Run it
+This is a deterministic screenshot of the visual acceptance model.
+It defines the intended hierarchy and safe-area use; only a later framebuffer capture from the attached Stopwatch can count as device rendering evidence.
 
-Download [day-16-music-visualizer.bin](https://esptember.com/firmware/day-16-music-visualizer.bin) and open a terminal in the download directory.
-This is a merged image containing the bootloader, partition table, and application.
+## The build prompt
 
-Find your serial port:
+```text
+Build ESPtember Day 16: Music Visualizer for the M5Stack Stopwatch Dev Kit (C152).
 
-```sh
-# macOS
-ls /dev/cu.usbmodem*
-# Linux
-ls /dev/ttyACM*
+Read these before writing code:
+- .agents/skills/build-stopwatch-lessons/SKILL.md
+- .agents/skills/prompt-first-embedded-lessons/SKILL.md
+- days/day-07-touch-calibration/SPEC.md
+- days/day-16-music-visualizer/SPEC.md
+- days/day-16-music-visualizer/tests/contract.json
+
+Treat the prompt, spec, tests, and acceptance criteria as source.
+Put deterministic behavior in a portable core and keep Arduino, LVGL, M5Unified, storage, network, audio, and sensor adapters outside it.
+Run scripts/prompt-contract/validate_day.sh days/day-16-music-visualizer before compiling a device candidate.
+Do not edit the contract or tests to make a candidate pass.
+
+Hardware and shared platform
+
+- Target board_M5StopWatch on ESP32-S3 with OPI PSRAM.
+- Hold the device with the lanyard loop at the bottom: BtnA is physical left and BtnB is physical right.
+- Immediately after M5.begin(), set panel width 468, height 466, offset_x 6, offset_y 0, then rotation 0.
+- Never draw rows 466 or 467. Keep focus decoration inset and every interactive bound inside the round safe area.
+- Load Preferences namespace espt-touch, blob key record, after display setup and before touch input.
+- Accept and validate Day 07 version 1 and version 2 records. Read raw touch, apply the complete shared warp, clamp once, then feed the mapped point to the application.
+- Provide the shared runtime calibration entry path. App-only installation must preserve the record.
+- Allocate retained frames and large working buffers in PSRAM; fail visibly and over serial when required hardware or memory is unavailable.
+
+Controls
+
+Use the default grammar: BtnA/left is Previous or Decrease; BtnB/right is Next or Increase; short both is Enter; hold both for 600 ms is Back. Preserve the 80 ms join and overlap rules and consume chord clicks.
+Touch must dispatch the same semantic actions as physical controls.
+
+Lesson behavior
+
+- Capture a fixed power-of-two frame, remove DC, apply a Hann window, compute magnitudes, and aggregate logarithmic bands.
+- Use separate attack and release constants so bars rise quickly and fall smoothly.
+- Focus Style and Sensitivity; cycle radial, bars, and orbit styles plus low, medium, and high gain.
+- Enter on the canvas freezes and resumes the displayed band frame without stopping capture.
+- Render every frame inside the 466-row panel and preserve the calibration record.
+
+Diagnostics and acceptance
+
+- Prefix serial protocol lines with D16_ and implement status, reset, action, capture, and touchlog commands.
+- Report hardware identity, corrected geometry, touch-map version and generation, current portable state, memory headroom, and last named error.
+- Injected actions must use the same reducer, hit testing, callbacks, and control recognizer as physical input.
+- Retain the exact RGB565 pixels sent to M5GFX and stream captures in bounded chunks without blocking the watchdog.
+- Run every scenario in tests/contract.json, generated deterministic sequences, the deliberate mutation, and the lesson-specific checks in SPEC.md.
+- Complete 20 largest-state round trips without reset or growing heap/PSRAM use.
+- Confirm the active touch-map version and generation remain unchanged.
+- Physically review touch alignment, BtnA/BtnB direction, chord behavior, cues, clipping, lower-edge use, and the absence of a black bar.
+
+Record host, compile, injected-device, and physical evidence separately.
+Never describe reference rendering or injected input as physical proof.
 ```
 
-On Windows, use the board's COM port from Device Manager.
-Replace `PORT` with your port, then flash the image at `0x0`:
+## Required behavior
 
-```sh
-uvx esptool --chip esp32s3 --port PORT \
-  write-flash 0x0 day-16-music-visualizer.bin
-```
+- Capture a fixed power-of-two frame, remove DC, apply a Hann window, compute magnitudes, and aggregate logarithmic bands.
+- Use separate attack and release constants so bars rise quickly and fall smoothly.
+- Focus Style and Sensitivity; cycle radial, bars, and orbit styles plus low, medium, and high gain.
+- Enter on the canvas freezes and resumes the displayed band frame without stopping capture.
+- Render every frame inside the 466-row panel and preserve the calibration record.
 
-Close any serial monitor using that port before flashing.
-When flashing completes, the board restarts into this lesson.
+## Recorded evidence
 
-## How it works
+The shared contract runner validates Stopwatch geometry, touch-map ownership, control metadata, state types and ranges, deterministic scenarios, round-face control bounds, and 10,000 generated actions against three disposable reducer shapes.
+A deliberately mutated reducer must fail.
 
-One design constraint shapes the day: M5Unified's speaker and mic share the I2S engine, so today the board only listens.
-
-The FFT is a plain radix-2 Cooley-Tukey, written out instead of imported — it's thirty lines, and seeing it is the lesson.
-Two pre-steps matter as much as the transform:
-
-A **Hann window**, because a rectangular window smears every note across the spectrum.
-And **DC removal**, because a MEMS mic's bias otherwise leaks through the window into the low bins and pins the bass bars:
-
-```c
-  float mean = 0;
-  for (int i = 0; i < FFT_N; i++) mean += pcm[i];
-  mean /= FFT_N;
-  for (int i = 0; i < FFT_N; i++) {
-    re[i] = (pcm[i] - mean) * hann[i];
-    im[i] = 0;
-  }
-```
-
-The 24 bars split ~125 Hz to 8 kHz on a **log scale** — equal notes per bar, the spacing ears actually hear.
-Each bar takes the peak magnitude in its bin range, converts to dB, and maps ~36 dB of range to bar length.
-Bar dynamics are the classic pair: instant rise, slow fall —
-
-```c
-    if (level > barLevel[b]) barLevel[b] = level;
-    else barLevel[b] = barLevel[b] > 7 ? barLevel[b] - 7 : 0;
-```
-
-Rendering reuses day 10's full-screen PSRAM sprite: bars redraw as thick radial strokes every captured frame, glassy-smooth on the round face.
-
-## Check the result
-
-- A quiet room shows a low shimmer of bars breathing with ambient noise.
-- Speaking makes the lower-mid bars (upper-left quadrant) jump with your voice.
-- A whistle spikes one narrow bar and its neighbors stay down — that's the FFT doing its one job.
-- Music lights the whole ring, bass pumping at twelve o'clock, and the slow decay makes beats visible.
+Historical implementation evidence from before the prompt-first Stopwatch migration follows.
 
 **Recorded evidence · September 21, 2026:** Capture, FFT, and band dynamics were verified over serial (`D15_LEVELS` reporting) — ambient levels settled after DC removal and individual bands responded to room sound. A full music session awaits a hands-on check, noted in NOTES.md.
 
-## Used resources
-
-- Cooley-Tukey radix-2 FFT — the 1965 algorithm, thirty lines in this firmware.
-- Hann window: the standard anti-leakage taper for audio spectra.
-- The graphic-EQ convention: instant attack, slow decay, log-spaced bands.
-
-## Build and change it
-
-Clone the repository once:
-
-```sh
-git clone https://github.com/chantastic/esptember.git
-cd esptember
-```
-
-Install the toolchain pieces (once):
-
-```sh
-arduino-cli core install esp32:esp32
-arduino-cli lib install M5Unified
-```
-
-Build and flash from the repository root:
-
-```sh
-cd days/day-16-music-visualizer
-./scripts/build.sh
-./scripts/flash.sh PORT
-```
-
-The merged image lands in `.build/firmware/music_visualizer.ino.merged.bin`.
-Knobs worth turning: `BARS`, the band edges (`fLo`/`fHi`), the dB floor and range in `analyze()`, and the decay rate — every visualizer's personality lives in those numbers.
+The reference screenshot is acceptance-model evidence.
+The next hardware pass must replace or supplement it with a framebuffer capture and a hand-review record.

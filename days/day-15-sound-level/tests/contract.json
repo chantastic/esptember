@@ -1,0 +1,169 @@
+{
+  "schema": 1,
+  "lesson": "day-15-sound-level",
+  "title": "Sound Level (dB)",
+  "hardware": {
+    "board": "m5stack-stopwatch",
+    "width": 468,
+    "height": 466,
+    "offset_x": 6,
+    "offset_y": 0,
+    "rotation": 0,
+    "touch_map": "espt-touch/record"
+  },
+  "controls": {
+    "profile": "c25k",
+    "left_button": "BtnA",
+    "right_button": "BtnB",
+    "left": "previous_or_decrease",
+    "right": "next_or_increase",
+    "enter": "short_both",
+    "back": "hold_both_600ms"
+  },
+  "state": {
+    "focus": {
+      "type": "enum",
+      "default": "peak",
+      "values": [
+        "peak",
+        "integration"
+      ]
+    },
+    "integration": {
+      "type": "enum",
+      "default": "medium",
+      "values": [
+        "fast",
+        "medium",
+        "slow"
+      ]
+    },
+    "dbfs": {
+      "type": "int",
+      "default": -96,
+      "min": -96,
+      "max": 0
+    },
+    "peak": {
+      "type": "int",
+      "default": -96,
+      "min": -96,
+      "max": 0
+    },
+    "clipped": {
+      "type": "bool",
+      "default": false
+    }
+  },
+  "scenarios": [
+    {
+      "name": "primary flow",
+      "steps": [
+        {
+          "action": {
+            "type": "sample",
+            "dbfs": -42
+          },
+          "expect": {
+            "dbfs": -42,
+            "peak": -42
+          }
+        },
+        {
+          "action": {
+            "type": "sample",
+            "dbfs": -55
+          },
+          "expect": {
+            "dbfs": -55,
+            "peak": -42
+          }
+        },
+        {
+          "action": {
+            "type": "peak_timeout"
+          },
+          "expect": {
+            "peak": -55
+          }
+        }
+      ]
+    },
+    {
+      "name": "reset peak",
+      "steps": [
+        {
+          "action": "enter",
+          "expect": {
+            "peak": -60
+          }
+        }
+      ],
+      "given": {
+        "dbfs": -60,
+        "peak": -20
+      }
+    },
+    {
+      "name": "integration cycle",
+      "steps": [
+        {
+          "action": "right",
+          "expect": {
+            "focus": "integration"
+          }
+        },
+        {
+          "action": "enter",
+          "expect": {
+            "integration": "slow"
+          }
+        },
+        {
+          "action": "enter",
+          "expect": {
+            "integration": "fast"
+          }
+        }
+      ]
+    }
+  ],
+  "layout": {
+    "safe_radius": 226,
+    "focus_inset": 3,
+    "controls": [
+      {
+        "id": "peak",
+        "bounds": [
+          104,
+          110,
+          260,
+          48
+        ]
+      },
+      {
+        "id": "integration",
+        "bounds": [
+          104,
+          178,
+          260,
+          48
+        ]
+      }
+    ]
+  },
+  "visual": {
+    "kind": "meter",
+    "eyebrow": "SOUND LEVEL",
+    "title": "LIVE",
+    "metric": "\u221242 dBFS",
+    "lines": [
+      "peak \u221231",
+      "medium"
+    ],
+    "accent": "#ff5b04",
+    "level": 0.68,
+    "scenario": "primary flow",
+    "evidence": "reference"
+  }
+}

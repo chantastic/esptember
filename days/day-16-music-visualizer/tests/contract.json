@@ -1,0 +1,173 @@
+{
+  "schema": 1,
+  "lesson": "day-16-music-visualizer",
+  "title": "Music Visualizer",
+  "hardware": {
+    "board": "m5stack-stopwatch",
+    "width": 468,
+    "height": 466,
+    "offset_x": 6,
+    "offset_y": 0,
+    "rotation": 0,
+    "touch_map": "espt-touch/record"
+  },
+  "controls": {
+    "profile": "c25k",
+    "left_button": "BtnA",
+    "right_button": "BtnB",
+    "left": "previous_or_decrease",
+    "right": "next_or_increase",
+    "enter": "short_both",
+    "back": "hold_both_600ms"
+  },
+  "state": {
+    "focus": {
+      "type": "enum",
+      "default": "canvas",
+      "values": [
+        "canvas",
+        "style",
+        "sensitivity"
+      ]
+    },
+    "style": {
+      "type": "enum",
+      "default": "radial",
+      "values": [
+        "radial",
+        "bars",
+        "orbit"
+      ]
+    },
+    "sensitivity": {
+      "type": "enum",
+      "default": "medium",
+      "values": [
+        "low",
+        "medium",
+        "high"
+      ]
+    },
+    "frozen": {
+      "type": "bool",
+      "default": false
+    },
+    "peak_band": {
+      "type": "int",
+      "default": 0,
+      "min": 0,
+      "max": 15
+    }
+  },
+  "scenarios": [
+    {
+      "name": "primary flow",
+      "steps": [
+        {
+          "action": "enter",
+          "expect": {
+            "frozen": true
+          }
+        },
+        {
+          "action": "enter",
+          "expect": {
+            "frozen": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "style cycle",
+      "steps": [
+        {
+          "action": "right",
+          "expect": {
+            "focus": "style"
+          }
+        },
+        {
+          "action": "enter",
+          "expect": {
+            "style": "bars"
+          }
+        },
+        {
+          "action": "enter",
+          "expect": {
+            "style": "orbit"
+          }
+        }
+      ]
+    },
+    {
+      "name": "band update",
+      "steps": [
+        {
+          "action": {
+            "type": "bands",
+            "peak": 7
+          },
+          "expect": {
+            "peak_band": 7
+          }
+        },
+        {
+          "action": {
+            "type": "bands",
+            "peak": 12
+          },
+          "expect": {
+            "peak_band": 12
+          }
+        }
+      ]
+    }
+  ],
+  "layout": {
+    "safe_radius": 226,
+    "focus_inset": 3,
+    "controls": [
+      {
+        "id": "canvas",
+        "bounds": [
+          104,
+          110,
+          260,
+          48
+        ]
+      },
+      {
+        "id": "style",
+        "bounds": [
+          104,
+          178,
+          260,
+          48
+        ]
+      },
+      {
+        "id": "sensitivity",
+        "bounds": [
+          104,
+          246,
+          260,
+          48
+        ]
+      }
+    ]
+  },
+  "visual": {
+    "kind": "radial",
+    "eyebrow": "MUSIC",
+    "title": "RADIAL",
+    "metric": "\u266a",
+    "lines": [
+      "peak 1.6 kHz",
+      "sensitivity medium"
+    ],
+    "accent": "#00d9ff",
+    "scenario": "primary flow",
+    "evidence": "reference"
+  }
+}

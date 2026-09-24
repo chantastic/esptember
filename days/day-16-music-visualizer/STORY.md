@@ -1,6 +1,12 @@
 ---
 title: Music Visualizer
 ---
+## The prompt-first pass
+
+The original build below records how this idea first worked.
+The durable lesson now targets the M5Stack Stopwatch and lives in the prompt, behavior contract, generalized tests, and hand-review checklist.
+Generated firmware is evidence for those sources, not the source itself.
+
 
 The FFT was going to be imported.
 Every ESP32 audio project pulls in a library for it, and every one of those libraries wraps the same thirty lines of Cooley-Tukey that have existed since 1965.

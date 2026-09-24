@@ -1,0 +1,147 @@
+{
+  "schema": 1,
+  "lesson": "day-18-pokedex",
+  "title": "Pokedex",
+  "hardware": {
+    "board": "m5stack-stopwatch",
+    "width": 468,
+    "height": 466,
+    "offset_x": 6,
+    "offset_y": 0,
+    "rotation": 0,
+    "touch_map": "espt-touch/record"
+  },
+  "controls": {
+    "profile": "c25k",
+    "left_button": "BtnA",
+    "right_button": "BtnB",
+    "left": "previous_or_decrease",
+    "right": "next_or_increase",
+    "enter": "short_both",
+    "back": "hold_both_600ms"
+  },
+  "state": {
+    "screen": {
+      "type": "enum",
+      "default": "list",
+      "values": [
+        "list",
+        "detail",
+        "search"
+      ]
+    },
+    "focus": {
+      "type": "int",
+      "default": 1,
+      "min": 1,
+      "max": 151
+    },
+    "query": {
+      "type": "string",
+      "default": "",
+      "max_length": 12
+    },
+    "type_filter": {
+      "type": "enum",
+      "default": "all",
+      "values": [
+        "all",
+        "fire",
+        "water",
+        "grass",
+        "electric"
+      ]
+    }
+  },
+  "scenarios": [
+    {
+      "name": "primary flow",
+      "steps": [
+        {
+          "action": "right",
+          "expect": {
+            "focus": 2
+          }
+        },
+        {
+          "action": "enter",
+          "expect": {
+            "screen": "detail"
+          }
+        },
+        {
+          "action": "back",
+          "expect": {
+            "screen": "list"
+          }
+        }
+      ]
+    },
+    {
+      "name": "wrap",
+      "steps": [
+        {
+          "action": "left",
+          "expect": {
+            "focus": 151
+          }
+        }
+      ],
+      "given": {
+        "focus": 1
+      }
+    },
+    {
+      "name": "search",
+      "steps": [
+        {
+          "action": {
+            "type": "search",
+            "query": "pika"
+          },
+          "expect": {
+            "screen": "search",
+            "query": "pika",
+            "focus": 25
+          }
+        },
+        {
+          "action": "enter",
+          "expect": {
+            "screen": "detail"
+          }
+        }
+      ]
+    }
+  ],
+  "layout": {
+    "safe_radius": 226,
+    "focus_inset": 3,
+    "controls": [
+      {
+        "id": "primary",
+        "bounds": [
+          104,
+          110,
+          260,
+          48
+        ]
+      }
+    ]
+  },
+  "visual": {
+    "kind": "list",
+    "eyebrow": "POKEDEX 001\u2013151",
+    "title": "KANTO",
+    "metric": "#025",
+    "lines": [
+      "Pikachu",
+      "Raichu",
+      "Sandshrew",
+      "Nidoran"
+    ],
+    "accent": "#ffcf33",
+    "scenario": "primary flow",
+    "evidence": "reference"
+  }
+}

@@ -2,118 +2,97 @@
 board: m5stack-stopwatch
 day: 14
 title: Morse Code Practicer
-toolchain: Arduino CLI (esp32 core) + M5Unified
-firmware: /firmware/day-14-morse-practicer.bin
-summary: "A straight key on the crown, ITU timing, live decode. Learn the oldest digital protocol by thumb."
-verification: "Boot and decode state machine verified over serial; keying feel pending hands-on"
+toolchain: Arduino ESP32 3.3.10 + M5Unified 0.2.19 + M5GFX 0.2.26 + LVGL 9.3.0
+summary: "A straight key, ITU timing, live symbols, decode, and selectable speed."
+verification: "Prompt contract and reference frame verified; generated hardware candidate awaits hand review"
 ---
 
-## The result
+## The assignment
 
-A straight key on the crown, ITU-R M.1677-1 timing, live decode.
-Press A and the sidetone sings; release and the press length decides dit or dah.
-Gaps decide letters and words.
-The screen shows both the raw symbol stream and the characters it becomes — key `... --- ...` and watch `SOS` assemble itself.
-Each day is a standalone firmware image; you can start here without flashing earlier days.
+Make the left pusher a responsive straight key that teaches Morse timing by feel and sound.
 
-## What you need
+The durable source is this prompt, [SPEC.md](https://github.com/chantastic/esptember/blob/main/days/day-14-morse-practicer/SPEC.md), the machine-readable contract, and its layered acceptance criteria.
+Generated firmware is a disposable candidate.
 
-- **Board:** M5Stack Stopwatch Dev Kit (ESP32-S3, C152): two pushers, buzzer, 1.75″ round AMOLED, battery.
-- **Connection:** a USB data cable and a computer with access to the serial port.
-- **For the download:** [uv](https://docs.astral.sh/uv/getting-started/installation/) supplies the `uvx` command below.
-- **For source builds:** [arduino-cli](https://arduino.github.io/arduino-cli/) with the esp32 core and the M5Unified library installed.
+## Reference frame
 
-The display is 466 × 466 pixels behind a circular aperture.
-Flashing replaces the firmware currently on the board.
+![Round-screen acceptance reference for Morse Code Practicer](https://esptember.com/images/day-14-morse-practicer/reference.png)
 
-## Run it
+This is a deterministic screenshot of the visual acceptance model.
+It defines the intended hierarchy and safe-area use; only a later framebuffer capture from the attached Stopwatch can count as device rendering evidence.
 
-Download [day-14-morse-practicer.bin](https://esptember.com/firmware/day-14-morse-practicer.bin) and open a terminal in the download directory.
-This is a merged image containing the bootloader, partition table, and application.
+## The build prompt
 
-Find your serial port:
+```text
+Build ESPtember Day 14: Morse Code Practicer for the M5Stack Stopwatch Dev Kit (C152).
 
-```sh
-# macOS
-ls /dev/cu.usbmodem*
-# Linux
-ls /dev/ttyACM*
+Read these before writing code:
+- .agents/skills/build-stopwatch-lessons/SKILL.md
+- .agents/skills/prompt-first-embedded-lessons/SKILL.md
+- days/day-07-touch-calibration/SPEC.md
+- days/day-14-morse-practicer/SPEC.md
+- days/day-14-morse-practicer/tests/contract.json
+
+Treat the prompt, spec, tests, and acceptance criteria as source.
+Put deterministic behavior in a portable core and keep Arduino, LVGL, M5Unified, storage, network, audio, and sensor adapters outside it.
+Run scripts/prompt-contract/validate_day.sh days/day-14-morse-practicer before compiling a device candidate.
+Do not edit the contract or tests to make a candidate pass.
+
+Hardware and shared platform
+
+- Target board_M5StopWatch on ESP32-S3 with OPI PSRAM.
+- Hold the device with the lanyard loop at the bottom: BtnA is physical left and BtnB is physical right.
+- Immediately after M5.begin(), set panel width 468, height 466, offset_x 6, offset_y 0, then rotation 0.
+- Never draw rows 466 or 467. Keep focus decoration inset and every interactive bound inside the round safe area.
+- Load Preferences namespace espt-touch, blob key record, after display setup and before touch input.
+- Accept and validate Day 07 version 1 and version 2 records. Read raw touch, apply the complete shared warp, clamp once, then feed the mapped point to the application.
+- Provide the shared runtime calibration entry path. App-only installation must preserve the record.
+- Allocate retained frames and large working buffers in PSRAM; fail visibly and over serial when required hardware or memory is unavailable.
+
+Controls
+
+Use a localized control scheme because A straight key must follow press duration directly. BtnA/left: key down up. BtnB/right: clear click speed hold. Short both: cycle speed. Hold both: clear message.
+Touch must dispatch the same semantic actions as physical controls.
+
+Lesson behavior
+
+- BtnA starts a 600 Hz sidetone on press and stops it on release without blocking.
+- Use PARIS timing: unit_ms = 1200 / WPM; under two units is a dit and two units or more is a dah.
+- Decode a letter after a three-unit gap and a word after seven units. Invalid sequences show a question mark.
+- BtnB click clears; short both cycles 5, 10, 15, and 20 WPM; hold both clears and returns to 10 WPM.
+- Show the current symbol sequence and decoded text without clipping at every speed.
+
+Diagnostics and acceptance
+
+- Prefix serial protocol lines with D14_ and implement status, reset, action, capture, and touchlog commands.
+- Report hardware identity, corrected geometry, touch-map version and generation, current portable state, memory headroom, and last named error.
+- Injected actions must use the same reducer, hit testing, callbacks, and control recognizer as physical input.
+- Retain the exact RGB565 pixels sent to M5GFX and stream captures in bounded chunks without blocking the watchdog.
+- Run every scenario in tests/contract.json, generated deterministic sequences, the deliberate mutation, and the lesson-specific checks in SPEC.md.
+- Complete 20 largest-state round trips without reset or growing heap/PSRAM use.
+- Confirm the active touch-map version and generation remain unchanged.
+- Physically review touch alignment, BtnA/BtnB direction, chord behavior, cues, clipping, lower-edge use, and the absence of a black bar.
+
+Record host, compile, injected-device, and physical evidence separately.
+Never describe reference rendering or injected input as physical proof.
 ```
 
-On Windows, use the board's COM port from Device Manager.
-Replace `PORT` with your port, then flash the image at `0x0`:
+## Required behavior
 
-```sh
-uvx esptool --chip esp32s3 --port PORT \
-  write-flash 0x0 day-14-morse-practicer.bin
-```
+- BtnA starts a 600 Hz sidetone on press and stops it on release without blocking.
+- Use PARIS timing: unit_ms = 1200 / WPM; under two units is a dit and two units or more is a dah.
+- Decode a letter after a three-unit gap and a word after seven units. Invalid sequences show a question mark.
+- BtnB click clears; short both cycles 5, 10, 15, and 20 WPM; hold both clears and returns to 10 WPM.
+- Show the current symbol sequence and decoded text without clipping at every speed.
 
-Close any serial monitor using that port before flashing.
-When flashing completes, the board restarts into this lesson.
+## Recorded evidence
 
-## How it works
+The shared contract runner validates Stopwatch geometry, touch-map ownership, control metadata, state types and ranges, deterministic scenarios, round-face control bounds, and 10,000 generated actions against three disposable reducer shapes.
+A deliberately mutated reducer must fail.
 
-Morse is a timing protocol, and the whole standard fits in one comment.
-One unit is the dit; dah = 3 units, intra-character gap = 1, letter gap = 3, word gap = 7.
-Unit length derives from words-per-minute via the PARIS convention:
-
-```c
-static uint32_t unitMs() { return 1200 / wpmSteps[wpmIndex]; }
-```
-
-Classification is a midpoint test — a press shorter than 2 units is a dit, longer is a dah, splitting the 1-unit dit from the 3-unit dah with equal tolerance both ways:
-
-```c
-static bool isDah(uint32_t pressMs) { return pressMs >= 2 * unitMs(); }
-```
-
-The decoder is the same shape as day 12's clock: no counters, just timestamps.
-Key releases append symbols; the loop watches the silence after the last release, closing the letter at 3 units and the word at 7.
-Nothing blocks — the sidetone starts on press and stops on release, so what you hear is exactly what the decoder measures.
-
-The code table is the 36 ITU letter and digit assignments, looked up when a letter closes.
-B taps clear the message; B held cycles keying speed through 5, 10, 15, and 20 WPM — at 5 WPM a dit is a leisurely 240 ms, at 20 it's 60 ms and you'll earn it.
-
-## Check the result
-
-- The screen shows `MORSE 10 WPM`, an empty symbol line, and key hints.
-- Pressing A sounds a 600 Hz sidetone for exactly the press duration.
-- Short presses append `.`, long presses `-`, drawn large as you key.
-- Pause after keying and the symbol collapses into its decoded letter; pause longer and a word space appears.
-- `... --- ...` decodes to `SOS`. Unknown patterns decode to `?`.
-- B clears; holding B steps the WPM and re-times everything.
+Historical implementation evidence from before the prompt-first Stopwatch migration follows.
 
 **Recorded evidence · September 21, 2026:** Boot and the decode state machine were verified over serial (`D13_STATUS` reporting) on the installed firmware. Keying feel at each WPM step awaits a hands-on check, noted in NOTES.md.
 
-## Used resources
-
-- [ITU-R M.1677-1](https://www.itu.int/rec/R-REC-M.1677-1-200910-I/en), *International Morse code* — the timing ratios (§2) and character assignments.
-- The PARIS convention: "PARIS" is 50 units, so unit ms = 1200 / WPM.
-- 600 Hz sidetone: the traditional CW listening pitch.
-
-## Build and change it
-
-Clone the repository once:
-
-```sh
-git clone https://github.com/chantastic/esptember.git
-cd esptember
-```
-
-Install the toolchain pieces (once):
-
-```sh
-arduino-cli core install esp32:esp32
-arduino-cli lib install M5Unified
-```
-
-Build and flash from the repository root:
-
-```sh
-cd days/day-14-morse-practicer
-./scripts/build.sh
-./scripts/flash.sh PORT
-```
-
-The merged image lands in `.build/firmware/morse_practicer.ino.merged.bin`.
-Natural extensions: a practice mode that shows a target character and scores your timing against the ITU ratios, or iambic keying on both pushers.
+The reference screenshot is acceptance-model evidence.
+The next hardware pass must replace or supplement it with a framebuffer capture and a hand-review record.

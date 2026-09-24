@@ -1,0 +1,173 @@
+{
+  "schema": 1,
+  "lesson": "day-14-morse-practicer",
+  "title": "Morse Code Practicer",
+  "hardware": {
+    "board": "m5stack-stopwatch",
+    "width": 468,
+    "height": 466,
+    "offset_x": 6,
+    "offset_y": 0,
+    "rotation": 0,
+    "touch_map": "espt-touch/record"
+  },
+  "controls": {
+    "profile": "localized",
+    "left_button": "BtnA",
+    "right_button": "BtnB",
+    "left": "key_down_up",
+    "right": "clear_click_speed_hold",
+    "enter": "cycle_speed",
+    "back": "clear_message",
+    "rationale": "A straight key must follow press duration directly."
+  },
+  "state": {
+    "wpm": {
+      "type": "enum",
+      "default": "10",
+      "values": [
+        "5",
+        "10",
+        "15",
+        "20"
+      ]
+    },
+    "symbol": {
+      "type": "string",
+      "default": "",
+      "max_length": 6
+    },
+    "message": {
+      "type": "string",
+      "default": "",
+      "max_length": 48
+    },
+    "key_down": {
+      "type": "bool",
+      "default": false
+    }
+  },
+  "scenarios": [
+    {
+      "name": "primary flow",
+      "steps": [
+        {
+          "action": {
+            "type": "key",
+            "down": true
+          },
+          "expect": {
+            "key_down": true
+          }
+        },
+        {
+          "action": {
+            "type": "key",
+            "down": false,
+            "duration_ms": 80
+          },
+          "expect": {
+            "key_down": false,
+            "symbol": "."
+          }
+        },
+        {
+          "action": {
+            "type": "gap",
+            "units": 3
+          },
+          "expect": {
+            "symbol": "",
+            "message": "E"
+          }
+        }
+      ]
+    },
+    {
+      "name": "decode SOS",
+      "steps": [
+        {
+          "action": {
+            "type": "decode",
+            "symbols": "..."
+          },
+          "expect": {
+            "message": "S"
+          }
+        },
+        {
+          "action": {
+            "type": "decode",
+            "symbols": "---"
+          },
+          "expect": {
+            "message": "SO"
+          }
+        },
+        {
+          "action": {
+            "type": "decode",
+            "symbols": "..."
+          },
+          "expect": {
+            "message": "SOS"
+          }
+        }
+      ]
+    },
+    {
+      "name": "speed cycle",
+      "steps": [
+        {
+          "action": "enter",
+          "expect": {
+            "wpm": "15"
+          }
+        },
+        {
+          "action": "enter",
+          "expect": {
+            "wpm": "20"
+          }
+        },
+        {
+          "action": "enter",
+          "expect": {
+            "wpm": "5"
+          }
+        }
+      ],
+      "given": {
+        "wpm": "10"
+      }
+    }
+  ],
+  "layout": {
+    "safe_radius": 226,
+    "focus_inset": 3,
+    "controls": [
+      {
+        "id": "primary",
+        "bounds": [
+          104,
+          110,
+          260,
+          48
+        ]
+      }
+    ]
+  },
+  "visual": {
+    "kind": "card",
+    "eyebrow": "MORSE 15 WPM",
+    "title": "... --- ...",
+    "metric": "SOS",
+    "lines": [
+      "BtnA: key",
+      "Both: speed"
+    ],
+    "accent": "#ffcf33",
+    "scenario": "primary flow",
+    "evidence": "reference"
+  }
+}
