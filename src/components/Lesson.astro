@@ -25,7 +25,10 @@ const sources = Object.entries(import.meta.glob([
 .filter(([path]) => path.includes(`/days/${entry.id}/firmware/`))
 .map(([path,content]) => ({ path: path.split('/firmware/')[1], content }))
 .sort((a,b) => a.path.localeCompare(b.path));
-const toc = view === "guide" ? [{ depth: 2, slug: "dev-kit", text: "The dev kit" }, ...headings, { depth: 2, slug: "firmware-source", text: "Firmware source" }] : headings;
+const toc = view === "guide"
+  ? [{ depth: 2, slug: "dev-kit", text: "The dev kit" }, ...headings,
+     ...(sources.length ? [{ depth: 2, slug: "firmware-source", text: "Firmware source" }] : [])]
+  : headings;
 ---
 <Layout title={`${entry.data.title} · ${view === 'guide' ? 'Guide' : 'Story'}`} description={entry.data.summary} markdown={`${base}guide.md`}>
   <main id="main-content" class="lesson-main">
@@ -60,7 +63,7 @@ const toc = view === "guide" ? [{ depth: 2, slug: "dev-kit", text: "The dev kit"
         </section>}
         {view === 'story' && <p class="story-intro">The build notes: what we tried, what broke, and what stayed. <a href={base}>Get the working instructions →</a></p>}
         <article class="prose"><Content /></article>
-        {view === 'guide' && <section class="sources" id="firmware-source">
+        {view === 'guide' && sources.length > 0 && <section class="sources" id="firmware-source">
           <p class="eyebrow">The implementation</p><h2>Firmware source</h2>
           <p>Read the files here or <a href={`${GITHUB_REPO}/tree/main/days/${entry.id}/firmware`}>open the project on GitHub ↗</a>.</p>
           {sources.map(file => <details><summary><code>{file.path}</code></summary><pre><code>{file.content}</code></pre></details>)}

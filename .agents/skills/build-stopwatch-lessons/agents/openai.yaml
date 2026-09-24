@@ -1,0 +1,4 @@
+interface:
+  display_name: "Build Stopwatch lessons"
+  short_description: "Apply Stopwatch hardware and touch conventions"
+  default_prompt: "Use $build-stopwatch-lessons to build or revise this ESPtember lesson for the M5Stack Stopwatch."

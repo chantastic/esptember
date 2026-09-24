@@ -9,6 +9,9 @@ mkdir -p public/firmware
 for readme in days/*/README.md; do
   # Only publish firmware for days with a published lesson.
   [ -f "$readme" ] || continue
+  # Prompt-only lessons may keep disposable candidates under .build, but those
+  # are evidence rather than release artifacts.
+  grep -q '^firmware: ' "$readme" || continue
   day_root="${readme%/README.md}"
   day="${day_root##*/}"
   merged=""

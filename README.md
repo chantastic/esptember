@@ -1,7 +1,10 @@
 # ESPtember
 
-30 days of individually flashable projects for the
-[Waveshare ESP32-S3-Touch-AMOLED-1.8](https://www.waveshare.com/esp32-s3-touch-amoled-1.8.htm).
+ESP32 project lessons, with flashable artifacts where a build has been retained.
+Starting with Day 07 (Touch Calibration), new work targets the
+[M5Stack Stopwatch](https://docs.m5stack.com/en/core/StopWatch) and treats a
+detailed prompt, behavior specification, generalized tests, and acceptance
+criteria as the durable source. Generated implementations are replaceable.
 
 Live at [esptember.com](https://esptember.com).
 
@@ -12,6 +15,8 @@ days/
   day-01-hello-world/
     README.md        # practical guide: website + plain Markdown
     STORY.md         # build narrative: discoveries and lessons
+    SPEC.md          # optional behavior contract and acceptance criteria
+    tests/           # optional portable contract tests
     firmware/        # that day's firmware project (toolchain varies by day)
 src/                 # Astro site; renders days/*/README.md
 public/firmware/     # collected merged .bin files, served by the site
@@ -47,6 +52,17 @@ That identity drives its illustrated board card, install instructions, flasher
 chip family, project-index label, and Markdown metadata.
 The homepage derives published project counts from these assignments.
 Adding a board to the workbench does not imply an existing binary supports it.
+
+### Stopwatch controls
+
+With the lanyard loop at the bottom, **BtnA is left** and **BtnB is right**.
+Use [C25K's four gestures](days/day-13-c25k/SPEC.md#3-input-grammar) by default:
+left = previous/decrease, right = next/increase, both press-and-release =
+select, both held for 600 ms = back. Combined presses consume the individual
+clicks. Use a project-specific convention when the activity calls for it,
+such as stopwatch start/stop and lap/reset, and document that exception.
+Check the physical mapping as each day is reworked; older examples may have
+assumed the sides incorrectly.
 
 Illustrations are original stylized vectors in `public/images/boards/`, based on
 manufacturer product references. They show the form of each kit, not a wiring diagram.

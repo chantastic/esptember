@@ -31,6 +31,16 @@ for (const slug of published) {
   }
   assert(guide.includes('Recorded evidence'), `${slug}: missing verification scope`);
   assert(story.includes('What we learned'), `${slug}: missing story conclusion`);
+  const firmwareDirectory = `days/${slug}/firmware`;
+  const sourcePaths = existsSync(firmwareDirectory) ? firmwareSources(firmwareDirectory) : [];
+  const firmwarePath = source.match(/^firmware: (.+)$/m)?.[1];
+  if (!firmwarePath) {
+    assert(!existsSync(`${base}/manifest.json`), `${slug}: prompt-only lesson published a firmware manifest`);
+    assert(!existsSync(`public/firmware/${slug}.bin`), `${slug}: prompt-only lesson published a firmware binary`);
+    assert.equal(sourcePaths.length, 0, `${slug}: prompt-only lesson has generated firmware source`);
+    assert(body.includes('## The build prompt'), `${slug}: prompt-only lesson is missing its build prompt`);
+    continue;
+  }
   const manifest = JSON.parse(read(`${base}/manifest.json`));
   assert.equal(manifest.builds[0].chipFamily, board.chip);
   const part = manifest.builds[0].parts[0];
@@ -38,7 +48,6 @@ for (const slug of published) {
   assert.equal(part.path, `/firmware/${slug}.bin`);
   assert(readFileSync(join('dist', part.path)).equals(readFileSync(`public/firmware/${slug}.bin`)), `${slug}: firmware mismatch`);
   // Excerpts may skip intervening code, but every executable line must exist in the source.
-  const sourcePaths = firmwareSources(`days/${slug}/firmware`);
   assert(sourcePaths.length, `${slug}: no firmware source found`);
   const displayedSources = new Set([...guide.matchAll(/<summary\b[^>]*>\s*<code\b[^>]*>([^<]+)<\/code>\s*<\/summary>/g)].map(match => match[1]));
   for (const path of sourcePaths) {

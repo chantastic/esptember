@@ -1,33 +1,68 @@
 # ESPtember — notes & lesson ideas
 
-- **Pending hands-on checks (autonomous run, Sep 21)** — day 08 speaker
-  ear check; day 10 cue discrimination in-pocket; day 11 pusher feel;
-  day 13 keying feel per WPM; day 16 multi-day aging + evolution +
+- **Hardware direction · September 23, 2026** — Day 07 is Touch Calibration;
+  LVGL and the existing lineup follow it. Target the M5Stack Stopwatch and
+  work one lesson at a time.
+- **Prompt-first direction · September 23** — stop treating a generated build
+  as the lesson source. Keep a detailed human-readable prompt, behavior spec,
+  generalized portable tests, and layered acceptance criteria. Generate
+  implementations only when explicitly requested; disagreements between
+  implementations first trigger a prompt/spec review.
+- **Day 07 contract experiment · September 23** — three disposable affine-core
+  implementations (normal equations, QR, centered covariance) each passed the
+  same 436 assertions. The comparison added an exact API, 40-byte record,
+  CRC byte order, median rule, inclusive thresholds, and invalid-input behavior
+  to the prompt/spec. Centered covariance produced the smallest host object;
+  no candidate was promoted to lesson source.
+- **Day 08 calibration handoff** — the retained LVGL firmware predates Day 07's
+  `espt-touch` persistence contract. Its next source prompt must require loading
+  and applying a valid calibration after panel geometry setup and before LVGL
+  creates its pointer input. Do not patch offsets into the LVGL callback.
+- **Default controls · September 23** — C25K is the reference. Lanyard down:
+  BtnA is left/previous/decrease; BtnB is right/next/increase. Press both and
+  release to select; hold both 600 ms to go back. Preserve C25K's chord
+  timing and click swallowing. Use localized conventions where they make
+  sense (e.g. stopwatch), with explicit physical mapping.
+- **Control audit, for each day's rework** — Day 13 already maps A to Prev
+  and B to Next. Days 17 (Tamagotchi) and 21 (Yo) currently advance selection
+  with A and act with B; adapt to the default grammar when reached. Days 11,
+  12, 14, 24, 25, and 29 describe A as the "crown"; review those descriptions
+  and physical assignments rather than assuming that means right. Day 12's
+  stopwatch-specific actions remain an intentional exception. Its current
+  code puts start/stop on left/A and lap/reset on right/B; review those sides
+  against the intended stopwatch convention when reworking that day.
+
+- **Pending hands-on checks (autonomous run, Sep 21)** — day 09 speaker
+  ear check; day 11 cue discrimination in-pocket; day 12 pusher feel;
+  day 14 keying feel per WPM; day 17 multi-day aging + evolution +
   death (an egg is incubating on the StopWatch now — it hatches after
-  1h and should show offline aging after any power-off gap). Day 14
+  1h and should show offline aging after any power-off gap). Day 15
   needs a shout test beyond room tone. Nothing deployed to the site
   yet — all committed locally, deploy after the touch-drill below.
-- **Day 16 art pass** — the five 16x16 creatures are programmer hex art;
+- **Day 17 art pass** — the five 16x16 creatures are programmer hex art;
   worth a real pixel pass. Also: sleep schedule and evolution branching
   by care mistakes are speced in PLAN.md but not in v1.
 
-- **Day 07 OPEN ITEM: physical touch calibration** — user reported touch
-  "way off" on the 1.8 V2. Raw CST816S reads match LVGL's indev exactly
-  (plumbing is fine); the question is panel-image vs. touch-coordinate
-  mapping. The shipped harness has `touchlog on` — do the corner drill
-  (hold TL, TR, BL, BR ~2s each) and compare against drawn positions.
-  Suspects: BSP's 16px `x_gap` (tuned for V1 SH8601, applied to V2
-  CO5300), or a mirror flag. Injected-touch verification PASSed fully.
-- **Day 07 harness pattern is reusable** — virtual LVGL pointer indev +
-  `status`/`tap`/`drag`/`capture` serial protocol + base64 framebuffer
-  dump. Extract into a shared component before day 08 needs it again.
-  Gotchas solved: LVGL builtin heap too small for snapshots (need
-  `CONFIG_LV_USE_CLIB_MALLOC=y` so PSRAM backs `lv_malloc`); yield every
-  32 rows during the dump or the task watchdog fires into the pixel
-  stream; hard flings elastically snap back — script gentle drags and
-  read coordinates from captures, not from the imagination.
+- **Day 08 Stopwatch port · September 23** — Arduino esp32 3.3.10,
+  M5Unified 0.2.19, M5GFX 0.2.26, LVGL 9.3.0. Flashed and passed the
+  device harness: count, brightness range, switch, state retention,
+  framebuffer captures, and 20 more screen round trips with unchanged
+  heap/PSRAM. C25K button controls now cover focus, edit, select, and back;
+  the copied recognizer passes its 98 portable assertions. Button feel,
+  physical touch alignment, and perceived brightness await the user's
+  hands-on review. The driver reports 468 × 468 despite the
+  advertised 466 × 466 panel; derive render dimensions from M5GFX.
+- **Day 08 previous Waveshare investigation** — the physical touch
+  calibration question remains historical, not a prerequisite for the
+  Stopwatch version. Earlier source and findings remain in Git history;
+  the local previous build is retained in the day's ignored
+  `.build/legacy-waveshare/` directory.
+- **Day 08 harness pattern is reusable** — virtual LVGL pointer plus
+  `status`/`tap`/`drag`/`capture` USB commands. The Stopwatch version keeps
+  the pixels sent to M5GFX in PSRAM and streams a snapshot in bounded
+  chunks. It tests LVGL separately from the physical touch controller.
 
-- **Day 12: C25K on the M5Stack StopWatch** — standalone Arduino firmware;
+- **Day 13: C25K on the M5Stack StopWatch** — standalone Arduino firmware;
   all 27 workouts passed accelerated device checks, and a 125-second real-time
   check crossed warm-up/run/walk boundaries. Button feel, perceived sound and
   vibration cues, daylight legibility, and full-workout battery runtime still
@@ -36,7 +71,7 @@
 - **Progress versus elapsed time** — replaying an interval moves the ring back
   while retaining the effort in the log. Portable timing/button helpers make
   those rules testable without real-time waits or fake completed user sessions.
-- **Day 12 clock follow-up** — hour/minute editing preserves the RTC date and
+- **Day 13 clock follow-up** — hour/minute editing preserves the RTC date and
   uses the visible build date when unset. Add calendar/timezone editing if this
   firmware needs to travel beyond its current Pacific-time build.
 
