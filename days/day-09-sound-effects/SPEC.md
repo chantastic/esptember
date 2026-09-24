@@ -2,7 +2,12 @@
 
 ## Objective
 
-Build a six-pad synthesized sound board with two pages and no audio assets.
+Build a fast, two-page drum-pad instrument for the M5Stack Stopwatch.
+Each page shows four colored square pads in a 2 × 2 grid.
+The left and right pushers change pages; touching a pad triggers its sound immediately.
+
+The board has eight configurable slots.
+The default set is Laser, Coin, Jump, Explosion, Power Up, and Blip, followed by two empty slots.
 
 ## Shared platform contract
 
@@ -11,59 +16,125 @@ BtnA is physical left and BtnB is physical right with the lanyard down.
 Every touch consumer loads `espt-touch/record`, accepts safe version-1 and version-2 records, maps raw coordinates through the complete shared warp, and provides the shared runtime calibration flow.
 No lesson-specific touch correction is permitted.
 
-## Controls
+## Localized controls
 
-Use the default grammar: BtnA/left is Previous or Decrease; BtnB/right is Next or Increase; short both is Enter; hold both for 600 ms is Back. Preserve the 80 ms join and overlap rules and consume chord clicks.
-Touch and serial injection dispatch the same semantic action names.
+This lesson intentionally uses a drum-machine control scheme instead of the C25K focus grammar.
+
+- BtnA/left moves to the previous page and wraps.
+- BtnB/right moves to the next page and wraps.
+- With two pages, either pusher toggles the visible page in its documented direction.
+- A pad triggers on touch-down through `LV_EVENT_PRESSED`; it does not wait for release or require a two-button chord.
+- Holding both pushers for 600 ms during boot enters the shared touch-calibration flow.
+- Simultaneous runtime pusher presses do not trigger pads or change two pages at once.
+
+The footer shows a left arrow beside A, the page count, and a right arrow beside B.
 
 ## Portable state
 
-- `screen`: enum, default `page1`
-- `focus`: enum, default `pad1`
+- `page`: enum, default `page1`
 - `active`: enum, default `none`
-- `queued`: enum, default `none`
-- `plays`: int, default `0`
+- `last_trigger`: enum, default `none`
+- `plays`: integer, default `0`, range 0–9999
 
 State transitions are pure, deterministic, and leave their input value unchanged.
-Every transition returns a state that satisfies the declared enum, integer, boolean, and string bounds.
+Every transition returns a state that satisfies the declared bounds.
 
-## Behavior
-
-1. Show three large pads per page plus a page control; every focus border is inset and round-face safe.
-2. Synthesize Laser, Coin, Jump, Explosion, Power Up, and Blip from deterministic PCM math at activation time.
-3. Use one active voice and one latest-wins pending slot. Repeated activation never blocks LVGL, button polling, or touch.
-4. Left and right wrap focus; Enter plays the focused pad or changes page; Back returns to page one and the first pad.
-5. Report requested, active, queued, started, and completed effect ids separately over serial.
-
-## Required scenarios
-
-- **primary flow**: enter, audio_done
-- **queue latest**: enter
-- **page navigation**: left, enter, back
-
-The JSON contract contains the exact intermediate expected state for each action.
-It is normative when prose and a disposable candidate disagree.
+`pad1_down` through `pad4_down` resolve through the current page's slot manifest.
+An empty slot leaves audio state and play count unchanged.
 
 ## Visual contract
 
-The reference frame is 468 × 466 and uses only rows 0–465.
-The primary title, status, data, and control hint remain readable through a circular aperture.
-Controls and their inset focus rings remain inside radius 226 from center `(234,233)`.
-Touch targets are at least 42 pixels tall and lower controls remain unobstructed so the calibrated lower face is exercised.
+Each page contains four 132 × 118 colored pads arranged at `(84,88)`, `(252,88)`, `(84,246)`, and `(252,246)`.
+The pad is the color field; its name appears in small text immediately underneath.
+Do not put large words, icons, focus rings, counters, or instructions inside a pad.
 
-## Persistence and failure contract
+The page title stays above the grid.
+The footer shows `A ◀`, `page / count`, and `▶ B`.
+All pad corners and text remain inside the radius-226 safe area around `(234,233)`.
+The screen uses rows 0–465 only and leaves no bottom strip.
 
-Only lesson-owned state may be written by this lesson.
+Use distinct colors with sufficient luminance contrast on the black background.
+The defaults are orange, cyan, lime, magenta, yellow, and blue.
+Empty slots remain visible as dim gray pads labeled `EMPTY` so the grid never changes shape.
+
+## Sound configuration
+
+The generated project owns a checked-in or generated `sound_manifest` with at most eight ordered slots.
+Each slot declares a short label, pad color, and exactly one source:
+
+1. **Description:** natural-language intent plus an explicit deterministic recipe produced from it.
+2. **File:** a user-supplied WAV, AIFF, MP3, FLAC, or OGG file plus the reproducible conversion command and source filename.
+
+A described sound is translated before compilation into a bounded recipe containing:
+
+- oscillator or noise type;
+- start and end frequency where applicable;
+- duration in milliseconds;
+- attack, decay, sustain, and release or a named exponential envelope;
+- optional low-pass coefficient, tremolo, vibrato, or seeded noise; and
+- output gain.
+
+Show the recipe beside the description so a user can edit concrete values after hearing it.
+Seed every noise source explicitly.
+The same recipe must produce the same signed 16-bit PCM and hash on every build.
+
+A supplied file is converted before compilation to signed 16-bit little-endian, mono, 22,050 Hz PCM.
+Preserve the original file outside generated build output.
+Reject unreadable input, clips longer than two seconds, decoded data larger than the configured PSRAM budget, and a silent result.
+Do not decode MP3, FLAC, OGG, or resample audio inside a touch callback.
+
+Empty slots are valid.
+Changing labels, colors, descriptions, or files regenerates a disposable candidate; it does not change the hardware or interaction contract.
+
+## Fast trigger path
+
+Prepare every configured clip before the UI becomes interactive.
+Render descriptions into PSRAM at startup and decode or convert supplied files at build time or startup outside the UI task.
+Keep the final PCM buffers resident and immutable while the app is running.
+
+On `LV_EVENT_PRESSED`:
+
+1. resolve the current page and pad index;
+2. update `active`, `last_trigger`, and `plays`;
+3. stop/retrigger speaker channel 0 with the resident PCM buffer; and
+4. return without synthesis, file I/O, allocation, logging loops, animation waits, or release detection.
+
+There is one voice.
+A new pad immediately replaces the sound currently playing; there is no pending queue and no wait for the old clip to finish.
+Repeated presses of the same pad retrigger from its first sample.
+
+Measure latency from mapped touch-down or pusher edge to the corresponding state transition and from pad touch-down to `D09_AUDIO started`.
+The page-state transition must occur within 16 ms, and pad-to-audio-start must be at most 30 ms at the 95th percentile over 100 injected triggers.
+No single measured trigger may exceed 50 ms.
+
+## Required scenarios
+
+- **primary flow:** touch pad 1, then complete playback;
+- **immediate retrigger:** touch pad 2 and pad 4 while another clip is active; each replaces it immediately;
+- **pusher paging:** right, left, then wrapping left;
+- **second page sounds:** trigger Power Up and Blip through page 2;
+- **empty slot:** touching an unconfigured slot is a visible press with no audio or play-count change.
+
+The JSON contract contains the exact intermediate expected state for every action.
+It is normative when prose and a disposable candidate disagree.
+
+## Diagnostics and failure behavior
+
+Prefix serial lines with `D09_` and provide `status`, `reset`, `action`, `capture`, `touchlog`, and `calibrate` commands.
+Report board identity, geometry, calibration version and generation, page, active clip, last trigger, play count, free memory, stack headroom, and last named error.
+
+For every trigger report slot, source type, sample count, PCM hash, request timestamp, start timestamp, and measured latency.
+Do not print PCM or perform unbounded serial writes on the trigger path.
+
+An invalid description recipe, missing file, decode failure, allocation failure, or speaker failure disables only that slot when possible, labels it `ERROR`, names the source on screen and serial, and keeps other pads usable.
 The `espt-touch` namespace is read-only outside the shared calibration flow.
-Validate persisted length, version, checksum where applicable, enum/range values, and string termination before use.
-Network, sensor, audio, storage, allocation, and parse failures name their source on screen and over serial, retain the last safe state, and expose a bounded retry.
 
 ## Acceptance layers
 
 1. The machine-readable contract passes three reducer shapes and rejects a deliberate mutation.
-2. The selected portable implementation adds lesson-specific numerical, timing, parsing, and persistence tests.
+2. Domain tests verify every recipe or converted file's length, bounds, deterministic hash, non-silence, and PSRAM budget.
 3. The real libraries compile at pinned versions with no project warnings.
-4. The instrumented device passes injected actions, capture, 20 largest-state loops, memory checks, and touch-map preservation.
-5. A person reviews the physical controls, touch, cues, readability, clipping, bottom edge, and activity-specific behavior.
+4. The instrumented device passes 100-trigger latency measurement, immediate retriggering, injected touch hit-testing, page buttons, framebuffer capture, 20 page round trips, memory checks, and touch-map preservation.
+5. A person reviews pad responsiveness, every configured sound, pusher direction, touch alignment, readability, clipping, and the bottom edge.
 
 Each layer records only what it observes.

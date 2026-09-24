@@ -12,31 +12,22 @@
     "touch_map": "espt-touch/record"
   },
   "controls": {
-    "profile": "c25k",
+    "profile": "localized",
     "left_button": "BtnA",
     "right_button": "BtnB",
-    "left": "previous_or_decrease",
-    "right": "next_or_increase",
-    "enter": "short_both",
-    "back": "hold_both_600ms"
+    "left": "previous_page",
+    "right": "next_page",
+    "enter": "touch_pad_press",
+    "back": "boot_hold_both_calibration",
+    "rationale": "A drum machine needs immediate pad touches; the two pushers are dedicated page controls with visible left and right arrows."
   },
   "state": {
-    "screen": {
+    "page": {
       "type": "enum",
       "default": "page1",
       "values": [
         "page1",
         "page2"
-      ]
-    },
-    "focus": {
-      "type": "enum",
-      "default": "pad1",
-      "values": [
-        "pad1",
-        "pad2",
-        "pad3",
-        "page"
       ]
     },
     "active": {
@@ -52,7 +43,7 @@
         "blip"
       ]
     },
-    "queued": {
+    "last_trigger": {
       "type": "enum",
       "default": "none",
       "values": [
@@ -77,56 +68,109 @@
       "name": "primary flow",
       "steps": [
         {
-          "action": "enter",
+          "action": "pad1_down",
           "expect": {
             "active": "laser",
+            "last_trigger": "laser",
             "plays": 1
           }
         },
         {
           "action": "audio_done",
           "expect": {
-            "active": "none"
+            "active": "none",
+            "last_trigger": "laser",
+            "plays": 1
           }
         }
       ]
     },
     {
-      "name": "queue latest",
+      "name": "immediate retrigger",
+      "given": {
+        "active": "laser",
+        "last_trigger": "laser",
+        "plays": 1
+      },
       "steps": [
         {
-          "action": "enter",
+          "action": "pad2_down",
           "expect": {
-            "queued": "laser",
-            "plays": 1
+            "active": "coin",
+            "last_trigger": "coin",
+            "plays": 2
+          }
+        },
+        {
+          "action": "pad4_down",
+          "expect": {
+            "active": "explosion",
+            "last_trigger": "explosion",
+            "plays": 3
           }
         }
-      ],
-      "given": {
-        "active": "coin"
-      }
+      ]
     },
     {
-      "name": "page navigation",
+      "name": "pusher paging",
       "steps": [
+        {
+          "action": "right",
+          "expect": {
+            "page": "page2"
+          }
+        },
         {
           "action": "left",
           "expect": {
-            "focus": "page"
+            "page": "page1"
           }
         },
         {
-          "action": "enter",
+          "action": "left",
           "expect": {
-            "screen": "page2",
-            "focus": "pad1"
+            "page": "page2"
+          }
+        }
+      ]
+    },
+    {
+      "name": "second page sounds",
+      "given": {
+        "page": "page2"
+      },
+      "steps": [
+        {
+          "action": "pad1_down",
+          "expect": {
+            "active": "powerup",
+            "last_trigger": "powerup",
+            "plays": 1
           }
         },
         {
-          "action": "back",
+          "action": "pad2_down",
           "expect": {
-            "screen": "page1",
-            "focus": "pad1"
+            "active": "blip",
+            "last_trigger": "blip",
+            "plays": 2
+          }
+        }
+      ]
+    },
+    {
+      "name": "empty slot",
+      "given": {
+        "page": "page2"
+      },
+      "steps": [
+        {
+          "action": "pad3_down",
+          "expect": {
+            "page": "page2",
+            "active": "none",
+            "last_trigger": "none",
+            "plays": 0
           }
         }
       ]
@@ -139,50 +183,65 @@
       {
         "id": "pad1",
         "bounds": [
-          104,
-          110,
-          260,
-          48
+          84,
+          88,
+          132,
+          118
         ]
       },
       {
         "id": "pad2",
         "bounds": [
-          104,
-          178,
-          260,
-          48
+          252,
+          88,
+          132,
+          118
         ]
       },
       {
         "id": "pad3",
         "bounds": [
-          104,
+          84,
           246,
-          260,
-          48
+          132,
+          118
         ]
       },
       {
-        "id": "page",
+        "id": "pad4",
         "bounds": [
-          104,
-          330,
-          260,
-          48
+          252,
+          246,
+          132,
+          118
         ]
       }
     ]
   },
   "visual": {
-    "kind": "card",
+    "kind": "pads",
     "eyebrow": "SOUND BOARD",
-    "title": "Laser",
-    "metric": "PEW",
-    "lines": [
-      "Coin   Jump",
-      "Page 1 of 2"
+    "title": "PAGE 1",
+    "metric": "",
+    "pads": [
+      {
+        "label": "LASER",
+        "color": "#ff5b04"
+      },
+      {
+        "label": "COIN",
+        "color": "#29c7d8"
+      },
+      {
+        "label": "JUMP",
+        "color": "#9bdd32"
+      },
+      {
+        "label": "EXPLOSION",
+        "color": "#e852a0"
+      }
     ],
+    "page": "1 / 2",
     "accent": "#ff5b04",
     "scenario": "primary flow",
     "evidence": "reference"

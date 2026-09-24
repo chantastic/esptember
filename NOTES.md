@@ -59,6 +59,12 @@
   keep the calibrated touch record device-owned and updateable at runtime;
   use C25K's four gestures by default; let established activities such as a
   stopwatch, Morse key, or metronome document a localized control grammar.
+- **Interactive audio latency · Day 09** — prepare final PCM before enabling
+  input, retain it in PSRAM, trigger on touch-down, and let the newest pad
+  restart the single voice immediately. Keep synthesis, decoding, file I/O,
+  allocation, long logging, animation waits, release detection, and pending
+  queues out of the trigger path. Measure request-to-speaker-start latency on
+  the device instead of describing the interface as fast.
 
 - **Pending hands-on checks (autonomous run, Sep 21)** — day 09 speaker
   ear check; day 11 cue discrimination in-pocket; day 12 pusher feel;
