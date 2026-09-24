@@ -1,6 +1,12 @@
 ---
 title: Walkie-Talkie, Worldwide
 ---
+## The prompt-first pass
+
+The original build below records how this idea first worked.
+The durable lesson now targets the M5Stack Stopwatch and lives in the prompt, behavior contract, generalized tests, and hand-review checklist.
+Generated firmware is evidence for those sources, not the source itself.
+
 
 The pitch for this pair of lessons was made a month ago: build the walkie-talkie twice, changing only the transport, and let the diff teach.
 The diff came in smaller than promised.

@@ -1,4 +1,0 @@
-dependencies:
-  waveshare/esp32_s3_touch_amoled_1_8: "^2.0.3"
-  espressif/esp_io_expander_tca9554: "*"
-  espressif/esp_websocket_client: "^1.2.3"

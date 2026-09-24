@@ -1,6 +1,12 @@
 ---
 title: Package Tracker
 ---
+## The prompt-first pass
+
+The original build below records how this idea first worked.
+The durable lesson now targets the M5Stack Stopwatch and lives in the prompt, behavior contract, generalized tests, and hand-review checklist.
+Generated firmware is evidence for those sources, not the source itself.
+
 
 The plan flirted with doing this without an account — and the research verdict was clean: there is no keyless package tracking.
 Every carrier gates its API behind registration; every aggregator wants a token; scraping tracking pages means fighting bot walls that exist precisely to stop you.

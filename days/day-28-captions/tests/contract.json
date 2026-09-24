@@ -1,0 +1,161 @@
+{
+  "schema": 1,
+  "lesson": "day-28-captions",
+  "title": "Real-Time Captions",
+  "hardware": {
+    "board": "m5stack-stopwatch",
+    "width": 468,
+    "height": 466,
+    "offset_x": 6,
+    "offset_y": 0,
+    "rotation": 0,
+    "touch_map": "espt-touch/record"
+  },
+  "controls": {
+    "profile": "c25k",
+    "left_button": "BtnA",
+    "right_button": "BtnB",
+    "left": "previous_or_decrease",
+    "right": "next_or_increase",
+    "enter": "short_both",
+    "back": "hold_both_600ms"
+  },
+  "state": {
+    "status": {
+      "type": "enum",
+      "default": "connecting",
+      "values": [
+        "connecting",
+        "listening",
+        "paused",
+        "error"
+      ]
+    },
+    "size": {
+      "type": "enum",
+      "default": "medium",
+      "values": [
+        "small",
+        "medium",
+        "large"
+      ]
+    },
+    "finals": {
+      "type": "int",
+      "default": 0,
+      "min": 0,
+      "max": 6
+    },
+    "interim": {
+      "type": "string",
+      "default": "",
+      "max_length": 96
+    },
+    "confirmed": {
+      "type": "string",
+      "default": "",
+      "max_length": 192
+    }
+  },
+  "scenarios": [
+    {
+      "name": "primary flow",
+      "steps": [
+        {
+          "action": {
+            "type": "connected"
+          },
+          "expect": {
+            "status": "listening"
+          }
+        },
+        {
+          "action": {
+            "type": "interim",
+            "text": "hello wor"
+          },
+          "expect": {
+            "interim": "hello wor"
+          }
+        },
+        {
+          "action": {
+            "type": "final",
+            "text": "Hello world."
+          },
+          "expect": {
+            "interim": "",
+            "confirmed": "Hello world.",
+            "finals": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "pause",
+      "steps": [
+        {
+          "action": "enter",
+          "expect": {
+            "status": "paused"
+          }
+        },
+        {
+          "action": "enter",
+          "expect": {
+            "status": "listening"
+          }
+        }
+      ],
+      "given": {
+        "status": "listening"
+      }
+    },
+    {
+      "name": "text size",
+      "steps": [
+        {
+          "action": "right",
+          "expect": {
+            "size": "large"
+          }
+        },
+        {
+          "action": "right",
+          "expect": {
+            "size": "small"
+          }
+        }
+      ]
+    }
+  ],
+  "layout": {
+    "safe_radius": 226,
+    "focus_inset": 3,
+    "controls": [
+      {
+        "id": "primary",
+        "bounds": [
+          104,
+          110,
+          260,
+          48
+        ]
+      }
+    ]
+  },
+  "visual": {
+    "kind": "card",
+    "eyebrow": "LIVE CAPTIONS",
+    "title": "LISTENING",
+    "metric": "\u201c",
+    "lines": [
+      "The device writes",
+      "while you speak.",
+      "interim text\u2026"
+    ],
+    "accent": "#00d9ff",
+    "scenario": "primary flow",
+    "evidence": "reference"
+  }
+}

@@ -1,104 +1,98 @@
 ---
-board: waveshare-amoled-18-v2
+board: m5stack-stopwatch
 day: 28
 title: Real-Time Captions
-toolchain: ESP-IDF v5.5 + Waveshare BSP (LVGL)
-firmware: /firmware/day-28-captions.bin
-summary: "The mic streams to Deepgram and words appear while you're still saying them — finals in white, hypotheses in gray."
-verification: "Boot, portal, and pipeline states verified; live transcription pending a Deepgram key"
+toolchain: Arduino ESP32 3.3.10 + M5Unified 0.2.19 + M5GFX 0.2.26 + LVGL 9.3.0
+summary: "Live microphone transcription with visibly different interim and finalized text."
+verification: "Prompt contract and reference frame verified; generated hardware candidate awaits hand review"
 ---
 
-## The result
+## The assignment
 
-Speak near the board and words appear while you're still saying them.
-The mic streams raw 16 kHz audio to [Deepgram](https://deepgram.com)'s live WebSocket; results come back in two flavors and the screen honors the difference — **finalized lines in white**, and the current **interim hypothesis in gray**, rewriting itself as context arrives.
-Watching the gray line change its mind is the whole show.
-Each day is a standalone firmware image; you can start here without flashing earlier days.
+Stream microphone audio to a live transcription service and make uncertainty visible on the round screen.
 
-## What you need
+The durable source is this prompt, [SPEC.md](https://github.com/chantastic/esptember/blob/main/days/day-28-captions/SPEC.md), the machine-readable contract, and its layered acceptance criteria.
+Generated firmware is a disposable candidate.
 
-- **Board:** Waveshare ESP32-S3-Touch-AMOLED-1.8 **V2** (onboard mic).
-- **Connection:** a USB data cable; a phone for the Wi-Fi portal.
-- **An API key:** a free [Deepgram](https://console.deepgram.com) account — the signup credit covers months of captioning.
-- **For the download:** [uv](https://docs.astral.sh/uv/getting-started/installation/) supplies the `uvx` command below.
-- **For source builds:** [ESP-IDF v5.5](https://docs.espressif.com/projects/esp-idf/en/stable/esp32s3/get-started/) with its environment activated.
+## Reference frame
 
-The display is 368 × 448 pixels.
-Flashing replaces the firmware currently on the board.
+![Round-screen acceptance reference for Real-Time Captions](https://esptember.com/images/day-28-captions/reference.png)
 
-## Run it
+This is a deterministic screenshot of the visual acceptance model.
+It defines the intended hierarchy and safe-area use; only a later framebuffer capture from the attached Stopwatch can count as device rendering evidence.
 
-Download [day-28-captions.bin](https://esptember.com/firmware/day-28-captions.bin) and flash it at `0x0`:
+## The build prompt
 
-```sh
-uvx esptool --chip esp32s3 --port PORT \
-  write-flash 0x0 day-28-captions.bin
+```text
+Build ESPtember Day 28: Real-Time Captions for the M5Stack Stopwatch Dev Kit (C152).
+
+Read these before writing code:
+- .agents/skills/build-stopwatch-lessons/SKILL.md
+- .agents/skills/prompt-first-embedded-lessons/SKILL.md
+- days/day-07-touch-calibration/SPEC.md
+- days/day-28-captions/SPEC.md
+- days/day-28-captions/tests/contract.json
+
+Treat the prompt, spec, tests, and acceptance criteria as source.
+Put deterministic behavior in a portable core and keep Arduino, LVGL, M5Unified, storage, network, audio, and sensor adapters outside it.
+Run scripts/prompt-contract/validate_day.sh days/day-28-captions before compiling a device candidate.
+Do not edit the contract or tests to make a candidate pass.
+
+Hardware and shared platform
+
+- Target board_M5StopWatch on ESP32-S3 with OPI PSRAM.
+- Hold the device with the lanyard loop at the bottom: BtnA is physical left and BtnB is physical right.
+- Immediately after M5.begin(), set panel width 468, height 466, offset_x 6, offset_y 0, then rotation 0.
+- Never draw rows 466 or 467. Keep focus decoration inset and every interactive bound inside the round safe area.
+- Load Preferences namespace espt-touch, blob key record, after display setup and before touch input.
+- Accept and validate Day 07 version 1 and version 2 records. Read raw touch, apply the complete shared warp, clamp once, then feed the mapped point to the application.
+- Provide the shared runtime calibration entry path. App-only installation must preserve the record.
+- Allocate retained frames and large working buffers in PSRAM; fail visibly and over serial when required hardware or memory is unavailable.
+
+Controls
+
+Use the default grammar: BtnA/left is Previous or Decrease; BtnB/right is Next or Increase; short both is Enter; hold both for 600 ms is Back. Preserve the 80 ms join and overlap rules and consume chord clicks.
+Touch must dispatch the same semantic actions as physical controls.
+
+Lesson behavior
+
+- Provision Wi-Fi and the transcription key at runtime; redact the key everywhere.
+- Stream 16 kHz mono linear PCM in bounded chunks and keep audio capture independent from network writes.
+- Replace the interim line in place; append finalized lines exactly once and retain the newest six.
+- Enter pauses/resumes capture; Back clears transcript only after confirmation; left/right change text size.
+- Handle reconnect, keepalive, malformed JSON, empty alternatives, and service errors without losing finalized text.
+
+Diagnostics and acceptance
+
+- Prefix serial protocol lines with D28_ and implement status, reset, action, capture, and touchlog commands.
+- Report hardware identity, corrected geometry, touch-map version and generation, current portable state, memory headroom, and last named error.
+- Injected actions must use the same reducer, hit testing, callbacks, and control recognizer as physical input.
+- Retain the exact RGB565 pixels sent to M5GFX and stream captures in bounded chunks without blocking the watchdog.
+- Run every scenario in tests/contract.json, generated deterministic sequences, the deliberate mutation, and the lesson-specific checks in SPEC.md.
+- Complete 20 largest-state round trips without reset or growing heap/PSRAM use.
+- Confirm the active touch-map version and generation remain unchanged.
+- Physically review touch alignment, BtnA/BtnB direction, chord behavior, cues, clipping, lower-edge use, and the absence of a black bar.
+
+Record host, compile, injected-device, and physical evidence separately.
+Never describe reference rendering or injected input as physical proof.
 ```
 
-Wi-Fi via day 22's portal, then the key over serial:
+## Required behavior
 
-```
-key YOUR_DEEPGRAM_KEY
-```
+- Provision Wi-Fi and the transcription key at runtime; redact the key everywhere.
+- Stream 16 kHz mono linear PCM in bounded chunks and keep audio capture independent from network writes.
+- Replace the interim line in place; append finalized lines exactly once and retain the newest six.
+- Enter pauses/resumes capture; Back clears transcript only after confirmation; left/right change text size.
+- Handle reconnect, keepalive, malformed JSON, empty alternatives, and service errors without losing finalized text.
 
-The board reboots, connects, and starts listening.
+## Recorded evidence
 
-## How it works
+The shared contract runner validates Stopwatch geometry, touch-map ownership, control metadata, state types and ranges, deterministic scenarios, round-face control bounds, and 10,000 generated actions against three disposable reducer shapes.
+A deliberately mutated reducer must fail.
 
-The whole pipeline is three reused parts and one new endpoint.
-Day 15's mic capture reads 200 ms chunks; day 25's WebSocket discipline carries them; Deepgram's live endpoint takes raw PCM as binary messages, no framing, no base64:
-
-```c
-#define DG_URI                                                              \
-    "wss://api.deepgram.com/v1/listen?encoding=linear16&sample_rate=16000&" \
-    "channels=1&interim_results=true&smart_format=true"
-```
-
-The mic paces the stream, exactly as it paced day 24's walkie-talkie: each blocking read fills a chunk, each chunk sends whole.
-No timers, no buffering strategy — the ADC is the metronome.
-
-Results arrive as JSON with an `is_final` flag, and the two-tier display *is* the lesson about streaming STT: the service commits to words only after enough context arrives, so a live UI must render belief and fact differently.
-Interim text repaints a gray line; finals push onto a scrolling white transcript:
-
-```c
-        if (cJSON_IsTrue(is_final)) {
-            push_final(transcript->valuestring);
-            interim[0] = 0;
-```
-
-The key follows the house rule — serial once, NVS forever, never in the repo or the binary.
-
-## Check the result
-
-- Without a key, the footer names the serial command; with one, it walks `connecting...` → `listening`.
-- Speak: gray words appear within a beat, occasionally revising themselves mid-sentence.
-- Pause: the gray line turns white and joins the transcript — `smart_format` adds punctuation and capitalization.
-- Six finalized lines scroll; `D27_FINAL` logs each to serial.
+Historical implementation evidence from before the prompt-first Stopwatch migration follows.
 
 **Recorded evidence · September 22, 2026:** Boot, the portal handoff, the key gate, and the capture→WebSocket→parse pipeline states were verified over serial. Live transcription awaits a Deepgram key on the bench, noted in NOTES.md.
 
-## Used resources
-
-- [Deepgram live streaming API](https://developers.deepgram.com/docs/getting-started-with-live-streaming-audio) — raw linear16 over WebSocket, `interim_results`, `smart_format`.
-- Days 14, 21, and 24: the mic path, the portal, and the WebSocket client, composed.
-
-## Build and change it
-
-Clone the repository once:
-
-```sh
-git clone https://github.com/chantastic/esptember.git
-cd esptember
-```
-
-With the ESP-IDF environment activated, run from the repository root:
-
-```sh
-cd days/day-28-captions/firmware
-idf.py build
-idf.py -p PORT flash monitor
-```
-
-To create the single downloadable image, run `idf.py merge-bin` in the same firmware directory.
-Keep `pmu_init()` and `panel_reset_release()` before display startup when changing the UI.
-The next lesson points this same pipeline at a different job: push-to-talk voice memos that file themselves.
+The reference screenshot is acceptance-model evidence.
+The next hardware pass must replace or supplement it with a framebuffer capture and a hand-review record.

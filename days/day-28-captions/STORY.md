@@ -1,6 +1,12 @@
 ---
 title: Real-Time Captions
 ---
+## The prompt-first pass
+
+The original build below records how this idea first worked.
+The durable lesson now targets the M5Stack Stopwatch and lives in the prompt, behavior contract, generalized tests, and hand-review checklist.
+Generated firmware is evidence for those sources, not the source itself.
+
 
 Somewhere in this workshop's history there's an earlier captions project, and this lesson was supposed to begin by excavating it.
 The excavation never happened — and by the time the firmware was assembled it was clear why it didn't need to: after twenty-six days, live captions is not a project, it's an *afternoon of composition*.

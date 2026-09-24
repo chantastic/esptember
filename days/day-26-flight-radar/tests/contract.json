@@ -1,0 +1,159 @@
+{
+  "schema": 1,
+  "lesson": "day-26-flight-radar",
+  "title": "Flight Radar",
+  "hardware": {
+    "board": "m5stack-stopwatch",
+    "width": 468,
+    "height": 466,
+    "offset_x": 6,
+    "offset_y": 0,
+    "rotation": 0,
+    "touch_map": "espt-touch/record"
+  },
+  "controls": {
+    "profile": "c25k",
+    "left_button": "BtnA",
+    "right_button": "BtnB",
+    "left": "previous_or_decrease",
+    "right": "next_or_increase",
+    "enter": "short_both",
+    "back": "hold_both_600ms"
+  },
+  "state": {
+    "screen": {
+      "type": "enum",
+      "default": "scope",
+      "values": [
+        "scope",
+        "detail",
+        "error"
+      ]
+    },
+    "targets": {
+      "type": "int",
+      "default": 0,
+      "min": 0,
+      "max": 32
+    },
+    "selected": {
+      "type": "int",
+      "default": 0,
+      "min": 0,
+      "max": 31
+    },
+    "age_s": {
+      "type": "int",
+      "default": 0,
+      "min": 0,
+      "max": 3600
+    },
+    "stale": {
+      "type": "bool",
+      "default": false
+    }
+  },
+  "scenarios": [
+    {
+      "name": "primary flow",
+      "steps": [
+        {
+          "action": {
+            "type": "aircraft",
+            "count": 12
+          },
+          "expect": {
+            "targets": 12,
+            "age_s": 0
+          }
+        },
+        {
+          "action": "right",
+          "expect": {
+            "selected": 1
+          }
+        },
+        {
+          "action": "enter",
+          "expect": {
+            "screen": "detail"
+          }
+        },
+        {
+          "action": "back",
+          "expect": {
+            "screen": "scope"
+          }
+        }
+      ]
+    },
+    {
+      "name": "selection clamp",
+      "steps": [
+        {
+          "action": "right",
+          "expect": {
+            "selected": 2
+          }
+        }
+      ],
+      "given": {
+        "targets": 3,
+        "selected": 1
+      }
+    },
+    {
+      "name": "stale frame",
+      "steps": [
+        {
+          "action": {
+            "type": "refresh_failed"
+          },
+          "expect": {
+            "screen": "error",
+            "stale": true
+          }
+        },
+        {
+          "action": "back",
+          "expect": {
+            "screen": "scope",
+            "stale": true
+          }
+        }
+      ],
+      "given": {
+        "targets": 8,
+        "age_s": 9
+      }
+    }
+  ],
+  "layout": {
+    "safe_radius": 226,
+    "focus_inset": 3,
+    "controls": [
+      {
+        "id": "primary",
+        "bounds": [
+          104,
+          110,
+          260,
+          48
+        ]
+      }
+    ]
+  },
+  "visual": {
+    "kind": "radial",
+    "eyebrow": "RADAR \u00b7 25 NM",
+    "title": "12 AIRCRAFT",
+    "metric": "DAL42",
+    "lines": [
+      "FL 118",
+      "7.2 NM \u00b7 042\u00b0"
+    ],
+    "accent": "#48ef8b",
+    "scenario": "primary flow",
+    "evidence": "reference"
+  }
+}

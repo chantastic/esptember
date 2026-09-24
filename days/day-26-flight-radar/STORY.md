@@ -1,6 +1,12 @@
 ---
 title: Flight Radar
 ---
+## The prompt-first pass
+
+The original build below records how this idea first worked.
+The durable lesson now targets the M5Stack Stopwatch and lives in the prompt, behavior contract, generalized tests, and hand-review checklist.
+Generated firmware is evidence for those sources, not the source itself.
+
 
 The best free API on the internet is powered by people's roofs.
 

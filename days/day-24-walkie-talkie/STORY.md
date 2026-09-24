@@ -1,6 +1,12 @@
 ---
 title: Walkie-Talkie
 ---
+## The prompt-first pass
+
+The original build below records how this idea first worked.
+The durable lesson now targets the M5Stack Stopwatch and lives in the prompt, behavior contract, generalized tests, and hand-review checklist.
+Generated firmware is evidence for those sources, not the source itself.
+
 
 Day 21 sent 24 bytes and called it a social network.
 Day 24 sends sixteen thousand bytes a second and calls it a phone.

@@ -1,0 +1,175 @@
+{
+  "schema": 1,
+  "lesson": "day-27-package-tracker",
+  "title": "Package Tracker",
+  "hardware": {
+    "board": "m5stack-stopwatch",
+    "width": 468,
+    "height": 466,
+    "offset_x": 6,
+    "offset_y": 0,
+    "rotation": 0,
+    "touch_map": "espt-touch/record"
+  },
+  "controls": {
+    "profile": "c25k",
+    "left_button": "BtnA",
+    "right_button": "BtnB",
+    "left": "previous_or_decrease",
+    "right": "next_or_increase",
+    "enter": "short_both",
+    "back": "hold_both_600ms"
+  },
+  "state": {
+    "screen": {
+      "type": "enum",
+      "default": "list",
+      "values": [
+        "list",
+        "detail",
+        "setup",
+        "error"
+      ]
+    },
+    "packages": {
+      "type": "int",
+      "default": 0,
+      "min": 0,
+      "max": 6
+    },
+    "selected": {
+      "type": "int",
+      "default": 0,
+      "min": 0,
+      "max": 5
+    },
+    "status": {
+      "type": "enum",
+      "default": "none",
+      "values": [
+        "none",
+        "pre_transit",
+        "in_transit",
+        "out_for_delivery",
+        "delivered",
+        "exception"
+      ]
+    },
+    "stale": {
+      "type": "bool",
+      "default": false
+    }
+  },
+  "scenarios": [
+    {
+      "name": "primary flow",
+      "steps": [
+        {
+          "action": {
+            "type": "packages",
+            "count": 3
+          },
+          "expect": {
+            "packages": 3,
+            "status": "in_transit"
+          }
+        },
+        {
+          "action": "right",
+          "expect": {
+            "selected": 1
+          }
+        },
+        {
+          "action": "enter",
+          "expect": {
+            "screen": "detail"
+          }
+        },
+        {
+          "action": "back",
+          "expect": {
+            "screen": "list"
+          }
+        }
+      ]
+    },
+    {
+      "name": "status mapping",
+      "steps": [
+        {
+          "action": {
+            "type": "status",
+            "value": "out_for_delivery"
+          },
+          "expect": {
+            "status": "out_for_delivery"
+          }
+        },
+        {
+          "action": {
+            "type": "status",
+            "value": "delivered"
+          },
+          "expect": {
+            "status": "delivered"
+          }
+        }
+      ]
+    },
+    {
+      "name": "cached failure",
+      "steps": [
+        {
+          "action": {
+            "type": "refresh_failed"
+          },
+          "expect": {
+            "screen": "error",
+            "stale": true
+          }
+        },
+        {
+          "action": "back",
+          "expect": {
+            "screen": "list",
+            "stale": true
+          }
+        }
+      ],
+      "given": {
+        "packages": 2,
+        "status": "in_transit"
+      }
+    }
+  ],
+  "layout": {
+    "safe_radius": 226,
+    "focus_inset": 3,
+    "controls": [
+      {
+        "id": "primary",
+        "bounds": [
+          104,
+          110,
+          260,
+          48
+        ]
+      }
+    ]
+  },
+  "visual": {
+    "kind": "list",
+    "eyebrow": "PACKAGES \u00b7 3",
+    "title": "IN TRANSIT",
+    "metric": "",
+    "lines": [
+      "Camera \u00b7 arriving Tue",
+      "Shoes \u00b7 out for delivery",
+      "Book \u00b7 delivered"
+    ],
+    "accent": "#ff5b04",
+    "scenario": "primary flow",
+    "evidence": "reference"
+  }
+}

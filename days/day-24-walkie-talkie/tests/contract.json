@@ -1,0 +1,159 @@
+{
+  "schema": 1,
+  "lesson": "day-24-walkie-talkie",
+  "title": "Walkie-Talkie",
+  "hardware": {
+    "board": "m5stack-stopwatch",
+    "width": 468,
+    "height": 466,
+    "offset_x": 6,
+    "offset_y": 0,
+    "rotation": 0,
+    "touch_map": "espt-touch/record"
+  },
+  "controls": {
+    "profile": "localized",
+    "left_button": "BtnA",
+    "right_button": "BtnB",
+    "left": "ptt_hold",
+    "right": "next_channel",
+    "enter": "channel_select",
+    "back": "return_idle",
+    "rationale": "Push-to-talk must track a held physical pusher directly."
+  },
+  "state": {
+    "mode": {
+      "type": "enum",
+      "default": "idle",
+      "values": [
+        "idle",
+        "transmitting",
+        "receiving"
+      ]
+    },
+    "channel": {
+      "type": "int",
+      "default": 1,
+      "min": 1,
+      "max": 22
+    },
+    "sequence": {
+      "type": "int",
+      "default": 0,
+      "min": 0,
+      "max": 65535
+    },
+    "queued": {
+      "type": "int",
+      "default": 0,
+      "min": 0,
+      "max": 32
+    },
+    "lost": {
+      "type": "int",
+      "default": 0,
+      "min": 0,
+      "max": 9999
+    }
+  },
+  "scenarios": [
+    {
+      "name": "primary flow",
+      "steps": [
+        {
+          "action": {
+            "type": "ptt",
+            "down": true
+          },
+          "expect": {
+            "mode": "transmitting"
+          }
+        },
+        {
+          "action": {
+            "type": "frame_sent"
+          },
+          "expect": {
+            "sequence": 1
+          }
+        },
+        {
+          "action": {
+            "type": "ptt",
+            "down": false
+          },
+          "expect": {
+            "mode": "idle"
+          }
+        }
+      ]
+    },
+    {
+      "name": "channel wrap",
+      "steps": [
+        {
+          "action": "right",
+          "expect": {
+            "channel": 1
+          }
+        }
+      ],
+      "given": {
+        "channel": 22
+      }
+    },
+    {
+      "name": "receive jitter",
+      "steps": [
+        {
+          "action": {
+            "type": "frame_received",
+            "sequence": 10
+          },
+          "expect": {
+            "mode": "receiving",
+            "queued": 1
+          }
+        },
+        {
+          "action": {
+            "type": "frame_received",
+            "sequence": 12
+          },
+          "expect": {
+            "queued": 2,
+            "lost": 1
+          }
+        }
+      ]
+    }
+  ],
+  "layout": {
+    "safe_radius": 226,
+    "focus_inset": 3,
+    "controls": [
+      {
+        "id": "primary",
+        "bounds": [
+          104,
+          110,
+          260,
+          48
+        ]
+      }
+    ]
+  },
+  "visual": {
+    "kind": "radial",
+    "eyebrow": "LOCAL WALKIE \u00b7 CH 7",
+    "title": "ON AIR",
+    "metric": "03.2s",
+    "lines": [
+      "peer linked",
+      "loss 0.0%"
+    ],
+    "accent": "#ff3b30",
+    "scenario": "primary flow",
+    "evidence": "reference"
+  }
+}

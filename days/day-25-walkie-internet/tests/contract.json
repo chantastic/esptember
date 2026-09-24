@@ -1,0 +1,172 @@
+{
+  "schema": 1,
+  "lesson": "day-25-walkie-internet",
+  "title": "Walkie-Talkie, Worldwide",
+  "hardware": {
+    "board": "m5stack-stopwatch",
+    "width": 468,
+    "height": 466,
+    "offset_x": 6,
+    "offset_y": 0,
+    "rotation": 0,
+    "touch_map": "espt-touch/record"
+  },
+  "controls": {
+    "profile": "localized",
+    "left_button": "BtnA",
+    "right_button": "BtnB",
+    "left": "ptt_hold",
+    "right": "next_channel",
+    "enter": "channel_select",
+    "back": "return_idle",
+    "rationale": "Push-to-talk and channel selection stay identical when transport changes."
+  },
+  "state": {
+    "link": {
+      "type": "enum",
+      "default": "offline",
+      "values": [
+        "offline",
+        "connecting",
+        "linked",
+        "error"
+      ]
+    },
+    "mode": {
+      "type": "enum",
+      "default": "idle",
+      "values": [
+        "idle",
+        "transmitting",
+        "receiving"
+      ]
+    },
+    "channel": {
+      "type": "int",
+      "default": 1,
+      "min": 1,
+      "max": 22
+    },
+    "reconnects": {
+      "type": "int",
+      "default": 0,
+      "min": 0,
+      "max": 99
+    },
+    "queued": {
+      "type": "int",
+      "default": 0,
+      "min": 0,
+      "max": 32
+    }
+  },
+  "scenarios": [
+    {
+      "name": "primary flow",
+      "steps": [
+        {
+          "action": {
+            "type": "connect"
+          },
+          "expect": {
+            "link": "connecting"
+          }
+        },
+        {
+          "action": {
+            "type": "linked"
+          },
+          "expect": {
+            "link": "linked"
+          }
+        },
+        {
+          "action": {
+            "type": "ptt",
+            "down": true
+          },
+          "expect": {
+            "mode": "transmitting"
+          }
+        },
+        {
+          "action": {
+            "type": "ptt",
+            "down": false
+          },
+          "expect": {
+            "mode": "idle"
+          }
+        }
+      ]
+    },
+    {
+      "name": "channel rejoin",
+      "steps": [
+        {
+          "action": "right",
+          "expect": {
+            "channel": 8,
+            "link": "connecting",
+            "queued": 0
+          }
+        }
+      ],
+      "given": {
+        "link": "linked",
+        "channel": 7,
+        "queued": 4
+      }
+    },
+    {
+      "name": "bounded reconnect",
+      "steps": [
+        {
+          "action": {
+            "type": "socket_error"
+          },
+          "expect": {
+            "link": "error",
+            "reconnects": 1
+          }
+        },
+        {
+          "action": {
+            "type": "retry"
+          },
+          "expect": {
+            "link": "connecting"
+          }
+        }
+      ]
+    }
+  ],
+  "layout": {
+    "safe_radius": 226,
+    "focus_inset": 3,
+    "controls": [
+      {
+        "id": "primary",
+        "bounds": [
+          104,
+          110,
+          260,
+          48
+        ]
+      }
+    ]
+  },
+  "visual": {
+    "kind": "radial",
+    "eyebrow": "WORLD WALKIE \u00b7 CH 7",
+    "title": "RELAY LINKED",
+    "metric": "READY",
+    "lines": [
+      "2 listeners",
+      "48 ms jitter"
+    ],
+    "accent": "#48ef8b",
+    "scenario": "primary flow",
+    "evidence": "reference"
+  }
+}
