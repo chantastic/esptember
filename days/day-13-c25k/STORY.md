@@ -1,6 +1,12 @@
 ---
 title: Couch to 5K
 ---
+## The prompt-first pass
+
+The original build below records how this idea first worked.
+The durable lesson now targets the M5Stack Stopwatch and lives in the prompt, behavior contract, generalized tests, and hand-review checklist.
+Generated firmware is evidence for those sources, not the source itself.
+
 
 This day took a detour from putting pictures on a screen.
 The assignment was a Couch-to-5K trainer for the M5Stack StopWatch: 27 workouts, two buttons, and a countdown you could read while moving.

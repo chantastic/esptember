@@ -1,4 +1,4 @@
-#include "../firmware/c25k/buttons.h"
+#include "buttons.h"
 
 #include <cstdio>
 #include <cstdlib>

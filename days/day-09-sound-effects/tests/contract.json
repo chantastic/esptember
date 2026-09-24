@@ -1,0 +1,190 @@
+{
+  "schema": 1,
+  "lesson": "day-09-sound-effects",
+  "title": "Sound Effects Board",
+  "hardware": {
+    "board": "m5stack-stopwatch",
+    "width": 468,
+    "height": 466,
+    "offset_x": 6,
+    "offset_y": 0,
+    "rotation": 0,
+    "touch_map": "espt-touch/record"
+  },
+  "controls": {
+    "profile": "c25k",
+    "left_button": "BtnA",
+    "right_button": "BtnB",
+    "left": "previous_or_decrease",
+    "right": "next_or_increase",
+    "enter": "short_both",
+    "back": "hold_both_600ms"
+  },
+  "state": {
+    "screen": {
+      "type": "enum",
+      "default": "page1",
+      "values": [
+        "page1",
+        "page2"
+      ]
+    },
+    "focus": {
+      "type": "enum",
+      "default": "pad1",
+      "values": [
+        "pad1",
+        "pad2",
+        "pad3",
+        "page"
+      ]
+    },
+    "active": {
+      "type": "enum",
+      "default": "none",
+      "values": [
+        "none",
+        "laser",
+        "coin",
+        "jump",
+        "explosion",
+        "powerup",
+        "blip"
+      ]
+    },
+    "queued": {
+      "type": "enum",
+      "default": "none",
+      "values": [
+        "none",
+        "laser",
+        "coin",
+        "jump",
+        "explosion",
+        "powerup",
+        "blip"
+      ]
+    },
+    "plays": {
+      "type": "int",
+      "default": 0,
+      "min": 0,
+      "max": 9999
+    }
+  },
+  "scenarios": [
+    {
+      "name": "primary flow",
+      "steps": [
+        {
+          "action": "enter",
+          "expect": {
+            "active": "laser",
+            "plays": 1
+          }
+        },
+        {
+          "action": "audio_done",
+          "expect": {
+            "active": "none"
+          }
+        }
+      ]
+    },
+    {
+      "name": "queue latest",
+      "steps": [
+        {
+          "action": "enter",
+          "expect": {
+            "queued": "laser",
+            "plays": 1
+          }
+        }
+      ],
+      "given": {
+        "active": "coin"
+      }
+    },
+    {
+      "name": "page navigation",
+      "steps": [
+        {
+          "action": "left",
+          "expect": {
+            "focus": "page"
+          }
+        },
+        {
+          "action": "enter",
+          "expect": {
+            "screen": "page2",
+            "focus": "pad1"
+          }
+        },
+        {
+          "action": "back",
+          "expect": {
+            "screen": "page1",
+            "focus": "pad1"
+          }
+        }
+      ]
+    }
+  ],
+  "layout": {
+    "safe_radius": 226,
+    "focus_inset": 3,
+    "controls": [
+      {
+        "id": "pad1",
+        "bounds": [
+          104,
+          110,
+          260,
+          48
+        ]
+      },
+      {
+        "id": "pad2",
+        "bounds": [
+          104,
+          178,
+          260,
+          48
+        ]
+      },
+      {
+        "id": "pad3",
+        "bounds": [
+          104,
+          246,
+          260,
+          48
+        ]
+      },
+      {
+        "id": "page",
+        "bounds": [
+          104,
+          330,
+          260,
+          48
+        ]
+      }
+    ]
+  },
+  "visual": {
+    "kind": "card",
+    "eyebrow": "SOUND BOARD",
+    "title": "Laser",
+    "metric": "PEW",
+    "lines": [
+      "Coin   Jump",
+      "Page 1 of 2"
+    ],
+    "accent": "#ff5b04",
+    "scenario": "primary flow",
+    "evidence": "reference"
+  }
+}

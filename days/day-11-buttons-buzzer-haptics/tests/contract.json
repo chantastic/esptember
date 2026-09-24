@@ -1,0 +1,158 @@
+{
+  "schema": 1,
+  "lesson": "day-11-buttons-buzzer-haptics",
+  "title": "Buttons, Buzzer, Haptics",
+  "hardware": {
+    "board": "m5stack-stopwatch",
+    "width": 468,
+    "height": 466,
+    "offset_x": 6,
+    "offset_y": 0,
+    "rotation": 0,
+    "touch_map": "espt-touch/record"
+  },
+  "controls": {
+    "profile": "c25k",
+    "left_button": "BtnA",
+    "right_button": "BtnB",
+    "left": "previous_or_decrease",
+    "right": "next_or_increase",
+    "enter": "short_both",
+    "back": "hold_both_600ms"
+  },
+  "state": {
+    "focus": {
+      "type": "enum",
+      "default": "sound",
+      "values": [
+        "sound",
+        "vibration"
+      ]
+    },
+    "sound": {
+      "type": "bool",
+      "default": true
+    },
+    "vibration": {
+      "type": "bool",
+      "default": true
+    },
+    "last": {
+      "type": "enum",
+      "default": "none",
+      "values": [
+        "none",
+        "previous",
+        "next",
+        "enter",
+        "back"
+      ]
+    },
+    "count": {
+      "type": "int",
+      "default": 0,
+      "min": 0,
+      "max": 9999
+    }
+  },
+  "scenarios": [
+    {
+      "name": "primary flow",
+      "steps": [
+        {
+          "action": "left",
+          "expect": {
+            "last": "previous",
+            "count": 1
+          }
+        },
+        {
+          "action": "right",
+          "expect": {
+            "last": "next",
+            "count": 2
+          }
+        },
+        {
+          "action": "enter",
+          "expect": {
+            "last": "enter",
+            "count": 3
+          }
+        },
+        {
+          "action": "back",
+          "expect": {
+            "last": "back",
+            "count": 4
+          }
+        }
+      ]
+    },
+    {
+      "name": "toggle sound",
+      "steps": [
+        {
+          "action": "enter",
+          "expect": {
+            "sound": false
+          }
+        }
+      ],
+      "given": {
+        "focus": "sound"
+      }
+    },
+    {
+      "name": "toggle vibration",
+      "steps": [
+        {
+          "action": "enter",
+          "expect": {
+            "vibration": false
+          }
+        }
+      ],
+      "given": {
+        "focus": "vibration"
+      }
+    }
+  ],
+  "layout": {
+    "safe_radius": 226,
+    "focus_inset": 3,
+    "controls": [
+      {
+        "id": "sound",
+        "bounds": [
+          104,
+          110,
+          260,
+          48
+        ]
+      },
+      {
+        "id": "vibration",
+        "bounds": [
+          104,
+          178,
+          260,
+          48
+        ]
+      }
+    ]
+  },
+  "visual": {
+    "kind": "card",
+    "eyebrow": "CONTROL GRAMMAR",
+    "title": "Both held",
+    "metric": "BACK",
+    "lines": [
+      "tone 330 Hz",
+      "vibration 240 ms"
+    ],
+    "accent": "#00d9ff",
+    "scenario": "primary flow",
+    "evidence": "reference"
+  }
+}

@@ -1,6 +1,12 @@
 ---
 title: Buttons, Buzzer, Haptics
 ---
+## The prompt-first pass
+
+The original build below records how this idea first worked.
+The durable lesson now targets the M5Stack Stopwatch and lives in the prompt, behavior contract, generalized tests, and hand-review checklist.
+Generated firmware is evidence for those sources, not the source itself.
+
 
 Nine days of screens.
 Today the screen is optional.

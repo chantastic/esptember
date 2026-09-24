@@ -3,6 +3,8 @@
 - For Day 07 and later M5Stack Stopwatch work, read and apply
   [.agents/skills/build-stopwatch-lessons/SKILL.md](.agents/skills/build-stopwatch-lessons/SKILL.md)
   before changing a lesson prompt, contract, tests, or disposable device build.
+- For prompt-first lesson conversions, also read and apply
+  [.agents/skills/prompt-first-embedded-lessons/SKILL.md](.agents/skills/prompt-first-embedded-lessons/SKILL.md).
 - Day 07 is Touch Calibration; LVGL and the existing lineup follow it. From
   Day 07 onward, target the M5Stack Stopwatch and work one lesson at a time.
 - The durable lesson source is a detailed human-readable build prompt, behavior

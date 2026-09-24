@@ -3,7 +3,7 @@
 #include <iostream>
 #include <vector>
 
-#include "../firmware/c25k/session.h"
+#include "session.h"
 
 using c25k::Session;
 using c25k::SessionEvent;

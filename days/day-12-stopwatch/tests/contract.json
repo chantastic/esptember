@@ -1,0 +1,148 @@
+{
+  "schema": 1,
+  "lesson": "day-12-stopwatch",
+  "title": "Basic-Ass Stopwatch",
+  "hardware": {
+    "board": "m5stack-stopwatch",
+    "width": 468,
+    "height": 466,
+    "offset_x": 6,
+    "offset_y": 0,
+    "rotation": 0,
+    "touch_map": "espt-touch/record"
+  },
+  "controls": {
+    "profile": "localized",
+    "left_button": "BtnA",
+    "right_button": "BtnB",
+    "left": "start_stop",
+    "right": "lap_click_reset_hold",
+    "enter": "unused",
+    "back": "unused",
+    "rationale": "Stopwatches have a stronger established convention than menu navigation."
+  },
+  "state": {
+    "mode": {
+      "type": "enum",
+      "default": "stopped",
+      "values": [
+        "stopped",
+        "running"
+      ]
+    },
+    "elapsed_cs": {
+      "type": "int",
+      "default": 0,
+      "min": 0,
+      "max": 35999999
+    },
+    "laps": {
+      "type": "int",
+      "default": 0,
+      "min": 0,
+      "max": 99
+    },
+    "last_lap_cs": {
+      "type": "int",
+      "default": 0,
+      "min": 0,
+      "max": 35999999
+    }
+  },
+  "scenarios": [
+    {
+      "name": "primary flow",
+      "steps": [
+        {
+          "action": "left",
+          "expect": {
+            "mode": "running"
+          }
+        },
+        {
+          "action": {
+            "type": "tick",
+            "centiseconds": 123
+          },
+          "expect": {
+            "elapsed_cs": 123
+          }
+        },
+        {
+          "action": "left",
+          "expect": {
+            "mode": "stopped"
+          }
+        }
+      ]
+    },
+    {
+      "name": "lap while running",
+      "steps": [
+        {
+          "action": "right",
+          "expect": {
+            "laps": 1,
+            "last_lap_cs": 450
+          }
+        }
+      ],
+      "given": {
+        "mode": "running",
+        "elapsed_cs": 450
+      }
+    },
+    {
+      "name": "guarded reset",
+      "steps": [
+        {
+          "action": "right",
+          "expect": {
+            "elapsed_cs": 450
+          }
+        },
+        {
+          "action": "right_hold",
+          "expect": {
+            "elapsed_cs": 0,
+            "laps": 0,
+            "last_lap_cs": 0
+          }
+        }
+      ],
+      "given": {
+        "elapsed_cs": 450,
+        "laps": 2,
+        "last_lap_cs": 300
+      }
+    }
+  ],
+  "layout": {
+    "safe_radius": 226,
+    "focus_inset": 3,
+    "controls": [
+      {
+        "id": "primary",
+        "bounds": [
+          104,
+          110,
+          260,
+          48
+        ]
+      }
+    ]
+  },
+  "visual": {
+    "kind": "card",
+    "eyebrow": "STOPWATCH",
+    "title": "RUNNING",
+    "metric": "03:42.18",
+    "lines": [
+      "LAP 3   01:02.44",
+      "LAP 2   01:01.07"
+    ],
+    "accent": "#48ef8b",
+    "scenario": "primary flow",
+    "evidence": "reference"
+  }
+}

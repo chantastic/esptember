@@ -2,118 +2,97 @@
 board: m5stack-stopwatch
 day: 10
 title: Level
-toolchain: Arduino CLI (esp32 core) + M5Unified
-firmware: /firmware/day-10-level.bin
-summary: "The round face becomes a bubble level: tilt readouts, a drifting bubble, and a haptic snap-to-green when it's true."
-verification: "IMU tilt tracking verified over serial; flat-surface check pending"
+toolchain: Arduino ESP32 3.3.10 + M5Unified 0.2.19 + M5GFX 0.2.26 + LVGL 9.3.0
+summary: "A round bubble level with zeroing, hysteresis, and a deterministic IMU filter."
+verification: "Prompt contract and reference frame verified; generated hardware candidate awaits hand review"
 ---
 
-## The result
+## The assignment
 
-The round face becomes a bubble level, in the spirit of the Apple Watch Ultra's: a bubble that drifts with tilt, live degree readouts for pitch and roll, and a snap-to-green moment — with a haptic tick — when the device lies flat within a degree.
-Set it on a shelf and the shelf gets judged.
-Each day is a standalone firmware image; you can start here without flashing earlier days.
+Turn the Stopwatch into a bubble level that remains readable and stable while the board moves.
 
-## What you need
+The durable source is this prompt, [SPEC.md](https://github.com/chantastic/esptember/blob/main/days/day-10-level/SPEC.md), the machine-readable contract, and its layered acceptance criteria.
+Generated firmware is a disposable candidate.
 
-- **Board:** M5Stack Stopwatch Dev Kit (ESP32-S3, C152): BMI270 six-axis IMU, vibration motor, buzzer, 1.75″ round AMOLED, battery.
-- **Connection:** a USB data cable and a computer with access to the serial port.
-- **For the download:** [uv](https://docs.astral.sh/uv/getting-started/installation/) supplies the `uvx` command below.
-- **For source builds:** [arduino-cli](https://arduino.github.io/arduino-cli/) with the esp32 core and the M5Unified library installed.
+## Reference frame
 
-The display is 466 × 466 pixels behind a circular aperture.
-Flashing replaces the firmware currently on the board.
+![Round-screen acceptance reference for Level](https://esptember.com/images/day-10-level/reference.png)
 
-## Run it
+This is a deterministic screenshot of the visual acceptance model.
+It defines the intended hierarchy and safe-area use; only a later framebuffer capture from the attached Stopwatch can count as device rendering evidence.
 
-Download [day-10-level.bin](https://esptember.com/firmware/day-10-level.bin) and open a terminal in the download directory.
-This is a merged image containing the bootloader, partition table, and application.
+## The build prompt
 
-Find your serial port:
+```text
+Build ESPtember Day 10: Level for the M5Stack Stopwatch Dev Kit (C152).
 
-```sh
-# macOS
-ls /dev/cu.usbmodem*
-# Linux
-ls /dev/ttyACM*
+Read these before writing code:
+- .agents/skills/build-stopwatch-lessons/SKILL.md
+- .agents/skills/prompt-first-embedded-lessons/SKILL.md
+- days/day-07-touch-calibration/SPEC.md
+- days/day-10-level/SPEC.md
+- days/day-10-level/tests/contract.json
+
+Treat the prompt, spec, tests, and acceptance criteria as source.
+Put deterministic behavior in a portable core and keep Arduino, LVGL, M5Unified, storage, network, audio, and sensor adapters outside it.
+Run scripts/prompt-contract/validate_day.sh days/day-10-level before compiling a device candidate.
+Do not edit the contract or tests to make a candidate pass.
+
+Hardware and shared platform
+
+- Target board_M5StopWatch on ESP32-S3 with OPI PSRAM.
+- Hold the device with the lanyard loop at the bottom: BtnA is physical left and BtnB is physical right.
+- Immediately after M5.begin(), set panel width 468, height 466, offset_x 6, offset_y 0, then rotation 0.
+- Never draw rows 466 or 467. Keep focus decoration inset and every interactive bound inside the round safe area.
+- Load Preferences namespace espt-touch, blob key record, after display setup and before touch input.
+- Accept and validate Day 07 version 1 and version 2 records. Read raw touch, apply the complete shared warp, clamp once, then feed the mapped point to the application.
+- Provide the shared runtime calibration entry path. App-only installation must preserve the record.
+- Allocate retained frames and large working buffers in PSRAM; fail visibly and over serial when required hardware or memory is unavailable.
+
+Controls
+
+Use the default grammar: BtnA/left is Previous or Decrease; BtnB/right is Next or Increase; short both is Enter; hold both for 600 ms is Back. Preserve the 80 ms join and overlap rules and consume chord clicks.
+Touch must dispatch the same semantic actions as physical controls.
+
+Lesson behavior
+
+- Filter BMI270 pitch and roll without adding visible lag; define axis signs with the lanyard at the bottom.
+- Show a bubble, signed pitch and roll, and a LEVEL state within one degree, with hysteresis before leaving it.
+- Focus Zero and Mode. Enter on Zero stores the current attitude; Back clears the stored zero.
+- Support bubble and numeric modes without changing the sensor pipeline.
+- A transition into LEVEL emits one short cue; remaining level does not retrigger it.
+
+Diagnostics and acceptance
+
+- Prefix serial protocol lines with D10_ and implement status, reset, action, capture, and touchlog commands.
+- Report hardware identity, corrected geometry, touch-map version and generation, current portable state, memory headroom, and last named error.
+- Injected actions must use the same reducer, hit testing, callbacks, and control recognizer as physical input.
+- Retain the exact RGB565 pixels sent to M5GFX and stream captures in bounded chunks without blocking the watchdog.
+- Run every scenario in tests/contract.json, generated deterministic sequences, the deliberate mutation, and the lesson-specific checks in SPEC.md.
+- Complete 20 largest-state round trips without reset or growing heap/PSRAM use.
+- Confirm the active touch-map version and generation remain unchanged.
+- Physically review touch alignment, BtnA/BtnB direction, chord behavior, cues, clipping, lower-edge use, and the absence of a black bar.
+
+Record host, compile, injected-device, and physical evidence separately.
+Never describe reference rendering or injected input as physical proof.
 ```
 
-On Windows, use the board's COM port from Device Manager.
-Replace `PORT` with your port, then flash the image at `0x0`:
+## Required behavior
 
-```sh
-uvx esptool --chip esp32s3 --port PORT \
-  write-flash 0x0 day-10-level.bin
-```
+- Filter BMI270 pitch and roll without adding visible lag; define axis signs with the lanyard at the bottom.
+- Show a bubble, signed pitch and roll, and a LEVEL state within one degree, with hysteresis before leaving it.
+- Focus Zero and Mode. Enter on Zero stores the current attitude; Back clears the stored zero.
+- Support bubble and numeric modes without changing the sensor pipeline.
+- A transition into LEVEL emits one short cue; remaining level does not retrigger it.
 
-Close any serial monitor using that port before flashing.
-When flashing completes, the board restarts into this lesson.
+## Recorded evidence
 
-## How it works
+The shared contract runner validates Stopwatch geometry, touch-map ownership, control metadata, state types and ranges, deterministic scenarios, round-face control bounds, and 10,000 generated actions against three disposable reducer shapes.
+A deliberately mutated reducer must fail.
 
-The accelerometer's stationary reading is the support force pointing opposite gravity — not gravity itself — and two `atan2`s turn its components into tilt angles:
-
-```c
-  const float p = atan2f(-ax, sqrtf(ay * ay + az * az)) * 180.0f / (float)M_PI;
-  const float r = atan2f(ay, az) * 180.0f / (float)M_PI;
-```
-
-Raw accelerometer data trembles, so a low-pass filter steadies the bubble without lag you can feel — one blend line at 15% per sample.
-
-The bubble floats *opposite* the tilt, like the air bubble in a vial: tip the right side down and the bubble escapes left.
-Thirty degrees of tilt puts it at the ring; past that it pins to the rim.
-
-The snap-to-level moment uses hysteresis — enter level inside 1.0°, leave outside 1.5° — so the edge never chatters:
-
-```c
-  const float worst = fmaxf(fabsf(pitchDeg), fabsf(rollDeg));
-  if (!isLevel && worst < LEVEL_TOLERANCE_DEG) {
-    isLevel = true;
-    M5.Speaker.tone(1046, 60, 0, true);
-    M5.Power.setVibration(160); // the tick you feel when it's true
-```
-
-Everything renders through a full-screen sprite in PSRAM at ~30 fps: each frame is composed off-screen and pushed whole, so the bubble glides instead of flickering — the first day on this board that animates continuously.
-
-## Check the result
-
-- Face-up on a table: readouts near zero, bubble near center.
-- Tilt any direction: the bubble drifts opposite, degree readouts track live, ring stays orange.
-- Within a degree of flat: the bubble locks to center, everything snaps green, the buzzer ticks and the motor taps once — **LEVEL**.
-- Small wobbles around flat don't flicker the state (hysteresis).
+Historical implementation evidence from before the prompt-first Stopwatch migration follows.
 
 **Recorded evidence · September 21, 2026:** IMU tilt tracking was verified over serial (`D09_STATUS` reporting) — pitch/roll followed physical motion of the board. The snap-to-green threshold against a known-flat reference surface awaits a hands-on check, noted in NOTES.md.
 
-## Used resources
-
-- Apple Watch Ultra's level watch face: the interaction model this borrows — bubble, degrees, snap-to-green.
-- [M5Unified](https://github.com/m5stack/M5Unified) IMU API (BMI270) and the support-force convention.
-- The [M5StopWatch factory demo](https://github.com/m5stack/M5StopWatch-UserDemo) IMU implementation, for axis orientation reference.
-
-## Build and change it
-
-Clone the repository once:
-
-```sh
-git clone https://github.com/chantastic/esptember.git
-cd esptember
-```
-
-Install the toolchain pieces (once):
-
-```sh
-arduino-cli core install esp32:esp32
-arduino-cli lib install M5Unified
-```
-
-Build and flash from the repository root:
-
-```sh
-cd days/day-10-level
-./scripts/build.sh
-./scripts/flash.sh PORT
-```
-
-The merged image lands in `.build/firmware/level.ino.merged.bin`.
-`LEVEL_TOLERANCE_DEG` sets how honest the green is; `RANGE_DEG` sets how twitchy the bubble feels.
-An edge-strip inclinometer mode when the device is held vertical is the natural extension.
+The reference screenshot is acceptance-model evidence.
+The next hardware pass must replace or supplement it with a framebuffer capture and a hand-review record.

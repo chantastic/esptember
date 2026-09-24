@@ -1,0 +1,4 @@
+interface:
+  display_name: "Prompt-first embedded lessons"
+  short_description: "Turn embedded examples into prompts, contracts, tests, and review evidence"
+  default_prompt: "Convert this embedded lesson to a prompt-first source with a detailed behavior spec, generalized portable contract, layered acceptance criteria, reference visuals, and a physical hand-review checklist."

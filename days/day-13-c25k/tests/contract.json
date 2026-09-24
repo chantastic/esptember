@@ -1,0 +1,169 @@
+{
+  "schema": 1,
+  "lesson": "day-13-c25k",
+  "title": "Couch to 5K",
+  "hardware": {
+    "board": "m5stack-stopwatch",
+    "width": 468,
+    "height": 466,
+    "offset_x": 6,
+    "offset_y": 0,
+    "rotation": 0,
+    "touch_map": "espt-touch/record"
+  },
+  "controls": {
+    "profile": "c25k",
+    "left_button": "BtnA",
+    "right_button": "BtnB",
+    "left": "previous_or_decrease",
+    "right": "next_or_increase",
+    "enter": "short_both",
+    "back": "hold_both_600ms"
+  },
+  "state": {
+    "screen": {
+      "type": "enum",
+      "default": "home",
+      "values": [
+        "home",
+        "running",
+        "paused",
+        "cancel",
+        "summary"
+      ]
+    },
+    "focus": {
+      "type": "enum",
+      "default": "workout",
+      "values": [
+        "workout",
+        "settings"
+      ]
+    },
+    "workout": {
+      "type": "int",
+      "default": 1,
+      "min": 1,
+      "max": 27
+    },
+    "segment": {
+      "type": "int",
+      "default": 0,
+      "min": 0,
+      "max": 40
+    },
+    "remaining_s": {
+      "type": "int",
+      "default": 0,
+      "min": 0,
+      "max": 3600
+    },
+    "completed": {
+      "type": "int",
+      "default": 0,
+      "min": 0,
+      "max": 27
+    }
+  },
+  "scenarios": [
+    {
+      "name": "primary flow",
+      "steps": [
+        {
+          "action": "enter",
+          "expect": {
+            "screen": "running",
+            "remaining_s": 300
+          }
+        },
+        {
+          "action": "enter",
+          "expect": {
+            "screen": "paused"
+          }
+        },
+        {
+          "action": "enter",
+          "expect": {
+            "screen": "running"
+          }
+        }
+      ]
+    },
+    {
+      "name": "browse without commit",
+      "steps": [
+        {
+          "action": "right",
+          "expect": {
+            "workout": 2
+          }
+        },
+        {
+          "action": "left",
+          "expect": {
+            "workout": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "cancel guard",
+      "steps": [
+        {
+          "action": "back",
+          "expect": {
+            "screen": "cancel"
+          }
+        },
+        {
+          "action": "back",
+          "expect": {
+            "screen": "running"
+          }
+        }
+      ],
+      "given": {
+        "screen": "running",
+        "remaining_s": 240
+      }
+    }
+  ],
+  "layout": {
+    "safe_radius": 226,
+    "focus_inset": 3,
+    "controls": [
+      {
+        "id": "workout",
+        "bounds": [
+          104,
+          110,
+          260,
+          48
+        ]
+      },
+      {
+        "id": "settings",
+        "bounds": [
+          104,
+          178,
+          260,
+          48
+        ]
+      }
+    ]
+  },
+  "visual": {
+    "kind": "radial",
+    "eyebrow": "W1 D1",
+    "title": "RUN",
+    "metric": "00:42",
+    "lines": [
+      "2 of 8",
+      "total 30:00"
+    ],
+    "accent": "#ff5b04",
+    "scenario": "primary flow",
+    "evidence": "reference"
+  }
+}

@@ -52,3 +52,17 @@ Run its portable suite against independent disposable candidates when the prompt
 When the user has authorized loading the attached device, use an app update that preserves NVS unless a fresh install is the explicit test. Emit concise serial evidence for hardware identity, 468 × 466 geometry, touch-map version and generation, screen transitions, stack headroom, input events, and final status.
 
 Exercise the largest-memory transition and the physical controls. Inspect every round-screen layout for clipped focus areas and bottom-edge artifacts. Record only the behavior actually observed.
+
+## Feed hand review back into durable sources
+
+Every prompt-first lesson includes a `HAND-REVIEW.md` checklist.
+Leave a generated candidate in a deterministic starting state and give the reviewer a short path through its important screens and physical behaviors.
+
+Classify each finding before changing anything:
+
+- keep activity-specific behavior in that day's `SPEC.md` and contract;
+- move repeated Stopwatch hardware, touch, layout, or control decisions into this skill;
+- move reusable prompt, contract, evidence, and review practice into the `prompt-first-embedded-lessons` skill.
+
+Reference-frame screenshots define visual intent but do not prove LVGL or device rendering.
+When a device candidate is available, capture its retained RGB565 framebuffer and publish it as a separate evidence layer.

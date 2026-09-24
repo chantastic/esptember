@@ -1,117 +1,98 @@
 ---
-board: waveshare-amoled-18-v2
+board: m5stack-stopwatch
 day: 9
 title: Sound Effects Board
-toolchain: ESP-IDF v5.5 + Waveshare BSP (LVGL, esp_codec_dev)
-firmware: /firmware/day-09-sound-effects.bin
-summary: "Six synthesized sound effects on touch pads, three per page. The board gets a voice."
-verification: "Playback pipeline verified over serial; perceived sound pending"
+toolchain: Arduino ESP32 3.3.10 + M5Unified 0.2.19 + M5GFX 0.2.26 + LVGL 9.3.0
+summary: "Six synthesized sounds, one nonblocking audio queue, and controls shared by touch and the two pushers."
+verification: "Prompt contract and reference frame verified; generated hardware candidate awaits hand review"
 ---
 
-## The result
+## The assignment
 
-Day 08 made the screen an interface.
-Today the board gets a voice: six sound effects on fat orange pads, three per page, played through the ES8311 codec and the onboard speaker.
-There are no audio files anywhere in this project — every effect is synthesized from math at press time.
-Each day is a standalone firmware image; you can start here without flashing earlier days.
+Build a six-pad synthesized sound board with two pages and no audio assets.
 
-## What you need
+The durable source is this prompt, [SPEC.md](https://github.com/chantastic/esptember/blob/main/days/day-09-sound-effects/SPEC.md), the machine-readable contract, and its layered acceptance criteria.
+Generated firmware is a disposable candidate.
 
-- **Board:** Waveshare ESP32-S3-Touch-AMOLED-1.8 **V2**: ESP32-S3, CO5300 panel, CST816-family touch, ES8311 codec, onboard speaker, 16 MB flash, 8 MB PSRAM.
-- **Connection:** a USB data cable and a computer with access to the serial port.
-- **For the download:** [uv](https://docs.astral.sh/uv/getting-started/installation/) supplies the `uvx` command below. ESP-IDF is not needed.
-- **For source builds:** [ESP-IDF v5.5](https://docs.espressif.com/projects/esp-idf/en/stable/esp32s3/get-started/) with its environment activated. Dependencies are declared in the firmware project.
+## Reference frame
 
-The display is 368 × 448 pixels.
-Flashing replaces the firmware currently on the board.
+![Round-screen acceptance reference for Sound Effects Board](https://esptember.com/images/day-09-sound-effects/reference.png)
 
-## Run it
+This is a deterministic screenshot of the visual acceptance model.
+It defines the intended hierarchy and safe-area use; only a later framebuffer capture from the attached Stopwatch can count as device rendering evidence.
 
-Download [day-09-sound-effects.bin](https://esptember.com/firmware/day-09-sound-effects.bin) and open a terminal in the download directory.
-This is a merged image containing the bootloader, partition table, and application.
+## The build prompt
 
-Find your serial port:
+```text
+Build ESPtember Day 09: Sound Effects Board for the M5Stack Stopwatch Dev Kit (C152).
 
-```sh
-# macOS
-ls /dev/cu.usbmodem*
-# Linux
-ls /dev/ttyACM*
+Read these before writing code:
+- .agents/skills/build-stopwatch-lessons/SKILL.md
+- .agents/skills/prompt-first-embedded-lessons/SKILL.md
+- days/day-07-touch-calibration/SPEC.md
+- days/day-09-sound-effects/SPEC.md
+- days/day-09-sound-effects/tests/contract.json
+
+Treat the prompt, spec, tests, and acceptance criteria as source.
+Put deterministic behavior in a portable core and keep Arduino, LVGL, M5Unified, storage, network, audio, and sensor adapters outside it.
+Run scripts/prompt-contract/validate_day.sh days/day-09-sound-effects before compiling a device candidate.
+Do not edit the contract or tests to make a candidate pass.
+
+Hardware and shared platform
+
+- Target board_M5StopWatch on ESP32-S3 with OPI PSRAM.
+- Hold the device with the lanyard loop at the bottom: BtnA is physical left and BtnB is physical right.
+- Immediately after M5.begin(), set panel width 468, height 466, offset_x 6, offset_y 0, then rotation 0.
+- Never draw rows 466 or 467. Keep focus decoration inset and every interactive bound inside the round safe area.
+- Load Preferences namespace espt-touch, blob key record, after display setup and before touch input.
+- Accept and validate Day 07 version 1 and version 2 records. Read raw touch, apply the complete shared warp, clamp once, then feed the mapped point to the application.
+- Provide the shared runtime calibration entry path. App-only installation must preserve the record.
+- Allocate retained frames and large working buffers in PSRAM; fail visibly and over serial when required hardware or memory is unavailable.
+
+Controls
+
+Use the default grammar: BtnA/left is Previous or Decrease; BtnB/right is Next or Increase; short both is Enter; hold both for 600 ms is Back. Preserve the 80 ms join and overlap rules and consume chord clicks.
+Touch must dispatch the same semantic actions as physical controls.
+
+Lesson behavior
+
+- Show three large pads per page plus a page control; every focus border is inset and round-face safe.
+- Synthesize Laser, Coin, Jump, Explosion, Power Up, and Blip from deterministic PCM math at activation time.
+- Use one active voice and one latest-wins pending slot. Repeated activation never blocks LVGL, button polling, or touch.
+- Left and right wrap focus; Enter plays the focused pad or changes page; Back returns to page one and the first pad.
+- Report requested, active, queued, started, and completed effect ids separately over serial.
+
+Diagnostics and acceptance
+
+- Prefix serial protocol lines with D09_ and implement status, reset, action, capture, and touchlog commands.
+- Report hardware identity, corrected geometry, touch-map version and generation, current portable state, memory headroom, and last named error.
+- Injected actions must use the same reducer, hit testing, callbacks, and control recognizer as physical input.
+- Retain the exact RGB565 pixels sent to M5GFX and stream captures in bounded chunks without blocking the watchdog.
+- Run every scenario in tests/contract.json, generated deterministic sequences, the deliberate mutation, and the lesson-specific checks in SPEC.md.
+- Complete 20 largest-state round trips without reset or growing heap/PSRAM use.
+- Confirm the active touch-map version and generation remain unchanged.
+- Physically review touch alignment, BtnA/BtnB direction, chord behavior, cues, clipping, lower-edge use, and the absence of a black bar.
+
+Record host, compile, injected-device, and physical evidence separately.
+Never describe reference rendering or injected input as physical proof.
 ```
 
-On Windows, use the board's COM port from Device Manager.
-Replace `PORT` with your port, then flash the image at `0x0`:
+## Required behavior
 
-```sh
-uvx esptool --chip esp32s3 --port PORT \
-  write-flash 0x0 day-09-sound-effects.bin
-```
+- Show three large pads per page plus a page control; every focus border is inset and round-face safe.
+- Synthesize Laser, Coin, Jump, Explosion, Power Up, and Blip from deterministic PCM math at activation time.
+- Use one active voice and one latest-wins pending slot. Repeated activation never blocks LVGL, button polling, or touch.
+- Left and right wrap focus; Enter plays the focused pad or changes page; Back returns to page one and the first pad.
+- Report requested, active, queued, started, and completed effect ids separately over serial.
 
-Close any serial monitor using that port before flashing.
-When flashing completes, the board restarts into this lesson.
+## Recorded evidence
 
-## How it works
+The shared contract runner validates Stopwatch geometry, touch-map ownership, control metadata, state types and ranges, deterministic scenarios, round-face control bounds, and 10,000 generated actions against three disposable reducer shapes.
+A deliberately mutated reducer must fail.
 
-Sound is just numbers fed to a DAC fast enough.
-Each effect is a generator function filling a 16-bit mono buffer at 22050 Hz — a laser is a falling sine sweep, a coin is two square-wave notes, an explosion is lowpassed noise with an exponential decay:
-
-```c
-static int gen_boom(int16_t *out)
-{
-    int n = SAMPLE_RATE * 550 / 1000;
-    float low = 0;
-    for (int i = 0; i < n; i++) {
-        float t = (float)i / n;
-        // One-pole lowpass over noise: rumble instead of hiss.
-        low += 0.08f * (noise() - low);
-        float env = expf(-4.0f * t);
-        out[i] = (int16_t)(low * env * 32000);
-    }
-    return n;
-}
-```
-
-The codec path is the BSP's three-call story — init I2S, init the speaker codec, write PCM:
-
-```c
-    bsp_audio_init(NULL);
-    speaker = bsp_audio_codec_speaker_init();
-```
-
-One playback task owns the codec.
-Pads don't play sounds — they queue a sound id and return immediately, so the UI never blocks on audio.
-The queue length is 1 and sends don't wait: mashing pads restarts nothing and stacks nothing; the current effect finishes, the latest request plays next.
-
-Pagination is the day's LVGL rep: two page containers, one visible at a time, a pager row with previous/next and a `1 / 2` indicator.
-Hiding a container hides its children — flipping pages is one flag on two objects.
-
-## Check the result
-
-- Three pads on page one: **Laser**, **Coin**, **Boom**. The pager reads `1 / 2`.
-- The arrows flip to page two: **Drum**, **Ring**, **Whoosh**.
-- Each pad plays its effect through the onboard speaker immediately on tap.
+Historical implementation evidence from before the prompt-first Stopwatch migration follows.
 
 **Recorded evidence · September 21, 2026:** The playback pipeline was verified over the serial harness — pad taps queued the right effect ids, the codec-write path reported active playback, and pagination flipped pages, confirmed by screen capture. Perceived sound quality through the speaker awaits an ear check, noted in NOTES.md.
 
-## Build and change it
-
-Clone the repository once:
-
-```sh
-git clone https://github.com/chantastic/esptember.git
-cd esptember
-```
-
-With the ESP-IDF environment activated, run from the repository root:
-
-```sh
-cd days/day-09-sound-effects/firmware
-idf.py build
-idf.py -p PORT flash monitor
-```
-
-Exit the monitor with `Ctrl+]`.
-To create the single downloadable image, run `idf.py merge-bin` in the same firmware directory.
-The output is `build/merged-binary.bin`.
-Keep `pmu_init()` and `panel_reset_release()` before display startup when changing the UI.
-New sounds are one generator function and one table entry in `sounds.c` — add a third page by changing `PAGE_COUNT`.
+The reference screenshot is acceptance-model evidence.
+The next hardware pass must replace or supplement it with a framebuffer capture and a hand-review record.

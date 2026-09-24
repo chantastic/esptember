@@ -1,4 +1,4 @@
-#include "../firmware/c25k/progress.h"
+#include "progress.h"
 #include <cassert>
 #include <cstdio>
 using namespace c25k;

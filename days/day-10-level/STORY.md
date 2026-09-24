@@ -1,6 +1,12 @@
 ---
 title: Level
 ---
+## The prompt-first pass
+
+The original build below records how this idea first worked.
+The durable lesson now targets the M5Stack Stopwatch and lives in the prompt, behavior contract, generalized tests, and hand-review checklist.
+Generated firmware is evidence for those sources, not the source itself.
+
 
 This lesson was planned for a different board — the second round Waveshare display.
 The board couldn't be found on build day, and the StopWatch turned out to be the better host anyway: it has the round face the design wants, plus the two things the original target lacks — a vibration motor for the snap moment, and a BMI270 already wired.

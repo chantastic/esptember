@@ -1,0 +1,175 @@
+{
+  "schema": 1,
+  "lesson": "day-10-level",
+  "title": "Level",
+  "hardware": {
+    "board": "m5stack-stopwatch",
+    "width": 468,
+    "height": 466,
+    "offset_x": 6,
+    "offset_y": 0,
+    "rotation": 0,
+    "touch_map": "espt-touch/record"
+  },
+  "controls": {
+    "profile": "c25k",
+    "left_button": "BtnA",
+    "right_button": "BtnB",
+    "left": "previous_or_decrease",
+    "right": "next_or_increase",
+    "enter": "short_both",
+    "back": "hold_both_600ms"
+  },
+  "state": {
+    "screen": {
+      "type": "enum",
+      "default": "bubble",
+      "values": [
+        "bubble",
+        "numeric"
+      ]
+    },
+    "focus": {
+      "type": "enum",
+      "default": "zero",
+      "values": [
+        "zero",
+        "mode"
+      ]
+    },
+    "zeroed": {
+      "type": "bool",
+      "default": false
+    },
+    "level": {
+      "type": "bool",
+      "default": false
+    },
+    "pitch": {
+      "type": "int",
+      "default": 0,
+      "min": -90,
+      "max": 90
+    },
+    "roll": {
+      "type": "int",
+      "default": 0,
+      "min": -90,
+      "max": 90
+    }
+  },
+  "scenarios": [
+    {
+      "name": "primary flow",
+      "steps": [
+        {
+          "action": "enter",
+          "expect": {
+            "zeroed": true
+          }
+        },
+        {
+          "action": "back",
+          "expect": {
+            "zeroed": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "mode wrap",
+      "steps": [
+        {
+          "action": "right",
+          "expect": {
+            "focus": "mode"
+          }
+        },
+        {
+          "action": "enter",
+          "expect": {
+            "screen": "numeric"
+          }
+        },
+        {
+          "action": "enter",
+          "expect": {
+            "screen": "bubble"
+          }
+        }
+      ]
+    },
+    {
+      "name": "level hysteresis",
+      "steps": [
+        {
+          "action": {
+            "type": "sample",
+            "pitch": 0,
+            "roll": 0
+          },
+          "expect": {
+            "level": true
+          }
+        },
+        {
+          "action": {
+            "type": "sample",
+            "pitch": 2,
+            "roll": 0
+          },
+          "expect": {
+            "level": true
+          }
+        },
+        {
+          "action": {
+            "type": "sample",
+            "pitch": 4,
+            "roll": 0
+          },
+          "expect": {
+            "level": false
+          }
+        }
+      ]
+    }
+  ],
+  "layout": {
+    "safe_radius": 226,
+    "focus_inset": 3,
+    "controls": [
+      {
+        "id": "zero",
+        "bounds": [
+          104,
+          110,
+          260,
+          48
+        ]
+      },
+      {
+        "id": "mode",
+        "bounds": [
+          104,
+          178,
+          260,
+          48
+        ]
+      }
+    ]
+  },
+  "visual": {
+    "kind": "radial",
+    "eyebrow": "LEVEL",
+    "title": "Pitch 0.2\u00b0",
+    "metric": "0.4\u00b0",
+    "lines": [
+      "LEVEL",
+      "zero: off"
+    ],
+    "accent": "#48ef8b",
+    "scenario": "primary flow",
+    "evidence": "reference"
+  }
+}

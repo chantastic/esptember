@@ -2,7 +2,7 @@
 #include <cstdio>
 #include <initializer_list>
 
-#include "../firmware/c25k/workout_summary.h"
+#include "workout_summary.h"
 
 using namespace c25k;
 

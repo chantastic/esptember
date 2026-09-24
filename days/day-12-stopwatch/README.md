@@ -2,116 +2,97 @@
 board: m5stack-stopwatch
 day: 12
 title: Basic-Ass Stopwatch
-toolchain: Arduino CLI (esp32 core) + M5Unified
-firmware: /firmware/day-12-stopwatch.bin
-summary: "The kit is shaped like a stopwatch. Today it behaves like one — real pusher ergonomics included."
-verification: "State machine verified over serial; pusher feel pending hands-on"
+toolchain: Arduino ESP32 3.3.10 + M5Unified 0.2.19 + M5GFX 0.2.26 + LVGL 9.3.0
+summary: "Mechanical-stopwatch controls, precise elapsed-time arithmetic, laps, and guarded reset."
+verification: "Prompt contract and reference frame verified; generated hardware candidate awaits hand review"
 ---
 
-## The result
+## The assignment
 
-The kit is shaped like a stopwatch.
-Today it behaves like one, with the pusher ergonomics every mechanical stopwatch and Casio digital agrees on: the crown starts and stops — and never resets.
-The second pusher laps while running and resets while stopped, and reset requires a hold, because an accidental reset is the one unforgivable stopwatch bug.
-Each day is a standalone firmware image; you can start here without flashing earlier days.
+Use the device's physical form honestly: build a stopwatch with familiar pusher behavior.
 
-## What you need
+The durable source is this prompt, [SPEC.md](https://github.com/chantastic/esptember/blob/main/days/day-12-stopwatch/SPEC.md), the machine-readable contract, and its layered acceptance criteria.
+Generated firmware is a disposable candidate.
 
-- **Board:** M5Stack Stopwatch Dev Kit (ESP32-S3, C152): two pushers, buzzer, vibration motor, 1.75″ round AMOLED, battery.
-- **Connection:** a USB data cable and a computer with access to the serial port.
-- **For the download:** [uv](https://docs.astral.sh/uv/getting-started/installation/) supplies the `uvx` command below.
-- **For source builds:** [arduino-cli](https://arduino.github.io/arduino-cli/) with the esp32 core and the M5Unified library installed.
+## Reference frame
 
-The display is 466 × 466 pixels behind a circular aperture.
-Flashing replaces the firmware currently on the board.
+![Round-screen acceptance reference for Basic-Ass Stopwatch](https://esptember.com/images/day-12-stopwatch/reference.png)
 
-## Run it
+This is a deterministic screenshot of the visual acceptance model.
+It defines the intended hierarchy and safe-area use; only a later framebuffer capture from the attached Stopwatch can count as device rendering evidence.
 
-Download [day-12-stopwatch.bin](https://esptember.com/firmware/day-12-stopwatch.bin) and open a terminal in the download directory.
-This is a merged image containing the bootloader, partition table, and application.
+## The build prompt
 
-Find your serial port:
+```text
+Build ESPtember Day 12: Basic-Ass Stopwatch for the M5Stack Stopwatch Dev Kit (C152).
 
-```sh
-# macOS
-ls /dev/cu.usbmodem*
-# Linux
-ls /dev/ttyACM*
+Read these before writing code:
+- .agents/skills/build-stopwatch-lessons/SKILL.md
+- .agents/skills/prompt-first-embedded-lessons/SKILL.md
+- days/day-07-touch-calibration/SPEC.md
+- days/day-12-stopwatch/SPEC.md
+- days/day-12-stopwatch/tests/contract.json
+
+Treat the prompt, spec, tests, and acceptance criteria as source.
+Put deterministic behavior in a portable core and keep Arduino, LVGL, M5Unified, storage, network, audio, and sensor adapters outside it.
+Run scripts/prompt-contract/validate_day.sh days/day-12-stopwatch before compiling a device candidate.
+Do not edit the contract or tests to make a candidate pass.
+
+Hardware and shared platform
+
+- Target board_M5StopWatch on ESP32-S3 with OPI PSRAM.
+- Hold the device with the lanyard loop at the bottom: BtnA is physical left and BtnB is physical right.
+- Immediately after M5.begin(), set panel width 468, height 466, offset_x 6, offset_y 0, then rotation 0.
+- Never draw rows 466 or 467. Keep focus decoration inset and every interactive bound inside the round safe area.
+- Load Preferences namespace espt-touch, blob key record, after display setup and before touch input.
+- Accept and validate Day 07 version 1 and version 2 records. Read raw touch, apply the complete shared warp, clamp once, then feed the mapped point to the application.
+- Provide the shared runtime calibration entry path. App-only installation must preserve the record.
+- Allocate retained frames and large working buffers in PSRAM; fail visibly and over serial when required hardware or memory is unavailable.
+
+Controls
+
+Use a localized control scheme because Stopwatches have a stronger established convention than menu navigation. BtnA/left: start stop. BtnB/right: lap click reset hold. Short both: unused. Hold both: unused.
+Touch must dispatch the same semantic actions as physical controls.
+
+Lesson behavior
+
+- BtnA, physically left, always starts or stops. It never resets.
+- BtnB records a lap while running. While stopped, a BtnB click does nothing and a 600 ms hold resets.
+- Compute elapsed time from monotonic deltas and an accumulated base; rendering frequency must not change time.
+- Keep the newest three laps visible and retain more laps in the portable state up to its fixed capacity.
+- Format MM:SS.hh and handle monotonic-counter wrap without a backward jump.
+
+Diagnostics and acceptance
+
+- Prefix serial protocol lines with D12_ and implement status, reset, action, capture, and touchlog commands.
+- Report hardware identity, corrected geometry, touch-map version and generation, current portable state, memory headroom, and last named error.
+- Injected actions must use the same reducer, hit testing, callbacks, and control recognizer as physical input.
+- Retain the exact RGB565 pixels sent to M5GFX and stream captures in bounded chunks without blocking the watchdog.
+- Run every scenario in tests/contract.json, generated deterministic sequences, the deliberate mutation, and the lesson-specific checks in SPEC.md.
+- Complete 20 largest-state round trips without reset or growing heap/PSRAM use.
+- Confirm the active touch-map version and generation remain unchanged.
+- Physically review touch alignment, BtnA/BtnB direction, chord behavior, cues, clipping, lower-edge use, and the absence of a black bar.
+
+Record host, compile, injected-device, and physical evidence separately.
+Never describe reference rendering or injected input as physical proof.
 ```
 
-On Windows, use the board's COM port from Device Manager.
-Replace `PORT` with your port, then flash the image at `0x0`:
+## Required behavior
 
-```sh
-uvx esptool --chip esp32s3 --port PORT \
-  write-flash 0x0 day-12-stopwatch.bin
-```
+- BtnA, physically left, always starts or stops. It never resets.
+- BtnB records a lap while running. While stopped, a BtnB click does nothing and a 600 ms hold resets.
+- Compute elapsed time from monotonic deltas and an accumulated base; rendering frequency must not change time.
+- Keep the newest three laps visible and retain more laps in the portable state up to its fixed capacity.
+- Format MM:SS.hh and handle monotonic-counter wrap without a backward jump.
 
-Close any serial monitor using that port before flashing.
-When flashing completes, the board restarts into this lesson.
+## Recorded evidence
 
-## How it works
+The shared contract runner validates Stopwatch geometry, touch-map ownership, control metadata, state types and ranges, deterministic scenarios, round-face control bounds, and 10,000 generated actions against three disposable reducer shapes.
+A deliberately mutated reducer must fail.
 
-The ergonomics come first, borrowed from a century of mechanical stopwatches and the Casio lap/reset overload:
-
-- **Crown (A): start/stop.** Always. It never resets — a running timer is sacred.
-- **Second pusher (B): lap while running, reset while stopped.** Reset is a *hold*, not a tap.
-
-One rule anchors the timekeeping: the display never owns the time.
-
-```c
-static uint32_t elapsedMs() {
-  return running ? accumulated + (millis() - startedAt) : accumulated;
-}
-```
-
-Elapsed time is computed from `millis()` deltas against an accumulated base, so rendering rate, button handling, and serial chatter can never skew the clock.
-Stopping banks the delta; starting again opens a new one.
-
-Lap freezes a split on screen; the underlying timer never pauses.
-The last three laps stack under the main readout, newest highlighted.
-
-Feedback reuses day 11's vocabulary — start is short and high, stop lower, lap a quick chirp, and reset is long and low: the deliberate one.
-The screen refreshes at 10 Hz while running and only on events otherwise, straight from day 13's render discipline.
-
-## Check the result
-
-- Crown starts the timer; the readout counts up in `MM:SS.hh`, header goes green **RUNNING**.
-- Crown stops it; the time holds. Crown again resumes — no reset.
-- **B** while running records a lap without pausing the timer; the last three show on screen.
-- **B** tapped while stopped does nothing. **B held** while stopped resets time and laps, with a long low buzz.
+Historical implementation evidence from before the prompt-first Stopwatch migration follows.
 
 **Recorded evidence · September 21, 2026:** Start/stop accumulation, lap capture, and reset were verified over serial (`D11_STATUS` reporting) on the installed firmware. Pusher feel and cue discrimination await a hands-on check, noted in NOTES.md.
 
-## Used resources
-
-- Mechanical stopwatch convention: crown = start/stop, side pusher = lap/reset, reset locked out while running.
-- Casio digital watch stopwatch mode: the lap/reset overload on one button, resolved by run state.
-- [M5Unified](https://github.com/m5stack/M5Unified) button API: `wasClicked()` / `wasHold()` supply the press vocabulary from day 11.
-
-## Build and change it
-
-Clone the repository once:
-
-```sh
-git clone https://github.com/chantastic/esptember.git
-cd esptember
-```
-
-Install the toolchain pieces (once):
-
-```sh
-arduino-cli core install esp32:esp32
-arduino-cli lib install M5Unified
-```
-
-Build and flash from the repository root:
-
-```sh
-cd days/day-12-stopwatch
-./scripts/build.sh
-./scripts/flash.sh PORT
-```
-
-The merged image lands in `.build/firmware/stopwatch.ino.merged.bin`.
-`MAX_LAPS` is 99; the lap list shows three — a scrollable lap history is a natural extension.
+The reference screenshot is acceptance-model evidence.
+The next hardware pass must replace or supplement it with a framebuffer capture and a hand-review record.
