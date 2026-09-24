@@ -6,7 +6,7 @@ const boardIds = Object.keys(boards) as [keyof typeof boards, ...(keyof typeof b
 const days = defineCollection({
   loader: glob({
     base: "./days",
-    pattern: ["*/README.md", "!*/.build/**", "!*/extensions/**", "!*/firmware/**"],
+    pattern: "*/README.md",
     generateId: ({ entry }) => entry.split("/")[0]!,
   }),
   schema: z.object({

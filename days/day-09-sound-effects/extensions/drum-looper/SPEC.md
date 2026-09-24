@@ -4,7 +4,7 @@
 
 Build a four-pad, four-track drum looper on the M5Stack Stopwatch.
 The loop is 4/4, four measures (16 quarter notes total), and quantized to sixteenth notes.
-The trap palette—Kick, Snare, Hi-Hat, and Triple Hi-Hat—is recorded and replaced independently without a dedicated record mode.
+The trap palette combines recordable Kick, Snare, and Triple Hi-Hat events with a regular Hi-Hat that toggles automatic eighth notes ON or OFF.
 
 ## Shared platform contract
 
@@ -18,8 +18,9 @@ Only the shared calibration flow may write that namespace.
 - **Thumb · BtnA/left:** tap tempo.
 - **Index · BtnB/right:** toggle play and pause.
 - **Both held 600 ms:** clear all tracks, stop, return to step 0, and preserve tempo.
-- **Pad touch while playing:** audition immediately and record into that pad's current replacement pass.
-- **Pad touch while paused:** audition only.
+- **Kick, Snare, or 3X Hi-Hat while playing:** audition immediately and record into that pad's current replacement pass.
+- **Kick, Snare, or 3X Hi-Hat while paused:** audition only.
+- **Regular Hi-Hat touch:** toggle automatic eighth notes ON or OFF in either transport state.
 - **Both held during boot:** enter shared touch calibration.
 
 A recognized both-button hold consumes both individual clicks.
@@ -37,13 +38,13 @@ For step `s`:
 - beat is `floor((s mod 16) / 4) + 1`; and
 - subdivision is `(s mod 4) + 1`.
 
-Each track is a 64-bit set.
+Kick, Snare, and Triple Hi-Hat are each a 64-bit set. The regular Hi-Hat is one Boolean state.
 Memory and runtime must remain bounded regardless of performance length.
 
 ## Portable state
 
 The normative fields and exact scenarios live in `tests/contract.json`.
-Portable state includes transport, BPM, step, pass, four hit counts, four replacement flags, four replacement-step counters, last pad, total live taps, and a bounded error enum.
+Portable state includes transport, BPM, step, pass, the regular Hi-Hat ON/OFF state, three event-track hit counts, three replacement flags, three replacement-step counters, last pad, total live taps, and a bounded error enum.
 
 The real portable core additionally owns the four 64-bit patterns, the absolute transport anchor, fractional paused phase, tap-tempo interval window, and deterministic quantization helpers.
 Reducers never mutate their input.
@@ -62,10 +63,18 @@ Pause freezes both.
 The first-ever play begins at step 0.
 Advancing from step 63 wraps to step 0 and increments the pass counter.
 It does not end a replacement merely because global step 0 was crossed.
-Each track ends independently after 64 musical steps have elapsed from its own replacement start.
+Each event track ends independently after 64 musical steps have elapsed from its own replacement start.
 
 If two or more tracks contain a hit on one scheduled step, start them on that same boundary through a bounded mixer or independent prepared channels.
 Track overlap must not serialize or drop a hit.
+
+### Automatic regular Hi-Hat
+
+The regular Hi-Hat has no pattern bits and never enters replacement state.
+Its pad toggles one `hihat_on` Boolean in either transport state.
+When ON and playing, dispatch one regular closed-hat hit on every even sixteenth step: 0, 2, 4, through 62. This is exactly 32 eighth notes per four-measure loop.
+Turning it OFF prevents the next and later automatic hats without changing Kick, Snare, or Triple Hi-Hat data.
+Turning it ON while playing waits for the next even step so the first automatic hit is on-grid. Turning it ON while paused plays one immediate preview; playback still begins on the next even step.
 
 ### Triple Hi-Hat compound event
 
@@ -101,7 +110,7 @@ A valid change preserves the current step; the next boundary uses the new period
 
 ## Per-track automatic replacement
 
-Every touch-down starts the pad's resident drum sound immediately.
+Every Kick, Snare, and Triple Hi-Hat touch-down starts the pad's resident drum sound immediately.
 This live audition path does not wait for quantization, transport scheduling, release, synthesis, allocation, or storage.
 
 While paused, no pattern changes.
@@ -109,7 +118,7 @@ While playing, quantize the touch timestamp to the nearest sixteenth boundary in
 An exact half-step tie resolves forward to the later step.
 Quantization across the step-63 boundary may write step 0 of the next pass; that write belongs to the next pass and must use its replacement state.
 
-For the selected track and quantized target tick:
+For the selected event track and quantized target tick:
 
 1. If the track is not already replacing, clear all 64 old bits for that track only, mark it replacing, and set its exclusive end tick to `target_tick + 64`.
 2. Set the quantized step bit.
@@ -123,7 +132,7 @@ Multiple tracks may be in replacement state simultaneously.
 
 ## Reset
 
-Holding both pushers for 600 ms stops transport, clears all 256 pattern bits, clears all replacement flags and tap history, resets step and fractional phase to zero, cancels in-flight Triple Hi-Hat bursts, and clears counters related to the loop contents.
+Holding both pushers for 600 ms stops transport, clears all 192 event-track pattern bits, turns the regular Hi-Hat OFF, clears all replacement flags and tap history, resets step and fractional phase to zero, cancels in-flight Triple Hi-Hat bursts, and clears counters related to the loop contents.
 It preserves the current BPM and the saved touch map.
 
 ## Sound contract
@@ -151,7 +160,8 @@ Reuse the four Day 09 pad bounds:
 
 Show `TRAP LOOPER` above the pads, followed by BPM, PLAYING or PAUSED, and `BAR nn / 4` with beat and subdivision.
 Keep pad labels small and directly underneath their color fields.
-A compact dot beside each label is dim for empty, white for a stored pattern, and red during that track's independent 64-step replacement window.
+A compact dot beside each event-track label is dim for empty, white for stored, and red during replacement.
+The regular Hi-Hat label reads `HI-HAT OFF` or `HI-HAT ON`; its dot is dim when OFF and white when ON, and never uses the replacement color.
 Flash the pressed pad briefly without moving or resizing it.
 
 The footer shows `A TEMPO`, `B PLAY` or `B PAUSE`, and `HOLD BOTH: CLEAR`.
@@ -162,7 +172,7 @@ No content uses rows 466–467 and no bottom bar remains visible.
 
 Prefix serial lines with `D09L_`.
 Provide `status`, `reset`, `action`, `advance`, `capture`, `touchlog`, and `calibrate`.
-Status reports board, geometry, touch-map version/generation, transport, BPM, step, bar, beat, subdivision, pass, hit counts, replacement flags and remaining steps, last pad, live taps, late-step count/max lateness, Triple Hi-Hat burst/stroke/late-stroke counts and maximum stroke lateness, heap, PSRAM, stack, and last error.
+Status reports board, geometry, touch-map version/generation, transport, BPM, step, bar, beat, subdivision, pass, the regular Hi-Hat ON/OFF state, event-track hit counts, replacement flags and remaining steps, last pad, live taps, late-step count/max lateness, Triple Hi-Hat burst/stroke/late-stroke counts and maximum stroke lateness, heap, PSRAM, stack, and last error.
 
 Ticks, metronome clicks, pad touches, and scheduled hits emit no unsolicited serial lines.
 Diagnostic command responses are bounded and must not make musical time depend on whether a host is reading USB.
@@ -184,6 +194,7 @@ The `espt-touch` namespace remains read-only outside calibration.
 - step 63 wraps to step 0 without truncating a track's independent 64-step replacement window;
 - both-button hold clears every track but preserves BPM; and
 - simultaneous scheduled track hits share one musical boundary.
+- regular Hi-Hat ON schedules hits on all 32 even steps in one loop, OFF schedules none, and toggling it changes no event-track pattern;
 - one Triple Hi-Hat event occupies one pattern bit and produces exactly three strokes at the declared tempo-relative offsets at 60, 120, and 200 BPM;
 - an empty 120 BPM loop produces 24 clicks and 96 sixteenth steps in 12 seconds; and
 - unread or disconnected USB does not slow touch, audio, rendering, or transport.

@@ -1,15 +1,15 @@
 # Trap Looper contract results
 
 The generalized state suite generated three disposable reducer shapes from `tests/contract.json`.
-Each passed 351,511 assertions covering defaults, bounds, deterministic nonmutation, play/pause/resume, the audible-grid state, valid and stale tap-tempo input, independently anchored 64-step replacement windows, the single-event Triple Hi-Hat track, same-step hit collapse, paused audition, loop wrap, replacement completion and restart, reset, Stopwatch metadata, round-screen layout, and 10,000 generated actions.
+Each passed 311,397 assertions covering defaults, bounds, deterministic nonmutation, play/pause/resume, the audible-grid state, valid and stale tap-tempo input, the regular Hi-Hat ON/OFF state, independently anchored 64-step event-track replacement windows, the single-event Triple Hi-Hat track, same-step hit collapse, paused audition, loop wrap, replacement completion and restart, reset, Stopwatch metadata, round-screen layout, and 10,000 generated actions.
 A fourth reducer with its first transition removed failed as required.
 
 The reference frame was rendered at 468 × 466 from the declared paused state.
 It defines visual intent only.
 
-A disposable candidate then passed sanitizer-backed domain checks for bitsets, replacement, quantization ties, tempo estimation, deterministic PCM, non-silence, the 256 KiB audio limit, and exact Triple Hi-Hat stroke offsets at 60, 120, and 200 BPM.
+A disposable candidate then passed sanitizer-backed domain checks for bitsets, replacement, quantization ties, tempo estimation, all 32 automatic eighth-note Hi-Hat positions, deterministic PCM, non-silence, the 256 KiB audio limit, and exact Triple Hi-Hat stroke offsets at 60, 120, and 200 BPM.
 The pinned Arduino ESP32 3.3.10, M5Unified 0.2.19, M5GFX 0.2.26, and LVGL 9.3.0 toolchain compiled it for ESP32-S3 with OPI PSRAM.
-The trap application used 917,571 bytes of its 3,145,728-byte slot and 31,704 bytes of static RAM.
+The trap application used 917,675 bytes of its 3,145,728-byte slot and 31,704 bytes of static RAM.
 Its four deterministic drum buffers occupy 32,852 bytes; the Triple Hi-Hat uses a brighter 75 ms resident clip.
 
 An app-partition-only update loaded the candidate onto the attached M5Stack Stopwatch without replacing NVS.
@@ -17,22 +17,20 @@ The device retained shared touch map version 2, generation 2, and reported the r
 Injected-device checks established:
 
 - independent Kick and Snare replacement across a complete 64-step window;
+- regular Hi-Hat toggling ON and OFF while paused, scheduling five on-grid eighth notes during a 1.1-second playing window, stopping future hats when turned OFF, and resetting to OFF;
 - paused audition without pattern edits and whole-track override on the next playing tap;
 - one paused Triple Hi-Hat event starting immediately and completing exactly three strokes with zero late follow-up strokes;
+- one stored Triple Hi-Hat event replaying once as another complete three-stroke burst without occupying adjacent pattern steps;
 - tap-tempo update and reset preserving the chosen BPM;
-- 100 live audio starts at 37 µs p95 and 900 µs maximum request-to-accepted latency, including 25 Triple Hi-Hat bursts that produced all 75 strokes with zero late follow-ups;
-- 120 BPM playback advancing exactly 96 sixteenth steps, completing one four-measure pass, and scheduling exactly 24 quarter-note clicks in 12 seconds, with zero late steps;
-- one real-time four-measure pass at 148 BPM scheduling 18 clicks through its five-step observation tail, with zero late steps;
+- 100 live event-pad audio starts at 36 µs p95 and 890 µs maximum request-to-accepted latency, including 33 Triple Hi-Hat bursts that produced all 99 strokes with zero late follow-ups;
+- untouched 120 BPM playback advancing exactly 96 sixteenth steps, completing one four-measure pass, and scheduling exactly 24 quarter-note clicks in 12 seconds, with zero late steps;
+- one real-time four-measure pass at 146 BPM scheduling 18 clicks through its five-step observation tail, with zero late steps;
 - 100 accelerated loop passes with stable heap and PSRAM; and
 - clean empty, stored-pattern, and hand-review framebuffers with the header, pads, footer, and bottom edge intact.
 
-The completed run restarted the candidate to an empty paused loop at 120 BPM.
+After the completed run, the candidate was restarted to an empty paused loop at 120 BPM with the automatic Hi-Hat OFF.
 The retained framebuffer is published as the device-candidate evidence; the reference render remains separate.
 Physical pusher feel, physical touch alignment, audible balance, groove, and simultaneous-hit quality still require the hand review.
-
-One physical touch occurred during the nominal empty-loop clock window and recorded a regular Hi-Hat event.
-The transport and click counts remained exact, but this run is not presented as untouched empty-loop evidence.
-The harness now requires the physical-touch count and all four patterns to remain unchanged during that check; its immediate rerun was stopped when active hand testing was detected rather than resetting the board underneath the player.
 
 The first device candidate emitted serial diagnostics from the performance path and supplied no click track.
 With no host reader, its transport fell as much as four seconds behind and reported `transport_overrun`.

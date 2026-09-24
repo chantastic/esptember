@@ -17,9 +17,9 @@
     "right_button": "BtnB",
     "left": "thumb_tap_tempo",
     "right": "index_play_pause",
-    "enter": "touch_pad_auto_record",
+    "enter": "touch_pad_record_or_hihat_toggle",
     "back": "hold_both_600ms_clear",
-    "rationale": "The four pads are the instrument. Thumb tap tempo, index transport, and hold-both clear provide the full looper workflow without a record mode."
+    "rationale": "Kick, Snare, and 3X Hi-Hat auto-record; regular Hi-Hat toggles eighth notes. Thumb tap tempo, index transport, and hold-both clear complete the workflow without a record mode."
   },
   "state": {
     "transport": {"type": "enum", "default": "paused", "values": ["paused", "playing"]},
@@ -28,15 +28,13 @@
     "pass": {"type": "int", "default": 0, "min": 0, "max": 9999},
     "kick_hits": {"type": "int", "default": 0, "min": 0, "max": 64},
     "snare_hits": {"type": "int", "default": 0, "min": 0, "max": 64},
-    "hihat_hits": {"type": "int", "default": 0, "min": 0, "max": 64},
+    "hihat": {"type": "enum", "default": "off", "values": ["off", "on"]},
     "triplehat_hits": {"type": "int", "default": 0, "min": 0, "max": 64},
     "kick_replacing": {"type": "enum", "default": "no", "values": ["no", "yes"]},
     "snare_replacing": {"type": "enum", "default": "no", "values": ["no", "yes"]},
-    "hihat_replacing": {"type": "enum", "default": "no", "values": ["no", "yes"]},
     "triplehat_replacing": {"type": "enum", "default": "no", "values": ["no", "yes"]},
     "kick_replace_remaining": {"type": "int", "default": 0, "min": 0, "max": 64},
     "snare_replace_remaining": {"type": "int", "default": 0, "min": 0, "max": 64},
-    "hihat_replace_remaining": {"type": "int", "default": 0, "min": 0, "max": 64},
     "triplehat_replace_remaining": {"type": "int", "default": 0, "min": 0, "max": 64},
     "last_pad": {"type": "enum", "default": "none", "values": ["none", "kick", "snare", "hihat", "triplehat"]},
     "live_taps": {"type": "int", "default": 0, "min": 0, "max": 9999},
@@ -82,24 +80,25 @@
     },
     {
       "name": "kick replacement begins on first playing tap",
-      "given": {"transport": "playing", "step": 20, "pass": 3, "kick_hits": 12, "snare_hits": 8, "hihat_hits": 32, "triplehat_hits": 2},
+      "given": {"transport": "playing", "step": 20, "pass": 3, "kick_hits": 12, "snare_hits": 8, "hihat": "on", "triplehat_hits": 2},
       "steps": [
-        {"action": "kick_down", "expect": {"kick_hits": 1, "kick_replacing": "yes", "kick_replace_remaining": 64, "snare_hits": 8, "hihat_hits": 32, "triplehat_hits": 2, "last_pad": "kick", "live_taps": 1}},
-        {"action": "kick_down_new_step", "expect": {"kick_hits": 2, "kick_replacing": "yes", "kick_replace_remaining": 64, "snare_hits": 8, "hihat_hits": 32, "triplehat_hits": 2, "last_pad": "kick", "live_taps": 2}},
+        {"action": "kick_down", "expect": {"kick_hits": 1, "kick_replacing": "yes", "kick_replace_remaining": 64, "snare_hits": 8, "hihat": "on", "triplehat_hits": 2, "last_pad": "kick", "live_taps": 1}},
+        {"action": "kick_down_new_step", "expect": {"kick_hits": 2, "kick_replacing": "yes", "kick_replace_remaining": 64, "snare_hits": 8, "hihat": "on", "triplehat_hits": 2, "last_pad": "kick", "live_taps": 2}},
         {"action": "kick_down_same_step", "expect": {"kick_hits": 2, "kick_replacing": "yes", "kick_replace_remaining": 64, "live_taps": 3}}
       ]
     },
     {
-      "name": "tracks replace independently in one pass",
-      "given": {"transport": "playing", "step": 12, "pass": 4, "kick_hits": 2, "kick_replacing": "yes", "kick_replace_remaining": 51, "snare_hits": 8, "hihat_hits": 32, "triplehat_hits": 2},
+      "name": "snare replacement and hi-hat toggle stay independent",
+      "given": {"transport": "playing", "step": 12, "pass": 4, "kick_hits": 2, "kick_replacing": "yes", "kick_replace_remaining": 51, "snare_hits": 8, "hihat": "on", "triplehat_hits": 2},
       "steps": [
-        {"action": "snare_down", "expect": {"kick_hits": 2, "kick_replacing": "yes", "kick_replace_remaining": 51, "snare_hits": 1, "snare_replacing": "yes", "snare_replace_remaining": 64, "hihat_hits": 32, "triplehat_hits": 2, "last_pad": "snare", "live_taps": 1}},
-        {"action": "hihat_down", "expect": {"kick_hits": 2, "kick_replacing": "yes", "kick_replace_remaining": 51, "snare_hits": 1, "snare_replacing": "yes", "snare_replace_remaining": 64, "hihat_hits": 1, "hihat_replacing": "yes", "hihat_replace_remaining": 64, "triplehat_hits": 2, "last_pad": "hihat", "live_taps": 2}}
+        {"action": "snare_down", "expect": {"kick_hits": 2, "kick_replacing": "yes", "kick_replace_remaining": 51, "snare_hits": 1, "snare_replacing": "yes", "snare_replace_remaining": 64, "hihat": "on", "triplehat_hits": 2, "last_pad": "snare", "live_taps": 1}},
+        {"action": "hihat_down", "expect": {"kick_hits": 2, "kick_replacing": "yes", "kick_replace_remaining": 51, "snare_hits": 1, "snare_replacing": "yes", "snare_replace_remaining": 64, "hihat": "off", "triplehat_hits": 2, "last_pad": "hihat", "live_taps": 2}},
+        {"action": "hihat_down_again", "expect": {"hihat": "on", "kick_hits": 2, "snare_hits": 1, "triplehat_hits": 2, "last_pad": "hihat", "live_taps": 3}}
       ]
     },
     {
       "name": "triple hi-hat records one compound event",
-      "given": {"transport": "playing", "step": 8, "pass": 2, "kick_hits": 4, "snare_hits": 8, "hihat_hits": 16, "triplehat_hits": 6},
+      "given": {"transport": "playing", "step": 8, "pass": 2, "kick_hits": 4, "snare_hits": 8, "hihat": "on", "triplehat_hits": 6},
       "steps": [
         {"action": "triplehat_down", "expect": {"transport": "playing", "step": 8, "triplehat_hits": 1, "triplehat_replacing": "yes", "triplehat_replace_remaining": 64, "last_pad": "triplehat", "live_taps": 1}},
         {"action": "triplehat_down_same_step", "expect": {"triplehat_hits": 1, "triplehat_replacing": "yes", "triplehat_replace_remaining": 64, "last_pad": "triplehat", "live_taps": 2}}
@@ -107,24 +106,24 @@
     },
     {
       "name": "paused pads audition without recording",
-      "given": {"transport": "paused", "step": 27, "kick_hits": 12, "snare_hits": 8, "hihat_hits": 32, "triplehat_hits": 2},
+      "given": {"transport": "paused", "step": 27, "kick_hits": 12, "snare_hits": 8, "hihat": "on", "triplehat_hits": 2},
       "steps": [
-        {"action": "triplehat_down", "expect": {"transport": "paused", "step": 27, "kick_hits": 12, "snare_hits": 8, "hihat_hits": 32, "triplehat_hits": 2, "triplehat_replacing": "no", "last_pad": "triplehat", "live_taps": 1}}
+        {"action": "triplehat_down", "expect": {"transport": "paused", "step": 27, "kick_hits": 12, "snare_hits": 8, "hihat": "on", "triplehat_hits": 2, "triplehat_replacing": "no", "last_pad": "triplehat", "live_taps": 1}}
       ]
     },
     {
       "name": "loop wrap preserves independent replacement windows",
       "given": {"transport": "playing", "step": 63, "pass": 8, "kick_hits": 4, "snare_hits": 4, "kick_replacing": "yes", "snare_replacing": "yes", "kick_replace_remaining": 33, "snare_replace_remaining": 1},
       "steps": [
-        {"action": "advance_one", "expect": {"step": 0, "pass": 9, "kick_hits": 4, "snare_hits": 4, "kick_replacing": "yes", "snare_replacing": "no", "kick_replace_remaining": 32, "snare_replace_remaining": 0, "hihat_replacing": "no", "triplehat_replacing": "no"}},
+        {"action": "advance_one", "expect": {"step": 0, "pass": 9, "kick_hits": 4, "snare_hits": 4, "kick_replacing": "yes", "snare_replacing": "no", "kick_replace_remaining": 32, "snare_replace_remaining": 0, "triplehat_replacing": "no"}},
         {"action": "snare_down_after_completion", "expect": {"step": 0, "pass": 9, "kick_hits": 4, "snare_hits": 1, "kick_replacing": "yes", "snare_replacing": "yes", "kick_replace_remaining": 32, "snare_replace_remaining": 64, "last_pad": "snare", "live_taps": 1}}
       ]
     },
     {
       "name": "hold both clears loop and preserves tempo",
-      "given": {"transport": "playing", "bpm": 147, "step": 51, "pass": 12, "kick_hits": 4, "snare_hits": 8, "hihat_hits": 16, "triplehat_hits": 2, "kick_replacing": "yes", "kick_replace_remaining": 19, "last_pad": "kick", "live_taps": 31},
+      "given": {"transport": "playing", "bpm": 147, "step": 51, "pass": 12, "kick_hits": 4, "snare_hits": 8, "hihat": "on", "triplehat_hits": 2, "kick_replacing": "yes", "kick_replace_remaining": 19, "last_pad": "kick", "live_taps": 31},
       "steps": [
-        {"action": "back", "expect": {"transport": "paused", "bpm": 147, "step": 0, "pass": 0, "kick_hits": 0, "snare_hits": 0, "hihat_hits": 0, "triplehat_hits": 0, "kick_replacing": "no", "snare_replacing": "no", "hihat_replacing": "no", "triplehat_replacing": "no", "kick_replace_remaining": 0, "snare_replace_remaining": 0, "hihat_replace_remaining": 0, "triplehat_replace_remaining": 0, "last_pad": "none", "live_taps": 0, "metronome_clicks": 0}}
+        {"action": "back", "expect": {"transport": "paused", "bpm": 147, "step": 0, "pass": 0, "kick_hits": 0, "snare_hits": 0, "hihat": "off", "triplehat_hits": 0, "kick_replacing": "no", "snare_replacing": "no", "triplehat_replacing": "no", "kick_replace_remaining": 0, "snare_replace_remaining": 0, "triplehat_replace_remaining": 0, "last_pad": "none", "live_taps": 0, "metronome_clicks": 0}}
       ]
     }
   ],
@@ -146,7 +145,7 @@
     "pads": [
       {"label": "KICK", "color": "#ff5b04", "status": "replacing"},
       {"label": "SNARE", "color": "#29c7d8", "status": "stored"},
-      {"label": "HI-HAT", "color": "#9bdd32", "status": "stored"},
+      {"label": "HI-HAT ON", "color": "#9bdd32", "status": "stored"},
       {"label": "3X HI-HAT", "color": "#e852a0", "status": "empty"}
     ],
     "page": "1 / 1",
