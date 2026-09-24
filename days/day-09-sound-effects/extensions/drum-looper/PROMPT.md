@@ -11,6 +11,7 @@ The other three tracks keep playing untouched.
 
 There is no record mode.
 While the transport is playing, pad taps are heard immediately and recorded automatically.
+Playback also supplies an audible quarter-note click, with a higher accent on beat one, so the player can perform against the grid before any track exists.
 
 ## Reference frame
 
@@ -62,6 +63,7 @@ Loop and tracks
 - Quantize each track to sixteenth notes: 16 steps per bar, 256 steps per loop.
 - Keep four independent 256-bit tracks named Kick, Snare, Hi-Hat, and Crash.
 - Use resident deterministic PCM for all four drum sounds and one immediate-retrigger speaker voice per sound or a bounded mixer that can start coincident hits without blocking the UI.
+- Keep a short resident metronome click on its own mixer channel. Sound it on every quarter note while playing, with a clearly higher accent on beat one of each bar. Do not click while paused.
 - Schedule from an absolute transport anchor. Never advance musical time by repeatedly delaying for one step.
 - At loop wrap, increment the pass counter. Each track's replacement window continues until 256 steps have elapsed from that track's own first replacement tap.
 
@@ -100,10 +102,12 @@ Diagnostics and acceptance
 
 - Prefix serial lines with D09L_ and implement status, reset, action, advance, capture, touchlog, and calibrate commands.
 - Report hardware, geometry, touch-map version/generation, transport, BPM, step, bar, beat, subdivision, pass, four track hit counts, replacement flags and remaining steps, timing lateness, heap, PSRAM, stack, and the last named error.
+- Keep the performance path independent from USB readership. Do not print a line for each tick, click, pad touch, or scheduled drum hit. Command responses and bounded error summaries must not stall touch, rendering, audio, or the musical clock when no serial monitor is attached.
 - Domain-test 16-bar wrap, 256-step indexing, nearest-step quantization at both sides of a boundary and exact ties, pause/resume phase, tempo estimation, invalid tempo taps, independent replacement, duplicate-hit collapse, reset, and scheduling across timer rollover.
 - Prove one track can be replaced without changing the other three and that two different tracks can be replaced during the same pass.
 - Over 100 injected pad touches, touch-to-audition p95 is at most 30 ms and no touch exceeds 50 ms.
 - Over 16 complete bars, no scheduled hit begins more than 3 ms late under normal UI load; report rather than hide overruns.
+- With an empty loop at 120 BPM, 12 seconds of playback produces 24 audible quarter-note clicks and advances 96 sixteenth steps. Repeat with USB connected but unread and with no monitor attached; neither condition may slow the clock.
 - Run 100 loop passes and repeated clear/rebuild cycles without memory loss or changes to the saved touch map.
 - Capture paused, playing, stored-pattern, and simultaneous-replacement frames.
 - Physically review sound balance, thumb/index ergonomics, tap-tempo feel, live response, rhythmic alignment, clipping, touch alignment, and the bottom edge.

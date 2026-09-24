@@ -198,6 +198,7 @@ Perceived sound quality, physical pusher feel, and physical touch alignment stil
 
 Keep the four-pad view, but turn it into a 16-bar, 4/4 looper with independent Kick, Snare, Hi-Hat, and Crash tracks.
 There is no record mode: while the loop plays, the first tap on a pad clears only that pad's old track and opens a full 16-bar replacement window for that instrument.
+An audible quarter-note click, with a higher beat-one accent, supplies the grid even before any drum track exists.
 
 ![Drum Looper running on the M5Stack Stopwatch](https://esptember.com/images/day-09-sound-effects/drum-looper-device.png)
 

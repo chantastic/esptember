@@ -67,6 +67,16 @@ Each track ends independently after 256 musical steps have elapsed from its own 
 If two or more tracks contain a hit on one scheduled step, start them on that same boundary through a bounded mixer or independent prepared channels.
 Track overlap must not serialize or drop a hit.
 
+## Audible grid
+
+While the transport plays, sound a short click on steps 0, 4, 8, and 12 of every bar.
+Use a distinctly higher click on step 0 so beat one is recognizable without looking at the display.
+Clicks stop immediately when paused and resume with the retained phase.
+They use a prepared resident buffer and a dedicated mixer channel, so they can overlap a drum without delaying or replacing it.
+
+At 120 BPM, 12 uninterrupted seconds must advance 96 sixteenth steps and schedule exactly 24 quarter-note clicks.
+This remains true with USB connected but unread and with no serial monitor attached.
+
 ## Tap tempo
 
 The first BtnA press arms tempo measurement without changing BPM.
@@ -143,6 +153,10 @@ Prefix serial lines with `D09L_`.
 Provide `status`, `reset`, `action`, `advance`, `capture`, `touchlog`, and `calibrate`.
 Status reports board, geometry, touch-map version/generation, transport, BPM, step, bar, beat, subdivision, pass, hit counts, replacement flags and remaining steps, last pad, live taps, late-step count/max lateness, heap, PSRAM, stack, and last error.
 
+Ticks, metronome clicks, pad touches, and scheduled hits emit no unsolicited serial lines.
+Diagnostic command responses are bounded and must not make musical time depend on whether a host is reading USB.
+A transport delay larger than the bounded catch-up window reports `transport_overrun`; it never silently stretches later steps.
+
 A missing sound disables only that pad and names it `sound_prepare`.
 An impossible transport state stops playback and reports `transport_state` without corrupting patterns.
 The `espt-touch` namespace remains read-only outside calibration.
@@ -159,6 +173,8 @@ The `espt-touch` namespace remains read-only outside calibration.
 - step 255 wraps to step 0 without truncating a track's independent 256-step replacement window;
 - both-button hold clears every track but preserves BPM; and
 - simultaneous scheduled track hits share one musical boundary.
+- an empty 120 BPM loop produces 24 clicks and 96 sixteenth steps in 12 seconds; and
+- unread or disconnected USB does not slow touch, audio, rendering, or transport.
 
 ## Acceptance layers
 

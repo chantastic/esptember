@@ -17,6 +17,8 @@ A generated candidate adds domain fixtures for:
 - pause/resume fractional phase and absolute-deadline scheduling across timer rollover;
 - median tap tempo with valid, invalid, stale, minimum, and maximum intervals;
 - simultaneous multi-track dispatch on one boundary and explicit lateness accounting;
+- quarter-note metronome scheduling, bar-one accent, pause silence, and overlap with drums;
+- 12-second 120 BPM playback advancing 96 steps and producing 24 clicks with USB unread and disconnected;
 - deterministic Kick, Snare, Hi-Hat, and Crash PCM hashes, sample bounds, and memory budget; and
 - reset clearing patterns while preserving BPM and the shared calibration record.
 

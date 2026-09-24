@@ -7,6 +7,8 @@ Reviewer: ____________________  Date: ____________________
 - [ ] With the lanyard down, the thumb reaches BtnA/left for tempo and the index reaches BtnB/right for play/pause comfortably.
 - [ ] Repeated thumb taps produce the expected tempo and reject an accidental long gap.
 - [ ] Index presses play, pause, and resume without an audible phase jump.
+- [ ] Playing an empty loop produces a steady quarter-note click with a recognizable higher accent on beat one.
+- [ ] The click continues at the same pace when the USB monitor is closed and remains audible under drum hits.
 - [ ] While paused, every pad auditions without changing its stored pattern.
 - [ ] While playing, a live pad sounds immediately rather than waiting for quantization.
 - [ ] The first Kick tap in a pass removes the old Kick pattern while Snare, Hi-Hat, and Crash continue unchanged.

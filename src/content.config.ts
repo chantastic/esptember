@@ -4,7 +4,11 @@ import boards from "./lib/boards.json";
 const boardIds = Object.keys(boards) as [keyof typeof boards, ...(keyof typeof boards)[]];
 
 const days = defineCollection({
-  loader: glob({ base: "./days", pattern: "*/README.md", generateId: ({ entry }) => entry.split("/")[0]! }),
+  loader: glob({
+    base: "./days",
+    pattern: ["*/README.md", "!*/.build/**", "!*/extensions/**", "!*/firmware/**"],
+    generateId: ({ entry }) => entry.split("/")[0]!,
+  }),
   schema: z.object({
     board: z.enum(boardIds),
     day: z.number(), title: z.string(), summary: z.string(),

@@ -40,16 +40,26 @@
     "crash_replace_remaining": {"type": "int", "default": 0, "min": 0, "max": 256},
     "last_pad": {"type": "enum", "default": "none", "values": ["none", "kick", "snare", "hihat", "crash"]},
     "live_taps": {"type": "int", "default": 0, "min": 0, "max": 9999},
-    "error": {"type": "enum", "default": "none", "values": ["none", "sound_prepare", "transport_state"]}
+    "metronome_clicks": {"type": "int", "default": 0, "min": 0, "max": 9999},
+    "error": {"type": "enum", "default": "none", "values": ["none", "sound_prepare", "click_start", "transport_state", "transport_overrun"]}
   },
   "scenarios": [
     {
       "name": "index play pause and resume",
       "steps": [
         {"action": "index", "expect": {"transport": "playing", "step": 0}},
-        {"action": "advance_37", "expect": {"transport": "playing", "step": 37}},
-        {"action": "index", "expect": {"transport": "paused", "step": 37}},
-        {"action": "index", "expect": {"transport": "playing", "step": 37}}
+        {"action": "advance_37", "expect": {"transport": "playing", "step": 37, "metronome_clicks": 10}},
+        {"action": "index", "expect": {"transport": "paused", "step": 37, "metronome_clicks": 10}},
+        {"action": "index", "expect": {"transport": "playing", "step": 37, "metronome_clicks": 10}}
+      ]
+    },
+    {
+      "name": "audible grid follows transport",
+      "given": {"transport": "playing", "step": 0},
+      "steps": [
+        {"action": "wait_16_steps", "expect": {"step": 16, "metronome_clicks": 4}},
+        {"action": "index", "expect": {"transport": "paused", "step": 16, "metronome_clicks": 4}},
+        {"action": "wait_16_steps_paused", "expect": {"transport": "paused", "step": 16, "metronome_clicks": 4}}
       ]
     },
     {
@@ -106,7 +116,7 @@
       "name": "hold both clears loop and preserves tempo",
       "given": {"transport": "playing", "bpm": 147, "step": 199, "pass": 12, "kick_hits": 4, "snare_hits": 8, "hihat_hits": 16, "crash_hits": 2, "kick_replacing": "yes", "kick_replace_remaining": 73, "last_pad": "kick", "live_taps": 31},
       "steps": [
-        {"action": "back", "expect": {"transport": "paused", "bpm": 147, "step": 0, "pass": 0, "kick_hits": 0, "snare_hits": 0, "hihat_hits": 0, "crash_hits": 0, "kick_replacing": "no", "snare_replacing": "no", "hihat_replacing": "no", "crash_replacing": "no", "kick_replace_remaining": 0, "snare_replace_remaining": 0, "hihat_replace_remaining": 0, "crash_replace_remaining": 0, "last_pad": "none", "live_taps": 0}}
+        {"action": "back", "expect": {"transport": "paused", "bpm": 147, "step": 0, "pass": 0, "kick_hits": 0, "snare_hits": 0, "hihat_hits": 0, "crash_hits": 0, "kick_replacing": "no", "snare_replacing": "no", "hihat_replacing": "no", "crash_replacing": "no", "kick_replace_remaining": 0, "snare_replace_remaining": 0, "hihat_replace_remaining": 0, "crash_replace_remaining": 0, "last_pad": "none", "live_taps": 0, "metronome_clicks": 0}}
       ]
     }
   ],
