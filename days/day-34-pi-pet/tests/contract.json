@@ -186,6 +186,18 @@
       "type": "string",
       "default": "",
       "max_length": 16
+    },
+    "sound": {
+      "type": "enum",
+      "default": "none",
+      "values": [
+        "none",
+        "pop",
+        "start",
+        "chime",
+        "wince",
+        "uhoh"
+      ]
     }
   },
   "scenarios": [
@@ -203,6 +215,7 @@
             "focus": "a",
             "a_state": "idle",
             "emit": "focus a",
+            "sound": "pop",
             "mood": "idle"
           }
         }
@@ -222,7 +235,8 @@
             "focus": "a",
             "a_state": "thinking",
             "mood": "thinking",
-            "emit": "focus a"
+            "emit": "focus a",
+            "sound": "pop"
           }
         },
         {
@@ -234,7 +248,8 @@
           "expect": {
             "a_state": "tool",
             "mood": "working",
-            "emit": ""
+            "emit": "",
+            "sound": "none"
           }
         },
         {
@@ -265,7 +280,8 @@
             "focus": "a",
             "a_state": "tool",
             "mood": "working",
-            "emit": "focus a"
+            "emit": "focus a",
+            "sound": "pop"
           }
         },
         {
@@ -279,7 +295,8 @@
             "a_unseen": true,
             "a_wince": true,
             "mood": "surprised",
-            "emit": ""
+            "emit": "",
+            "sound": "wince"
           }
         },
         {
@@ -290,6 +307,7 @@
           },
           "expect": {
             "a_state": "thinking",
+            "sound": "none",
             "mood": "surprised"
           }
         },
@@ -319,7 +337,8 @@
             "a_unseen": true,
             "a_wince": true,
             "mood": "surprised",
-            "emit": "focus a"
+            "emit": "focus a",
+            "sound": "pop"
           }
         },
         {
@@ -328,7 +347,8 @@
             "a_wince": false,
             "a_age": "over_4s",
             "mood": "blocked",
-            "emit": ""
+            "emit": "",
+            "sound": "uhoh"
           }
         },
         {
@@ -336,6 +356,7 @@
           "expect": {
             "a_unseen": false,
             "emit": "ack a",
+            "sound": "none",
             "mood": "blocked"
           }
         }
@@ -355,7 +376,8 @@
             "focus": "a",
             "a_state": "thinking",
             "mood": "thinking",
-            "emit": "focus a"
+            "emit": "focus a",
+            "sound": "pop"
           }
         },
         {
@@ -368,14 +390,16 @@
             "a_state": "done",
             "a_unseen": true,
             "mood": "done",
-            "emit": ""
+            "emit": "",
+            "sound": "chime"
           }
         },
         {
           "action": "advance_5s",
           "expect": {
             "a_age": "over_4s",
-            "mood": "waiting"
+            "mood": "waiting",
+            "sound": "none"
           }
         },
         {
@@ -403,7 +427,8 @@
             "a_state": "done",
             "a_unseen": true,
             "mood": "done",
-            "emit": "focus a"
+            "emit": "focus a",
+            "sound": "pop"
           }
         },
         {
@@ -412,6 +437,7 @@
             "a_age": "over_30s",
             "mood": "idle",
             "emit": "",
+            "sound": "none",
             "a_unseen": true
           }
         }
@@ -432,7 +458,8 @@
             "a_state": "done",
             "a_unseen": true,
             "mood": "done",
-            "emit": "focus a"
+            "emit": "focus a",
+            "sound": "pop"
           }
         },
         {
@@ -440,7 +467,8 @@
           "expect": {
             "a_age": "over_4s",
             "mood": "waiting",
-            "emit": ""
+            "emit": "",
+            "sound": "none"
           }
         },
         {
@@ -469,7 +497,8 @@
             "mode": "pets",
             "focus": "a",
             "a_state": "idle",
-            "emit": "focus a"
+            "emit": "focus a",
+            "sound": "pop"
           }
         },
         {
@@ -495,7 +524,8 @@
             "b_state": "done",
             "b_unseen": true,
             "mood": "done",
-            "emit": "focus b"
+            "emit": "focus b",
+            "sound": "chime"
           }
         },
         {
@@ -504,7 +534,8 @@
             "a_age": "over_4s",
             "b_age": "over_4s",
             "mood": "waiting",
-            "emit": ""
+            "emit": "",
+            "sound": "none"
           }
         }
       ]
@@ -523,7 +554,8 @@
             "focus": "a",
             "a_state": "tool",
             "mood": "working",
-            "emit": "focus a"
+            "emit": "focus a",
+            "sound": "pop"
           }
         },
         {
@@ -545,7 +577,8 @@
             "focus": "b",
             "b_unseen": false,
             "mood": "done",
-            "emit": "focus b"
+            "emit": "focus b",
+            "sound": "none"
           }
         },
         {
@@ -571,7 +604,8 @@
             "mode": "pets",
             "focus": "a",
             "a_state": "idle",
-            "emit": "focus a"
+            "emit": "focus a",
+            "sound": "pop"
           }
         },
         {
@@ -599,7 +633,8 @@
           "action": "right",
           "expect": {
             "focus": "b",
-            "emit": "focus b"
+            "emit": "focus b",
+            "sound": "none"
           }
         },
         {
@@ -638,7 +673,8 @@
             "mode": "pets",
             "focus": "a",
             "a_state": "idle",
-            "emit": "focus a"
+            "emit": "focus a",
+            "sound": "pop"
           }
         },
         {
@@ -661,7 +697,8 @@
             "focus": "b",
             "a_state": "none",
             "mood": "thinking",
-            "emit": "focus b"
+            "emit": "focus b",
+            "sound": "none"
           }
         },
         {
@@ -695,7 +732,8 @@
             "a_unseen": true,
             "a_wince": true,
             "mood": "surprised",
-            "emit": "focus a"
+            "emit": "focus a",
+            "sound": "pop"
           }
         },
         {
@@ -723,7 +761,8 @@
             "c_state": "none",
             "c_unseen": false,
             "mood": "idle",
-            "emit": ""
+            "emit": "",
+            "sound": "none"
           }
         }
       ]
@@ -742,7 +781,8 @@
             "focus": "a",
             "a_state": "thinking",
             "mood": "thinking",
-            "emit": "focus a"
+            "emit": "focus a",
+            "sound": "pop"
           }
         },
         {
@@ -750,7 +790,8 @@
           "expect": {
             "manual_sleep": true,
             "mood": "sleeping",
-            "emit": ""
+            "emit": "",
+            "sound": "none"
           }
         },
         {
@@ -803,7 +844,8 @@
             "mode": "pets",
             "focus": "a",
             "a_state": "idle",
-            "emit": "focus a"
+            "emit": "focus a",
+            "sound": "pop"
           }
         },
         {
@@ -811,7 +853,8 @@
           "expect": {
             "a_age": "over_10m",
             "mood": "sleeping",
-            "emit": ""
+            "emit": "",
+            "sound": "none"
           }
         },
         {
@@ -823,7 +866,8 @@
           "expect": {
             "a_state": "thinking",
             "a_age": "fresh",
-            "mood": "thinking"
+            "mood": "thinking",
+            "sound": "start"
           }
         }
       ]
@@ -893,6 +937,300 @@
           }
         }
       ]
+    },
+    {
+      "name": "transition sounds mark new sessions, run starts, completion, and errors",
+      "steps": [
+        {
+          "action": {
+            "type": "report",
+            "id": "a",
+            "state": "idle"
+          },
+          "expect": {
+            "mode": "pets",
+            "focus": "a",
+            "a_state": "idle",
+            "emit": "focus a",
+            "sound": "pop"
+          }
+        },
+        {
+          "action": {
+            "type": "report",
+            "id": "a",
+            "state": "thinking"
+          },
+          "expect": {
+            "a_state": "thinking",
+            "mood": "thinking",
+            "emit": "",
+            "sound": "start"
+          }
+        },
+        {
+          "action": {
+            "type": "report",
+            "id": "a",
+            "state": "tool"
+          },
+          "expect": {
+            "a_state": "tool",
+            "mood": "working",
+            "sound": "none"
+          }
+        },
+        {
+          "action": {
+            "type": "report",
+            "id": "a",
+            "state": "thinking"
+          },
+          "expect": {
+            "a_state": "thinking",
+            "mood": "thinking",
+            "sound": "none"
+          }
+        },
+        {
+          "action": {
+            "type": "report",
+            "id": "a",
+            "state": "done"
+          },
+          "expect": {
+            "a_state": "done",
+            "a_unseen": true,
+            "mood": "done",
+            "sound": "chime"
+          }
+        },
+        {
+          "action": {
+            "type": "report",
+            "id": "a",
+            "state": "done"
+          },
+          "expect": {
+            "sound": "none"
+          }
+        },
+        {
+          "action": {
+            "type": "report",
+            "id": "a",
+            "state": "tool"
+          },
+          "expect": {
+            "a_state": "tool",
+            "mood": "working",
+            "sound": "start"
+          }
+        },
+        {
+          "action": {
+            "type": "report",
+            "id": "a",
+            "state": "error"
+          },
+          "expect": {
+            "a_state": "error",
+            "a_wince": true,
+            "mood": "surprised",
+            "sound": "wince"
+          }
+        },
+        {
+          "action": "advance_5s",
+          "expect": {
+            "a_wince": false,
+            "a_age": "over_4s",
+            "mood": "blocked",
+            "sound": "uhoh"
+          }
+        },
+        {
+          "action": "advance_5s",
+          "expect": {
+            "sound": "none"
+          }
+        }
+      ]
+    },
+    {
+      "name": "a quick recovery from an error never says uh-oh",
+      "steps": [
+        {
+          "action": {
+            "type": "report",
+            "id": "a",
+            "state": "tool"
+          },
+          "expect": {
+            "mode": "pets",
+            "focus": "a",
+            "a_state": "tool",
+            "mood": "working",
+            "emit": "focus a",
+            "sound": "pop"
+          }
+        },
+        {
+          "action": {
+            "type": "report",
+            "id": "a",
+            "state": "error"
+          },
+          "expect": {
+            "a_state": "error",
+            "a_unseen": true,
+            "a_wince": true,
+            "mood": "surprised",
+            "emit": "",
+            "sound": "wince"
+          }
+        },
+        {
+          "action": {
+            "type": "report",
+            "id": "a",
+            "state": "thinking"
+          },
+          "expect": {
+            "a_state": "thinking",
+            "sound": "none"
+          }
+        },
+        {
+          "action": "advance_5s",
+          "expect": {
+            "a_wince": false,
+            "a_age": "over_4s",
+            "mood": "thinking",
+            "sound": "none"
+          }
+        }
+      ]
+    },
+    {
+      "name": "manual sleep mutes transition sounds",
+      "steps": [
+        {
+          "action": {
+            "type": "report",
+            "id": "a",
+            "state": "thinking"
+          },
+          "expect": {
+            "mode": "pets",
+            "focus": "a",
+            "a_state": "thinking",
+            "mood": "thinking",
+            "emit": "focus a",
+            "sound": "pop"
+          }
+        },
+        {
+          "action": "hold",
+          "expect": {
+            "manual_sleep": true,
+            "mood": "sleeping",
+            "emit": "",
+            "sound": "none"
+          }
+        },
+        {
+          "action": {
+            "type": "report",
+            "id": "a",
+            "state": "done"
+          },
+          "expect": {
+            "a_state": "done",
+            "a_unseen": true,
+            "sound": "none",
+            "mood": "sleeping"
+          }
+        },
+        {
+          "action": {
+            "type": "report",
+            "id": "b",
+            "state": "idle"
+          },
+          "expect": {
+            "b_state": "idle",
+            "sound": "none"
+          }
+        },
+        {
+          "action": "enter",
+          "expect": {
+            "a_unseen": false,
+            "manual_sleep": false,
+            "mood": "done",
+            "emit": "ack a",
+            "sound": "none"
+          }
+        }
+      ]
+    },
+    {
+      "name": "demo enter auditions each state's sound",
+      "steps": [
+        {
+          "action": "enter",
+          "expect": {
+            "demo_mood": "thinking",
+            "mood": "thinking",
+            "sound": "start"
+          }
+        },
+        {
+          "action": "enter",
+          "expect": {
+            "demo_mood": "working",
+            "mood": "working",
+            "sound": "start"
+          }
+        },
+        {
+          "action": "enter",
+          "expect": {
+            "demo_mood": "waiting",
+            "mood": "waiting",
+            "sound": "none"
+          }
+        },
+        {
+          "action": "enter",
+          "expect": {
+            "demo_mood": "blocked",
+            "mood": "blocked",
+            "sound": "uhoh"
+          }
+        },
+        {
+          "action": "enter",
+          "expect": {
+            "demo_mood": "done",
+            "mood": "done",
+            "sound": "chime"
+          }
+        },
+        {
+          "action": "enter",
+          "expect": {
+            "demo_mood": "sad",
+            "mood": "sad",
+            "sound": "none"
+          }
+        }
+      ],
+      "given": {
+        "demo_mood": "surprised",
+        "mood": "surprised"
+      }
     },
     {
       "name": "demo state cycle wraps after sad",

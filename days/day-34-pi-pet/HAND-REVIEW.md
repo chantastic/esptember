@@ -32,7 +32,9 @@ Start in demo mode (no pi sessions running, or after `reset`), lanyard down.
 Start two or three pi sessions in different directories.
 
 - [ ] Each session appears with its own color; the name and activity line are readable and unclipped.
-- [ ] The page dots match the sessions; the focused dot is larger.
+- [ ] The page dots match the sessions; the focused dot is larger; rings read at a glance: amber working, white thinking, red error, pulsing blue waiting for you.
+- [ ] A red style under a red error ring is still distinguishable: ______
+- [ ] Sounds: a new session pops, a run start ticks once (no chatter during tool bursts), done chimes, an error winces, and a persisting error says uh-oh; the level suits a desk; holding both mutes.
 - [ ] While an agent works, its pet shows thinking dots (after a moment) and works while a tool runs; the activity line shows the command or file.
 - [ ] A failing command makes the pet look surprised; a session that stops on an error shows `!` until acknowledged.
 - [ ] When an agent finishes, its pet celebrates, then waits with a blue badge until acknowledged; an unfocused finished pet's dot pulses blue.

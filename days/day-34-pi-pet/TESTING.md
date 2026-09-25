@@ -31,7 +31,7 @@ It does not prove rendering, frame rate, touch alignment, the physical controls,
 The pi-pet hub owns the port, so stop it before any device step: `/pet release` in pi, or `pkill -f pi-pet/hub.mjs`.
 
 - **Compile and flash:** compile with the pinned toolchain and flash **app-only at `0x10000`**. This preserves NVS and `espt-touch/record`.
-- **Replay:** `python3 tests/check_device.py` (needs pyserial) replays each scenario without a `given` state or a 30 s / 10 min clock. It checks the device's `pets` report and its emitted `GB_FOCUS`/`GB_ACK` lines after every step. Waits stand in for `advance_5s`.
+- **Replay:** `python3 tests/check_device.py` (needs pyserial) replays each scenario without a `given` state or a 30 s / 10 min clock. It checks the device's `pets` report and its emitted `GB_FOCUS`/`GB_ACK`/`GB_SOUND` lines after every step. Waits stand in for `advance_5s`.
 - **Framebuffer:** `shot` returns the raw 468 × 466 RGB565 canvas, byte-swapped as M5GFX stores it.
 - **Live pi:** a headless `pi --no-session -p "..."` run through the installed extension should produce `thinking → working → thinking`, plus `surprised` for a failing bash command, in the hub's monitor stream.
 - **Motion review:** `rec <frames> <x> <y> <size> <step>` then `recdump` returns cropped frames at the loop rate. Compare them with screencast frames of the post's live demo.

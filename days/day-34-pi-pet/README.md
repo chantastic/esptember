@@ -4,7 +4,7 @@ day: 34
 title: Pi Pet
 toolchain: Arduino ESP32 3.3.10 + M5Unified 0.2.19 + M5GFX 0.2.26 + pi extension (TypeScript) + Node serial hub
 summary: "One Grok Bot–style pet per running pi coding-agent session: it thinks, works, gets blocked, celebrates, and waits for you."
-verification: "Contract, host bridge, and 13-scenario injected-device replay verified; device framebuffer and frame-sequence captures recorded; physical hand review pending"
+verification: "Contract, host bridge, and 16-scenario injected-device replay verified; device framebuffer and frame-sequence captures recorded; physical hand review pending"
 ---
 
 ## The assignment
@@ -107,6 +107,8 @@ Verify in layers and record only what ran:
   - an error → a brief Surprised, then Blocked if the session stops on it;
   - done → Done, then Waiting until you acknowledge it.
 - The first session is focused automatically. A pet that finishes takes focus unless the focused pet is busy, and it stays unseen until you page to it or acknowledge it.
+- Page dots keep each session's color and add a state ring: amber working, white thinking, red error, and pulsing blue when a session is waiting for you.
+- Short synthesized sounds mark transitions from any session: a pop when a session appears, a tick when a run starts, a chime when it finishes, a wince on an error, and an uh-oh if the error persists. Holding both buttons mutes them.
 - The activity line shows the current command or file, with tokens, passwords, and bearer credentials redacted.
 - A crashed session's pet disappears. The last pet leaving returns the device to its demo bot.
 - The pet keeps the reference's motion:
@@ -121,9 +123,9 @@ Wi-Fi transport, text-to-speech through an authenticated `devices.chan.dev/v1/sp
 
 ## Recorded evidence
 
-- **Host contract:** the shared contract runner validates three disposable reducer shapes, 61 scenario steps, and 10,000 generated actions, and rejects a deliberate mutation. A reference model audits every expectation and fuzzes 40,061 checks. The host bridge passes redaction and hub-merge tests on a temporary socket.
+- **Host contract:** the shared contract runner validates three disposable reducer shapes, 86 scenario steps, and 10,000 generated actions, and rejects a deliberate mutation. A reference model audits every expectation, transition sounds included, and fuzzes 40,086 checks. The host bridge passes redaction and hub-merge tests on a temporary socket.
 - **Injected-device evidence:**
-  - The replay passes 13 scenarios and 459 checks on the attached Stopwatch.
+  - The replay passes 16 scenarios and 687 checks on the attached Stopwatch, including every transition sound.
   - The shared touch map (version 2, generation 2) survives every app-only flash.
   - A headless pi run through the installed extension drove thinking, working, and the error wince live.
   - Frame-by-frame device recordings were compared with screencasts of the post's live demo.

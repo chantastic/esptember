@@ -110,7 +110,9 @@ def main() -> int:
             line, wait = command(step["action"])
             if line:
                 dev.send(line)
-            emitted = [l for l in dev.lines(wait) if l.startswith(("GB_FOCUS ", "GB_ACK "))]
+            window = dev.lines(wait)
+            emitted = [l for l in window if l.startswith(("GB_FOCUS ", "GB_ACK "))]
+            sounds = [l.split()[1] for l in window if l.startswith("GB_SOUND ")]
             expected |= step["expect"]
             got = dev.report()
             where = f"{scenario['name']} step {index} {step['action']}"
@@ -120,7 +122,8 @@ def main() -> int:
                 emit = f"{'focus' if verb == 'GB_FOCUS' else 'ack'} {SLOT_BY_ID.get(pid, pid)}"
             pairs = [("focus", got["focus"], expected["focus"]), ("mood", got["mood"], expected["mood"]),
                      ("manual_sleep", got["manual_sleep"], expected["manual_sleep"]),
-                     ("emit", emit, expected["emit"])]
+                     ("emit", emit, expected["emit"]),
+                     ("sound", sounds[-1] if sounds else "none", expected["sound"])]
             if expected["mode"] == "demo":
                 pairs.append(("demo_bot", got["demo_bot"], expected["demo_bot"]))
             for slot in IDS:

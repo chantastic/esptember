@@ -77,7 +77,7 @@ Text lines at 115200 over USB CDC:
 - Diagnostics:
   - `pets` reports `GB_PETS n= focus= mood= manual_sleep= demo_bot=` plus `id:state:unseen` per pet.
   - `act left|right|enter|hold` is semantic input.
-  - `reset`, `mood <name>`, `style <n>`, `expr <n>`, `look <x> <y>`, `bounce`, `spin`.
+  - `reset`, `mood <name>`, `style <n>`, `expr <n>`, `look <x> <y>`, `bounce`, `spin`, `sound <pop|start|chime|wince|uhoh>`.
   - `shot` returns the raw RGB565 framebuffer.
   - `rec <frames> <x> <y> <size> <step>` / `recdump` records cropped frames at the loop rate for frame-by-frame review.
 
@@ -86,7 +86,7 @@ The device emits:
 - `GB_READY` after boot.
 - `GB_FOCUS <id>` whenever focus changes.
 - `GB_ACK <id>` when the user acknowledges.
-- Evidence lines `GB_HARDWARE`, `GB_TOUCHMAP`, `GB_FPS`, `GB_EVENT`.
+- Evidence lines `GB_HARDWARE`, `GB_TOUCHMAP`, `GB_SPEAKER`, `GB_FPS`, `GB_EVENT`, `GB_SOUND`.
 
 ## Portable state
 
@@ -107,6 +107,7 @@ Global fields:
 - `demo_mood`: mood
 - `mood`: the displayed mood
 - `emit`: the last device event of the action (`focus x`, `ack x`, or empty)
+- `sound`: the transition sound the action plays (`none|pop|start|chime|wince|uhoh`)
 
 Clock actions `advance_5s`, `advance_30s`, and `advance_10m` stand in for elapsed time.
 
@@ -174,6 +175,17 @@ The device ports the web avatar engine rather than imitating it. Measured behavi
   - **Pulse clocks:** each glyph keeps its own clock from its state's entry. This is a study adaptation so an outgoing pulse never jumps.
   - **Debounce:** glyph entry starts immediately in the reference. The device debounces Thinking by 350 ms so sub-second tool bursts don't flicker the face; this is a labeled adaptation.
 - **Badge:** a blue dot (`#1D9BF0`) on the pet while it needs you.
+- **Transition sounds:** synthesized at boot (22.05 kHz mono, about −7 dBFS, speaker volume 170/255), at most one per event, from any pet, not only the focused one:
+
+  | Event | Sound |
+  | --- | --- |
+  | A new session appears | **pop** (70 ms upward sweep) |
+  | A run starts: thinking/tool entered from idle, done, waiting, or sleeping | **start** (short tick) |
+  | Done | **chime** (C6–E6–G6 bell arpeggio) |
+  | Error | **wince** (short falling blip) |
+  | Still in error when the 2.5 s wince ends | **uh-oh** (G4 → D4) |
+
+  Flips between thinking and tool are silent, and manual sleep mutes all sounds. In demo mode, Enter auditions the new state's sound: done chime, blocked uh-oh, surprised wince, thinking/working start. Every played sound emits `GB_SOUND <name>`.
 - **Sleeping:** closed-line expressions, drifting `z`, dim backlight.
 - **Rendering:**
   - antialiased distance fields at every scale;
@@ -183,7 +195,9 @@ The device ports the web avatar engine rather than imitating it. Measured behavi
 - **Status band:**
   - Session name, bold, centered at y 390, inside [110, 376, 248, 28].
   - Activity line at y 417, trimmed with `...` to fit [116, 405, 236, 24]. When the detail is empty, it shows the state name.
-  - One page dot per pet at y 438 in its ink, inside [153, 430, 162, 16]. The focused dot is larger; unseen pets pulse a blue ring.
+  - One page dot per pet at y 438, inside [153, 430, 162, 16]. The focused dot is larger.
+    - The fill is the pet's ink (identity), dimmed to 40 % while sleeping.
+    - A ring shows state: working amber `#F5B13F`, thinking soft white `#D8D4CA`, error/blocked red `#FF4D4F` (pulsing while unseen), and finished/waiting-and-unseen pulsing blue `#1D9BF0`. Idle and seen pets have no ring.
   - The status band appears only in pet mode. In demo mode, a transient style or state label is shown instead.
 
 The avatar shapes, expressions, and motion constants are xAI's design. Generated candidates derive them from the public page at build time; they are not committed to this repository.

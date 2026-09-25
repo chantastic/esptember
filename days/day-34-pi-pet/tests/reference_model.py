@@ -21,6 +21,9 @@ MOODS = ["idle", "thinking", "working", "waiting", "blocked", "done", "surprised
 DEMO_CYCLE = ["idle", "happy", "curious", "excited", "surprised", "thinking", "working",
               "waiting", "blocked", "done", "sad"]
 STYLE_COUNT = 8
+# Transition sounds (device synthesizes them; one per action at most).
+DEMO_SOUND = {"done": "chime", "blocked": "uhoh", "surprised": "wince", "thinking": "start", "working": "start"}
+RESTING = {"idle", "done", "waiting", "sleeping"}
 NEEDS_YOU = {"done", "error", "waiting"}
 WORKING = {"thinking", "tool"}
 AGES = ["fresh", "over_4s", "over_30s", "over_10m"]
@@ -75,12 +78,22 @@ def set_focus(s: dict, slot: str, by_user: bool) -> None:
 def reduce(state: dict, action: dict) -> dict:
     s = copy.deepcopy(state)
     s["emit"] = ""
+    s["sound"] = "none"
     kind = action["type"]
 
     if kind == "report":
         slot, new = action["id"], action["state"]
-        fresh = s[f"{slot}_state"] == "none"
-        changed = fresh or s[f"{slot}_state"] != new
+        prev = s[f"{slot}_state"]
+        fresh = prev == "none"
+        changed = fresh or prev != new
+        if fresh:
+            s["sound"] = "pop"                       # a new session appears
+        elif changed and new == "done":
+            s["sound"] = "chime"
+        elif changed and new == "error":
+            s["sound"] = "wince"
+        elif changed and new in WORKING and prev in RESTING:
+            s["sound"] = "start"                     # a run begins (not thinking <-> tool flips)
         s[f"{slot}_state"] = new
         if new == "error":
             s[f"{slot}_wince"] = True
@@ -113,6 +126,8 @@ def reduce(state: dict, action: dict) -> dict:
             if s[f"{slot}_state"] == "none":
                 continue
             s[f"{slot}_age"] = AGES[max(AGES.index(s[f"{slot}_age"]), order)]
+            if s[f"{slot}_wince"] and s[f"{slot}_state"] == "error":
+                s["sound"] = "uhoh"                  # still errored when the wince ends: blocked
             s[f"{slot}_wince"] = False  # every advance exceeds the 2.5 s wince
     elif s["focus"] != "none":  # pet mode buttons
         if kind in ("left", "right"):
@@ -134,9 +149,12 @@ def reduce(state: dict, action: dict) -> dict:
         elif kind == "enter":
             m = s["demo_mood"]
             s["demo_mood"] = "idle" if m not in DEMO_CYCLE else DEMO_CYCLE[(DEMO_CYCLE.index(m) + 1) % len(DEMO_CYCLE)]
+            s["sound"] = DEMO_SOUND.get(s["demo_mood"], "none")  # auditions each state's sound
         elif kind == "hold":
             s["demo_mood"] = "idle" if s["demo_mood"] == "sleeping" else "sleeping"
 
+    if s["manual_sleep"]:
+        s["sound"] = "none"                          # manual sleep mutes
     s["mode"] = "pets" if s["focus"] != "none" else "demo"
     if s["focus"] == "none":
         s["mood"] = s["demo_mood"]
@@ -180,6 +198,7 @@ def main() -> int:
             assert (s["focus"] == "none") == (not pets), "focus must exist iff pets exist"
             assert s["focus"] == "none" or s["focus"] in pets, "focus must point at a pet"
             assert s["mood"] in MOODS
+            assert s["sound"] in ("none", "pop", "start", "chime", "wince", "uhoh")
             for slot in SLOTS:
                 if s[f"{slot}_state"] == "none":
                     assert not s[f"{slot}_unseen"] and not s[f"{slot}_wince"], "empty slot keeps no flags"

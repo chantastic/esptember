@@ -1,5 +1,18 @@
 # Pi Pet results
 
+## Revision 4: state rings and transition sounds
+
+September 24, 2026 (Pacific).
+
+- **Page dots:** each dot keeps the session's ink and adds a state ring (amber working, white thinking, red error, pulsing blue unseen). A device framebuffer with five pets showed each ring as specified.
+- **Sounds:** five synthesized sounds (pop, start, chime, wince, uh-oh) mark new sessions, run starts, completion, errors, and persisting errors. Manual sleep mutes them, and demo Enter auditions them.
+- **Contract:** the contract now models `sound`. `tests/run.sh` passed 243,136 assertions per reducer shape over 86 steps (mutation rejected), 40,086 reference-model checks, and 17 host-bridge checks.
+- **Injected-device evidence:** `tests/check_device.py` passed 16 scenarios with 687 checks, including every `GB_SOUND`. The speaker initialized (`GB_SPEAKER ok=1`).
+  - The replay first failed on a real defect, now fixed: `tick()` runs with a timestamp taken before serial input. An error stamped later underflowed the unsigned wince and uh-oh arithmetic, playing uh-oh at once, and a newly reported pet looked ten minutes old for one frame.
+- **Live sessions:** all three herdr pi sessions registered after reloading (`.pi`, `chan-services`, `esptember`). They had simply predated the extension.
+- **Compile evidence:** 990,083 bytes.
+- **Not yet observed physically:** sound level and character, and ring legibility.
+
 ## Revision 3: retained-head glyphs, contour eyes, black background
 
 September 24, 2026 (Pacific).
