@@ -49,6 +49,8 @@ Start two or three pi sessions in different directories.
 - [ ] Plug it back in: nothing visibly glitches, and `/pet` shows `usb*` as the active link again.
 - [ ] `/pet wifi` on a board without credentials: macOS asks for keychain access once, and the board joins the network.
 - [ ] Battery runtime unplugged with the display on: ______
+- [ ] Quit every pi session (or walk out of Wi-Fi range): within about 20 s the pets clear and the silent screensaver starts drifting; it dims after a minute; a touch brightens it.
+- [ ] Start a session again: the pets return and the screensaver stops.
 
 ## Findings
 

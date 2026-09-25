@@ -23,7 +23,7 @@ import serial  # pyserial
 IDS = {"a": "aaaa0001", "b": "bbbb0002", "c": "cccc0003"}
 SLOT_BY_ID = {v: k for k, v in IDS.items()}
 STYLE = {"a": 2, "b": 4, "c": 5}
-LONG = {"advance_30s", "advance_10m"}
+LONG = {"advance_30s", "advance_10m", "hub_silent_20s"}
 
 
 def open_port(path: str) -> serial.Serial:

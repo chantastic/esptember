@@ -29,7 +29,7 @@ It does not prove rendering, frame rate, touch alignment, the physical controls,
 
 ## Device layers
 
-The pi-pet hub owns the port. Stop it entirely before `check_device.py` (`pkill -f pi-pet/hub.mjs`); a released hub fails over to Wi-Fi and would drive the board during the replay. `/pet release` is enough for flashing.
+The pi-pet hub owns the port. Before `check_device.py`, send it `{"t":"pause","seconds":400}` so it leaves both USB and Wi-Fi alone; running sessions respawn a killed hub. Resume it with `{"t":"resume"}` afterwards. A released hub fails over to Wi-Fi and would drive the board during the replay; `/pet release` is enough for flashing.
 
 - **Compile and flash:** compile with the pinned toolchain and flash **app-only at `0x10000`**. This preserves NVS and `espt-touch/record`.
 - **Replay:** `python3 tests/check_device.py` (needs pyserial) replays each scenario without a `given` state or a 30 s / 10 min clock. It checks the device's `pets` report and its emitted `GB_FOCUS`/`GB_ACK`/`GB_SOUND` lines after every step. Waits stand in for `advance_5s`.

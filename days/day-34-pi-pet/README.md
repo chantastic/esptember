@@ -116,6 +116,7 @@ Verify in layers and record only what ran:
 - The first session is focused automatically. A pet that finishes takes focus unless the focused pet is busy, and it stays unseen until you page to it or acknowledge it.
 - Page dots keep each session's color and add a state ring: amber working, white thinking, red error, and pulsing blue when a session is waiting for you.
 - Short synthesized sounds mark transitions from any session: a pop when a session appears, a tick when a run starts, a chime when it finishes, a wince on an error, and an uh-oh if the error persists. Holding both buttons mutes them.
+- With no sessions (the hub quit, or the Stopwatch is out of range), it becomes a silent screensaver: the demo bot drifts through moods and head shapes and dims over time. It hands back to your sessions the moment the hub reconnects.
 - The activity line shows the current command or file, with tokens, passwords, and bearer credentials redacted.
 - A crashed session's pet disappears. The last pet leaving returns the device to its demo bot.
 - The pet keeps the reference's motion:
@@ -130,7 +131,7 @@ Text-to-speech through an authenticated `devices.chan.dev/v1/speech`, battery ca
 
 ## Recorded evidence
 
-- **Host contract:** the shared contract runner validates three disposable reducer shapes, 86 scenario steps, and 10,000 generated actions, and rejects a deliberate mutation. A reference model audits every expectation, transition sounds included, and fuzzes 40,086 checks. The host bridge passes redaction and hub-merge tests on a temporary socket.
+- **Host contract:** the shared contract runner validates three disposable reducer shapes, 89 scenario steps, and 10,000 generated actions, and rejects a deliberate mutation. A reference model audits every expectation, transition sounds included, and fuzzes 40,089 checks. The host bridge passes redaction and hub-merge tests on a temporary socket.
 - **Injected-device evidence:**
   - The replay passes 16 scenarios and 687 checks on the attached Stopwatch, including every transition sound.
   - The shared touch map (version 2, generation 2) survives every app-only flash.

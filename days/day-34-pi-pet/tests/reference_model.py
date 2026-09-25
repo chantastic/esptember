@@ -108,8 +108,10 @@ def reduce(state: dict, action: dict) -> dict:
                     set_focus(s, slot, by_user=False)
         if s["focus"] == "none":
             set_focus(s, slot, by_user=False)
-    elif kind in ("remove", "remove_all"):
-        targets = SLOTS if kind == "remove_all" else (action["id"],)
+    elif kind in ("remove", "remove_all", "hub_silent_20s"):
+        # hub_silent_20s: no line from the hub for 20 s (it quit, or the link is gone): the board
+        # clears the stale roster itself; the hub resyncs everything when it reconnects.
+        targets = SLOTS if kind != "remove" else (action["id"],)
         for slot in targets:
             if s[f"{slot}_state"] == "none":
                 continue
@@ -149,12 +151,12 @@ def reduce(state: dict, action: dict) -> dict:
         elif kind == "enter":
             m = s["demo_mood"]
             s["demo_mood"] = "idle" if m not in DEMO_CYCLE else DEMO_CYCLE[(DEMO_CYCLE.index(m) + 1) % len(DEMO_CYCLE)]
-            s["sound"] = DEMO_SOUND.get(s["demo_mood"], "none")  # auditions each state's sound
+            # Demo is the screensaver: silent, including Enter (review sounds with `sound <name>`).
         elif kind == "hold":
             s["demo_mood"] = "idle" if s["demo_mood"] == "sleeping" else "sleeping"
 
-    if s["manual_sleep"]:
-        s["sound"] = "none"                          # manual sleep mutes
+    if s["manual_sleep"] or s["focus"] == "none":
+        s["sound"] = "none"                          # manual sleep and the demo/screensaver are silent
     s["mode"] = "pets" if s["focus"] != "none" else "demo"
     if s["focus"] == "none":
         s["mood"] = s["demo_mood"]
@@ -190,6 +192,7 @@ def main() -> int:
     actions += [{"type": "report", "id": i, "state": st} for i in SLOTS
                 for st in ("idle", "thinking", "tool", "error", "done", "waiting", "sleeping")]
     actions += [{"type": "remove", "id": i} for i in SLOTS]
+    actions += [{"type": "hub_silent_20s"}]
     for _ in range(200):
         s = dict(base)
         for _ in range(200):

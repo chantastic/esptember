@@ -81,6 +81,7 @@ Newline-delimited JSON on the Unix socket `~/.pi-pet/hub.sock`, overridable with
 | `{"t":"release"}` | Close the serial port for 30 s so a flasher can use it. Wi-Fi stays up. |
 | `{"t":"wifi","ssid"?}` | Send the keychain Wi-Fi credentials to the board over USB; replies `{"t":"result","ok","message"}`. |
 | `{"t":"forget"}` | Unpair every board; replies `{"t":"result",...}`. |
+| `{"t":"pause","seconds"}` / `{"t":"resume"}` | Tests: leave the board entirely alone (no USB, no Wi-Fi) for a while. Required before `check_device.py`, because sessions respawn a killed hub. |
 | `{"t":"monitor"}` / `{"t":"raw","line"}` | Diagnostics: receive device lines / send a device command. |
 
 The hub derives a pet id from the last 8 alphanumerics of the session id.
@@ -151,7 +152,7 @@ Global fields:
 - `emit`: the last device event of the action (`focus x`, `ack x`, or empty)
 - `sound`: the transition sound the action plays (`none|pop|start|chime|wince|uhoh`)
 
-Clock actions `advance_5s`, `advance_30s`, and `advance_10m` stand in for elapsed time.
+Clock actions `advance_5s`, `advance_30s`, and `advance_10m` stand in for elapsed time. `hub_silent_20s` stands for 20 s without hub traffic.
 
 ## Behavior
 
@@ -168,16 +169,19 @@ Clock actions `advance_5s`, `advance_30s`, and `advance_10m` stand in for elapse
    - `thinking` → thinking; `tool` → working; `error` → blocked; `waiting` → waiting; `sleeping` → sleeping.
    - `done` → done (the celebration) while fresh; waiting if still unseen after 4 s; idle after 30 s.
    - `idle` or settled `done` → idle, or sleeping after 10 minutes.
-9. **Demo mode** (no pets):
+9. **Hub silence:** the hub sends `ping` every 5 s on the active link. After 20 s with no line from the hub (action `hub_silent_20s`), the board clears the roster as if `unpet *` arrived and emits `GB_EVENT hub_gone`. The hub resyncs everything when it reconnects.
+10. **Demo mode is the screensaver** (no pets):
    - Left/right cycle the eight roster bots and wake a sleeping demo.
-   - Short both cycles idle → happy → curious → excited → surprised → thinking → working → waiting → blocked → done → sad → idle; from sleeping it returns to idle.
+   - Short both cycles idle → happy → curious → excited → surprised → thinking → working → waiting → blocked → done → sad → idle; from sleeping it returns to idle. It is silent.
+   - Without buttons or touch for a minute, it advances every 12 s through idle, happy, curious, thinking, working, excited, waiting, done, surprised (never blocked or sad), and changes head style every third step.
+   - All sounds are muted while there are no sessions.
    - Hold both toggles sleeping.
-10. **Touch** uses the shared map:
+11. **Touch** uses the shared map:
     - Tap the pet to hop.
     - Drag the pet to move it; release springs it home with a wobble.
     - Tap elsewhere to make it glance there.
     - Any touch wakes manual sleep.
-11. **Tilt:** the pet slides gently downhill and looks that way while wandering. A shake of more than 2.2 g makes it hop.
+12. **Tilt:** the pet slides gently downhill and looks that way while wandering. A shake of more than 2.2 g makes it hop.
 
 ## Character and motion
 
@@ -227,7 +231,12 @@ The device ports the web avatar engine rather than imitating it. Measured behavi
   | Error | **wince** (short falling blip) |
   | Still in error when the 2.5 s wince ends | **uh-oh** (G4 → D4) |
 
-  Flips between thinking and tool are silent, and manual sleep mutes all sounds. In demo mode, Enter auditions the new state's sound: done chime, blocked uh-oh, surprised wince, thinking/working start. Every played sound emits `GB_SOUND <name>`.
+  Flips between thinking and tool are silent. Manual sleep and the demo screensaver mute all sounds. Review them with `sound <name>`. Every played sound emits `GB_SOUND <name>`.
+- **Brightness** (battery care): any button or touch restores full brightness for a minute.
+  - Screensaver: 255 for its first minute, 120 until ten minutes, then 50.
+  - Pets: dims to 120 when no pet has been working, finished, or waiting on you for 5 minutes.
+  - Sleeping: 70.
+  - `GB_HELLO` reports `battery=<percent> charging=<0|1>` for runtime measurements.
 - **Sleeping:** closed-line expressions, drifting `z`, dim backlight.
 - **Rendering:**
   - antialiased distance fields at every scale;

@@ -1176,14 +1176,14 @@
       ]
     },
     {
-      "name": "demo enter auditions each state's sound",
+      "name": "the demo screensaver is silent, even on enter",
       "steps": [
         {
           "action": "enter",
           "expect": {
             "demo_mood": "thinking",
             "mood": "thinking",
-            "sound": "start"
+            "sound": "none"
           }
         },
         {
@@ -1191,7 +1191,7 @@
           "expect": {
             "demo_mood": "working",
             "mood": "working",
-            "sound": "start"
+            "sound": "none"
           }
         },
         {
@@ -1207,7 +1207,7 @@
           "expect": {
             "demo_mood": "blocked",
             "mood": "blocked",
-            "sound": "uhoh"
+            "sound": "none"
           }
         },
         {
@@ -1215,14 +1215,6 @@
           "expect": {
             "demo_mood": "done",
             "mood": "done",
-            "sound": "chime"
-          }
-        },
-        {
-          "action": "enter",
-          "expect": {
-            "demo_mood": "sad",
-            "mood": "sad",
             "sound": "none"
           }
         }
@@ -1231,6 +1223,66 @@
         "demo_mood": "surprised",
         "mood": "surprised"
       }
+    },
+    {
+      "name": "a silent hub clears the stale roster into the screensaver",
+      "steps": [
+        {
+          "action": {
+            "type": "report",
+            "id": "a",
+            "state": "tool"
+          },
+          "expect": {
+            "mode": "pets",
+            "focus": "a",
+            "a_state": "tool",
+            "mood": "working",
+            "emit": "focus a",
+            "sound": "pop"
+          }
+        },
+        {
+          "action": {
+            "type": "report",
+            "id": "b",
+            "state": "done"
+          },
+          "expect": {
+            "b_state": "done",
+            "b_unseen": true,
+            "emit": "",
+            "sound": "pop"
+          }
+        },
+        {
+          "action": "hub_silent_20s",
+          "expect": {
+            "mode": "demo",
+            "focus": "none",
+            "a_state": "none",
+            "b_state": "none",
+            "b_unseen": false,
+            "mood": "idle",
+            "sound": "none"
+          }
+        },
+        {
+          "action": {
+            "type": "report",
+            "id": "a",
+            "state": "thinking"
+          },
+          "expect": {
+            "mode": "pets",
+            "focus": "a",
+            "a_state": "thinking",
+            "mood": "thinking",
+            "emit": "focus a",
+            "sound": "pop"
+          }
+        }
+      ]
     },
     {
       "name": "demo state cycle wraps after sad",

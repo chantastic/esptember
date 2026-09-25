@@ -1,5 +1,17 @@
 # Pi Pet results
 
+## Revision 6: screensaver and battery care
+
+September 25, 2026 (Pacific).
+
+- **Heartbeat and hub silence:** the hub pings every 5 s. After 20 s of silence the board cleared its stale roster (`GB_EVENT hub_gone`, observed at 20.0 s) and fell back to the demo bot. When the hub resumed, your live sessions returned over USB.
+- **Screensaver:** with no sessions, the bot drifted silently through moods every 12 s. The first step waited out the one-minute interaction pause; injected button presses count as interaction. Demo and screensaver sounds are muted, including the former both-buttons audition.
+- **Brightness:** dimming policy implemented (see SPEC). `GB_HELLO` reported `battery=100 charging=1` over USB.
+- **Defect found:** the replay caught one. A session arriving on an empty board was muted because the "no sessions" check ran before it took focus. Sounds are now decided first and played after focus settles.
+- **Tests:** the contract now has 89 steps (243,258 assertions per shape), with 40,089 model checks and 23 host-bridge checks. `tests/check_device.py` passed 16 scenarios with 687 checks, with the hub paused through its new `pause` message.
+- **Compile evidence:** 1,609,919 bytes.
+- **Not yet observed:** battery runtime with dimming, and the screensaver's look over hours.
+
 ## Revision 5: Wi-Fi and USB
 
 September 24, 2026 (Pacific).
