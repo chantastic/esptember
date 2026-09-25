@@ -1,0 +1,145 @@
+Pi Done implementation excerpts; read-only snapshot.
+Source: /Users/chan/Developer/esptember/days/day-17-tamagotchi/extensions/pi-pet/.build/device-candidate/pi_pet/pi_pet.ino
+SHA-256 of whole source: 99446594a46f771d5a768296189ecc47dbf82f81d1a2b9769eda89e281863c60
+Captured: 2026-09-24T22:03:26.150285+00:00
+Line numbers refer to this source snapshot; not executable as a complete program.
+
+--- source lines 215-240 ---
+215: static void startBounce() { if (bounceStart < 0) bounceStart = int32_t(millis()); }
+216: // Ribbons travel in lanes: a few parallel bands share one tilted orbit, each its own colour.
+217: static void spawnRibbons(int n) {
+218:   const float now = millis() / 1000.0f;
+219:   const float tilt = frand(.9f, 1.45f), roll = frand(-PI, PI), phase = frand(0, 2 * PI);
+220:   const float speed = frand(4.5f, 6.5f) * (frand(0, 1) < .5f ? 1 : -1), len = frand(1.6f, 2.4f);
+221:   const int c0 = esp_random() % 6;
+222:   for (int i = 0; i < n; ++i) {
+223:     const bool newPlane = i > 0 && i % 4 == 0;  // more than four lanes: start another orbit plane
+224:     Ribbon r{newPlane ? frand(.9f, 1.45f) : tilt, newPlane ? frand(-PI, PI) : roll, phase - i * .12f, speed,
+225:              len - i * .1f, 116 + (i % 4) * 7.5f, now + i * .04f, frand(2.0f, 2.6f), kConfetti[(c0 + i) % 6]};
+226:     if (ribbonCount < 9) ribbons[ribbonCount++] = r;
+227:     else ribbons[esp_random() % 9] = r;
+228:   }
+229: }
+230: // Eyes travel around the head about a (possibly tilted) axis; orbit ribbons trail the spin.
+231: static void startSpin(float turns = 1, float axis = 0, int ribbonsToAdd = 5) {
+232:   if (spinning) return;
+233:   spinning = true;
+234:   spinAxis = axis;
+235:   spin.x = 0; spin.v = 0; spin.t = turns * 2 * PI * (frand(0, 1) < .5f ? 1 : -1);
+236:   if (ribbonsToAdd) spawnRibbons(ribbonsToAdd);
+237: }
+238: static void burst(int n) {
+239:   for (int i = 0; i < n && partCount < 28; ++i) {
+240:     const float a = frand(-PI, 0), sp = frand(220, 520);
+--- source lines 259-280 ---
+259: }
+260: 
+261: static void enterState(int s, bool announce) {
+262:   if (s == state) return;
+263:   state = s;
+264:   const StateDef &def = kStates[s];
+265:   const uint32_t now = millis();
+266:   stateSince = now;
+267:   changeExpr(def.expr[esp_random() % def.nExpr], def.exprSpeed, now);
+268:   nextExpr = now + urand(def.exprMin, def.exprMax);
+269:   nextBlink = now + urand(1500, 7000);
+270:   nextGaze = now + urand(500, 1400);
+271:   nextSpecial = now + (s == SExcited ? urand(400, 1100) : s == SWorking ? urand(1200, 2400) : urand(9000, 18000));
+272:   nextSigh = now + urand(1500, 3500);
+273:   nextTilt = now + urand(1200, 2200);
+274:   nextWink = now + urand(3000, 8000);
+275:   M5.Display.setBrightness(s == SSleeping ? 70 : 255);
+276:   if (s == SDone) { spinning = false; startSpin(2, frand(-.9f, .9f), 9); spinQueue = 2; startBounce(); }
+277:   if (s == SThinking) dotsPhase0 = now;
+278:   if (announce) showLabel(kStateNames[s]);
+279:   Serial.printf("GB_EVENT mood=%s\n", kStateNames[s]);
+280: }
+--- source lines 415-418 ---
+415:     case SDone:  // web "celebrate"
+416:       d.t = 0; o.t = 0; A.t = -2.5f * fabsf(sinf(1.6f * r)); h.t = 1; eyeT = 1.1f; lidT = 1.1f;
+417:       break;
+418:     case SSurprised: {
+--- source lines 526-536 ---
+526:     if (spinning) spin.step(6.2f, 1, step);
+527:     inkR.step(9, 1, step); inkG.step(9, 1, step); inkB.step(9, 1, step);
+528:     sqx.step(16, .35f, step); sqy.step(16, .35f, step);
+529:     dragX.step(dragging ? 18 : 7, dragging ? 1 : .6f, step); dragY.step(dragging ? 18 : 7, dragging ? 1 : .6f, step);
+530:   }
+531:   if (spinning && fabsf(spin.t - spin.x) < .004f && fabsf(spin.v) < .015f) {
+532:     spinning = false; spin.init(0);
+533:     if (spinQueue > 0 && state == SDone) { --spinQueue; startSpin(frand(1, 2), frand(-1.1f, 1.1f), 4); }
+534:   }
+535:   { const float tnow = now / 1000.0f;  // retire ribbons
+536:     for (int i = 0; i < ribbonCount;) { if (tnow - ribbons[i].born > ribbons[i].life) ribbons[i] = ribbons[--ribbonCount]; else ++i; } }
+--- source lines 625-633 ---
+625:   float bounce = 0;
+626:   if (bounceStart >= 0) {  // web bounce chain: decaying parabolic hops
+627:     static const float kH[4] = {48, 28, 14, 6}, kD[4] = {.5f, .382f, .27f, .177f};
+628:     float t = (now - uint32_t(bounceStart)) / 1000.0f;
+629:     int i = 0;
+630:     while (i < 4 && t >= kD[i]) t -= kD[i++];
+631:     if (i >= 4) bounceStart = -1;
+632:     else { const float s = t / kD[i]; bounce = -4 * kH[i] * s * (1 - s); }
+633:   }
+--- source lines 711-726 ---
+711:     // Spin: the eyes ride a cylinder about the spin axis (tilted from vertical by spinAxis).
+712:     e.xs = 1; e.sa = sinf(spinAxis); e.ca = cosf(spinAxis);
+713:     if (spinning) {
+714:       const float R = 100 * face[2];
+715:       const float a = ex * e.ca + ey * e.sa, b = -ex * e.sa + ey * e.ca;  // a: across the axis
+716:       const float th0 = asinf(clampf(a / R, -1, 1)), th = th0 + spin.x;
+717:       const float cth = cosf(th);
+718:       e.visible = e.visible && cth > .02f;
+719:       e.xs = clampf(fmaxf(cth, .02f) / fmaxf(cosf(th0), .02f), .02f, 1.3f);
+720:       const float a2 = R * sinf(th);
+721:       ex = a2 * e.ca - b * e.sa; ey = a2 * e.sa + b * e.ca;
+722:     }
+723:     e.cx = ex; e.cy = ey; e.ixs = 1 / e.xs;
+724:     float l = fmaxf(lid.x, .04f);
+725:     if (i == winkEye && now - winkAt < 320) {
+726:       const float t = (now - winkAt) / 320.0f;
+--- source lines 785-828 ---
+785:   // it), the front half after the body.
+786:   auto drawRibbons = [&](bool front) {
+787:     const float tnow = now / 1000.0f;
+788:     for (int i = 0; i < ribbonCount; ++i) {
+789:       const Ribbon &rb = ribbons[i];
+790:       const float age = tnow - rb.born;
+791:       if (age < 0) continue;
+792:       const float alpha = clampf(age / .25f, 0, 1) * clampf((rb.life - age) / .5f, 0, 1);
+793:       const float head = rb.phase + rb.speed * age;
+794:       const float ct = cosf(rb.tilt), st = sinf(rb.tilt), cr2 = cosf(rb.roll), sr2 = sinf(rb.roll);
+795:       const RGB c1 = rgb(rb.color), c2 = rgb(kConfetti[(i + 2) % 6]);
+796:       constexpr int kSeg = 12;
+797:       float px = 0, py = 0; bool pfront = false;
+798:       for (int k = 0; k <= kSeg; ++k) {
+799:         const float f = float(k) / kSeg;
+800:         const float th = head - rb.len * (1 - f) * (rb.speed > 0 ? 1 : -1);
+801:         const float x = rb.radius * cosf(th), y1 = rb.radius * sinf(th);
+802:         const float y = y1 * ct, z = y1 * st;
+803:         const float X = x * cr2 - y * sr2, Y = x * sr2 + y * cr2;
+804:         const float sx = hcx + X * kScale, sy = hcy + Y * kScale;
+805:         const bool isFront = z > 0;
+806:         if (k > 0 && isFront == front && pfront == front) {
+807:           const float w = (2.0f + 7.0f * sinf(f * PI)) * alpha * kScale;
+808:           const RGB c = {mixf(c1.r, c2.r, f), mixf(c1.g, c2.g, f), mixf(c1.b, c2.b, f)};
+809:           // Thick segment as a quad (two triangles): far cheaper than antialiased wide lines.
+810:           const float dx = sx - px, dy = sy - py, dl = fmaxf(fsqrt(dx * dx + dy * dy), .01f);
+811:           const float nx = -dy / dl * w * .5f, ny = dx / dl * w * .5f;
+812:           const uint16_t col = unswap(pack(c.r, c.g, c.b));  // fades by width, never toward the background
+813:           canvas.fillTriangle(int(px + nx), int(py + ny), int(px - nx), int(py - ny), int(sx + nx), int(sy + ny), col);
+814:           canvas.fillTriangle(int(px - nx), int(py - ny), int(sx - nx), int(sy - ny), int(sx + nx), int(sy + ny), col);
+815:         }
+816:         px = sx; py = sy; pfront = isFront;
+817:       }
+818:     }
+819:   };
+820:   if (ribbonCount) drawRibbons(false);
+821: 
+822:   auto toLocal = [&](float x, float y, float &u, float &v) {
+823:     const float dx = x - hcx, dy = y - hcy;
+824:     u = (dx * cr + dy * sr) * ksx; v = (-dx * sr + dy * cr) * ksy;
+825:   };
+826:   // Eye screen box.
+827:   float eyeX0 = 1e9f, eyeX1 = -1e9f, eyeY0 = 1e9f, eyeY1 = -1e9f;
+828:   for (auto &e : eyes) {

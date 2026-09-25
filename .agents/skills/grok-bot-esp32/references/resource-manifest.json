@@ -1,0 +1,282 @@
+{
+ "captured_at": "2026-09-24T22:03:26.150998+00:00",
+ "resources": [
+  {
+   "path": "references/upstream/article-animation.js",
+   "kind": "upstream deployed bundle",
+   "origin": "/tmp/grokbot/gb/js/25eegay1u-vgr.js",
+   "url": "https://x.ai/_next/static/chunks/25eegay1u-vgr.js",
+   "sha256": "64aacb1cd535464e0248c024dd207a01ff99b9e7260be140a6be8f8e665c5c74",
+   "bytes": 235073
+  },
+  {
+   "path": "references/upstream/motion-extract.js",
+   "kind": "Pi-extracted source fragment",
+   "origin": "/tmp/grokbot/gb/avatar_seg.js",
+   "url": "https://x.ai/news/designing-grok-bot",
+   "sha256": "f41ee5ab0f3146a63e3466a4ca1e9a57bab25449598ca9eea686f04c619aa6ea",
+   "bytes": 14794
+  },
+  {
+   "path": "references/upstream/transforms-extract.js",
+   "kind": "Pi-extracted source fragment",
+   "origin": "/tmp/grokbot/gb/ag.js",
+   "url": "https://x.ai/news/designing-grok-bot",
+   "sha256": "3af9324acd55dd7df5dc16ecc00830f6ac7c71044c477fad4a52f480e2e25c9c",
+   "bytes": 9106
+  },
+  {
+   "path": "references/upstream/tables-extract.js",
+   "kind": "Pi-extracted source fragment",
+   "origin": "/tmp/grokbot/gb/tables.js",
+   "url": "https://x.ai/news/designing-grok-bot",
+   "sha256": "86f7912f033365741d06975f9bab7a0a7d715e1e88c1f974b5104bb2d605ef10",
+   "bytes": 12212
+  },
+  {
+   "path": "assets/eyes.json",
+   "kind": "25 pairs of 48-point source contours",
+   "origin": "/tmp/grokbot/gb/eyes.json",
+   "url": "https://x.ai/news/designing-grok-bot",
+   "sha256": "08eee496c10b89d89b84560cab5874723951748e757dc34ed0b557ba78dbaf15",
+   "bytes": 41560
+  },
+  {
+   "path": "assets/authored-shape-paths.json",
+   "kind": "three authored path extracts; not full head catalog",
+   "origin": "/tmp/grokbot/gb/shapes.json",
+   "url": "https://x.ai/news/designing-grok-bot",
+   "sha256": "c2df464e9c46eca60ba17951657a2f56f594698a03db3c4c17d260e764d24dbc",
+   "bytes": 7522
+  },
+  {
+   "path": "references/candidate/capsule-generator.py",
+   "kind": "historical candidate implementation",
+   "origin": "/Users/chan/Developer/esptember/days/day-17-tamagotchi/extensions/pi-pet/.build/assets/gen_assets.py",
+   "url": null,
+   "sha256": "e640a9aa4370794d2650fbc5d2cff5e4942036297cbf44312ebea196685945e5",
+   "bytes": 7371
+  },
+  {
+   "path": "references/initial-findings-2026-09-24.md",
+   "kind": "initial research snapshot; read current-status first",
+   "origin": "/Users/chan/.codex/visualizations/2026/09/24/01a0d559-ff01-7f11-8559-df32081677de/grok-bot-design-handoff.md",
+   "url": null,
+   "sha256": "e7b9706edc3b2a86c2ada7a325431b900fcabefcd1644f515c63eb74f6b177a5",
+   "bytes": 11476
+  },
+  {
+   "path": "assets/review/eyes-sheet.png",
+   "kind": "Pi-generated historical visual review sheet",
+   "origin": "/Users/chan/Developer/esptember/drafts/grok-bot/eyes-sheet.png",
+   "url": null,
+   "sha256": "8ab2972e490bea854de2088ac7baaf09ee48d44232aa544ec2b952bbffc551fc",
+   "bytes": 26847
+  },
+  {
+   "path": "assets/review/shapes-sheet.png",
+   "kind": "Pi-generated historical visual review sheet",
+   "origin": "/Users/chan/Developer/esptember/drafts/grok-bot/shapes-sheet.png",
+   "url": null,
+   "sha256": "225bc27a7ccb786ff19960060c105a7bc0198f36b2faea311697512e41c069de",
+   "bytes": 3821
+  },
+  {
+   "path": "assets/review/v3-states.png",
+   "kind": "Pi-generated historical visual review sheet",
+   "origin": "/Users/chan/Developer/esptember/drafts/grok-bot/v3-states.png",
+   "url": null,
+   "sha256": "fe0a7f466d92b0920f56aff53b83b34396aa85d309b35548de58ca6da202f8e8",
+   "bytes": 57538
+  },
+  {
+   "path": "assets/review/assets-check.png",
+   "kind": "Pi-generated historical visual review sheet",
+   "origin": "/Users/chan/Developer/esptember/drafts/grok-bot/assets-check.png",
+   "url": null,
+   "sha256": "e181ae5388a9c01ba9ad48aaff6716b71bb4bbaa95ccb79e1ff53e8cd28bff11",
+   "bytes": 11231
+  },
+  {
+   "path": "references/candidate/pi-done-excerpts.txt",
+   "kind": "Pi Done source excerpts; not a full program",
+   "origin": "/Users/chan/Developer/esptember/days/day-17-tamagotchi/extensions/pi-pet/.build/device-candidate/pi_pet/pi_pet.ino",
+   "sha256": "07c3d555a32b6f3a6803ef114c04a941876791889e3d7ee19a2169f3ed91cbf7",
+   "bytes": 8008,
+   "source_sha256": "99446594a46f771d5a768296189ecc47dbf82f81d1a2b9769eda89e281863c60"
+  },
+  {
+   "path": "assets/grok-motion-study.html",
+   "kind": "revised offline browser design study",
+   "origin": "/Users/chan/.codex/visualizations/2026/09/24/01a0d559-ff01-7f11-8559-df32081677de/grok-motion-study.html",
+   "url": null,
+   "sha256": "36c823a766b2222b2e4028fa6e13af4141a38a419746ec96e934a5bd3acdbd17",
+   "bytes": 62052
+  },
+  {
+   "path": "assets/grok-motion-preview.html",
+   "kind": "revised offline browser design study",
+   "origin": "/Users/chan/.codex/visualizations/2026/09/24/01a0d559-ff01-7f11-8559-df32081677de/grok-motion-preview.html",
+   "url": null,
+   "sha256": "0306106c95bf7b6e10c9deec55a85e0b18d8b260adb06bf053ec5dec9f790cff",
+   "bytes": 120989
+  },
+  {
+   "path": "references/glyph-morphs.md",
+   "kind": "derived geometry reference and review record",
+   "origin": "references/upstream/article-animation.js",
+   "url": "https://x.ai/news/designing-grok-bot",
+   "sha256": "c178427fd52438dee331f5905217e3dc9dc3c5f22dc9d1b4e3ca1905108b9c61",
+   "bytes": 6370,
+   "source_sha256": "64aacb1cd535464e0248c024dd207a01ff99b9e7260be140a6be8f8e665c5c74",
+   "updated": "2026-09-24 (Pi revision-3 update)"
+  },
+  {
+   "path": "references/embedded-rendering.md",
+   "kind": "measured ESP32-S3 rendering techniques and dead ends",
+   "sha256": "1d4bb8f86212851ab707dc144f895dfa39d6e2b38435f876f8aa2966392c2b4e",
+   "bytes": 7268,
+   "added": "2026-09-24 (Pi revision-3 update)"
+  },
+  {
+   "path": "references/review-tools.md",
+   "kind": "frame-by-frame capture and comparison workflow",
+   "sha256": "a0ecc49a3ee30af0b531c248e731230d7dc4c92e8ece4decb323291f35684fe1",
+   "bytes": 4157,
+   "added": "2026-09-24 (Pi revision-3 update)"
+  },
+  {
+   "path": "scripts/capture-web-demo.mjs",
+   "kind": "live web demo screencast capture (puppeteer-core + installed Chrome)",
+   "sha256": "857d1c400fbb065c20a35eab8bbe18ed307a2fd350dfb157290273d3df34ae7b",
+   "bytes": 3494,
+   "added": "2026-09-24 (Pi revision-3 update)",
+   "url": "https://x.ai/news/designing-grok-bot"
+  },
+  {
+   "path": "scripts/web-contact-sheets.py",
+   "kind": "per-state contact sheets from a web capture",
+   "sha256": "bba94945824e6e7625c18c709f9c3aeda107099732a88fcce108fc606f3e7a14",
+   "bytes": 1588,
+   "added": "2026-09-24 (Pi revision-3 update)"
+  },
+  {
+   "path": "scripts/device-recorder.py",
+   "kind": "Pi Pet firmware rec/shot capture over USB serial",
+   "sha256": "4aad0fd28079f67a47c6c81d7ee795f5d0c2479ee0ac17ab883b5760c2df1d5a",
+   "bytes": 4259,
+   "added": "2026-09-24 (Pi revision-3 update)"
+  },
+  {
+   "path": "assets/review/web-idle.png",
+   "kind": "web demo capture sheet: idle (one cycle, ~15 fps sampling)",
+   "sha256": "4daca3d139ad747df9f2c48d73016de3eb8cc81ee4b718eb66e3ca0aaaeaa2ba",
+   "bytes": 195212,
+   "added": "2026-09-24 (Pi revision-3 update)",
+   "origin": "/tmp/grokbot/motion (CDP screencast)",
+   "url": "https://x.ai/news/designing-grok-bot"
+  },
+  {
+   "path": "assets/review/web-working.png",
+   "kind": "web demo capture sheet: working (one cycle, ~15 fps sampling)",
+   "sha256": "4228a0e7a0133d1468336fffcc6f98f95aa230ff079bf1f37a603781ad8337f2",
+   "bytes": 266189,
+   "added": "2026-09-24 (Pi revision-3 update)",
+   "origin": "/tmp/grokbot/motion (CDP screencast)",
+   "url": "https://x.ai/news/designing-grok-bot"
+  },
+  {
+   "path": "assets/review/web-bored.png",
+   "kind": "web demo capture sheet: bored (one cycle, ~15 fps sampling)",
+   "sha256": "283a3684babea1a54ecfb871c7ca678d2c51eb3ec5a5bf47984b70431ac57299",
+   "bytes": 202383,
+   "added": "2026-09-24 (Pi revision-3 update)",
+   "origin": "/tmp/grokbot/motion (CDP screencast)",
+   "url": "https://x.ai/news/designing-grok-bot"
+  },
+  {
+   "path": "assets/review/web-alerting.png",
+   "kind": "web demo capture sheet: alerting (one cycle, ~15 fps sampling)",
+   "sha256": "c0b709c4ca7648acba28fb01ae099275a04b68bc9b2d45fb4b2610f57124bad1",
+   "bytes": 74124,
+   "added": "2026-09-24 (Pi revision-3 update)",
+   "origin": "/tmp/grokbot/motion (CDP screencast)",
+   "url": "https://x.ai/news/designing-grok-bot"
+  },
+  {
+   "path": "assets/review/web-thinking.png",
+   "kind": "web demo capture sheet: thinking (one cycle, ~15 fps sampling)",
+   "sha256": "18fbb63d4d43165d4a494c56888c1363b629acdcdad0c09aa844e4fc98fea4c3",
+   "bytes": 107432,
+   "added": "2026-09-24 (Pi revision-3 update)",
+   "origin": "/tmp/grokbot/motion (CDP screencast)",
+   "url": "https://x.ai/news/designing-grok-bot"
+  },
+  {
+   "path": "assets/review/web-celebrate.png",
+   "kind": "web demo capture sheet: celebrate (one cycle, ~15 fps sampling)",
+   "sha256": "43c598fd93533fffaad67fd70e137200d70e52761d349cb8ad4b9bbcedab9d13",
+   "bytes": 674903,
+   "added": "2026-09-24 (Pi revision-3 update)",
+   "origin": "/tmp/grokbot/motion (CDP screencast)",
+   "url": "https://x.ai/news/designing-grok-bot"
+  },
+  {
+   "path": "assets/review/device-contours.png",
+   "kind": "device sheet of all 25 settled contour expressions (revision 3)",
+   "sha256": "04f4ceee2d2854d814d2726e5a0d87ccaf23a072f3d74213837b82cb5e9ec220",
+   "bytes": 117990,
+   "added": "2026-09-24 (Pi revision-3 update)",
+   "origin": "firmware rec/recdump"
+  },
+  {
+   "path": "assets/review/device-blink.png",
+   "kind": "device blink sequence on expression 20, contour squash to dash",
+   "sha256": "94ba040d353e09bbc50f5fe092a683296be3e498b8d9ba9680da5b06dc86b8e7",
+   "bytes": 24811,
+   "added": "2026-09-24 (Pi revision-3 update)",
+   "origin": "firmware rec/recdump"
+  },
+  {
+   "path": "assets/review/device-idle-to-thinking.png",
+   "kind": "device Idle->Thinking retained-head transition (capsule eyes era)",
+   "sha256": "9690450d7a7b580eb301f2f524d9fd4c974252f23ca3564552a6c32d27cb03b9",
+   "bytes": 19493,
+   "added": "2026-09-24 (Pi revision-3 update)",
+   "origin": "firmware rec/recdump"
+  },
+  {
+   "path": "assets/review/device-thinking-to-blocked.png",
+   "kind": "device Thinking->Blocked direct glyph blend (revision 3)",
+   "sha256": "74d39ac66fa8d64d63763509940c68fdbe9c26d22061bfcc1aa0846aff41ccb4",
+   "bytes": 22801,
+   "added": "2026-09-24 (Pi revision-3 update)",
+   "origin": "firmware rec/recdump"
+  },
+  {
+   "path": "assets/review/device-blocked-to-idle.png",
+   "kind": "device Blocked->Idle expansion with eye half-turn (capsule eyes era)",
+   "sha256": "d4a9eefaacb2545a7e24c982f54aaf943af9497e42566f144e2aeb00a7039421",
+   "bytes": 27914,
+   "added": "2026-09-24 (Pi revision-3 update)",
+   "origin": "firmware rec/recdump"
+  },
+  {
+   "path": "assets/review/device-working-spin.png",
+   "kind": "device Working entry and spin with ribbon lanes (revision 3)",
+   "sha256": "cf4bc8b516a683c044a6eaaca8db36758c607c3bc074bf76f526f5116db722fc",
+   "bytes": 169317,
+   "added": "2026-09-24 (Pi revision-3 update)",
+   "origin": "firmware rec/recdump"
+  },
+  {
+   "path": "assets/review/device-done.png",
+   "kind": "device Done choreography (revision 3)",
+   "sha256": "d5f95467b346b03144c7286aad869288dfc694e0aba9a4959f6d87825de95f7e",
+   "bytes": 130073,
+   "added": "2026-09-24 (Pi revision-3 update)",
+   "origin": "firmware rec/recdump"
+  }
+ ],
+ "updated_at": "2026-09-25T00:29:33.258422+00:00"
+}
