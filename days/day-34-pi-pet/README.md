@@ -2,7 +2,7 @@
 board: m5stack-stopwatch
 day: 34
 title: Pi Pet
-toolchain: Arduino ESP32 3.3.10 + M5Unified 0.2.19 + M5GFX 0.2.26 + pi extension (TypeScript) + Node serial hub
+toolchain: Arduino ESP32 3.3.10 + M5Unified 0.2.19 + M5GFX 0.2.26 + pi extension (TypeScript) + Node hub (USB serial + Wi-Fi)
 summary: "One Grok Bot–style pet per running pi coding-agent session: it thinks, works, gets blocked, celebrates, and waits for you."
 verification: "Contract, host bridge, and 16-scenario injected-device replay verified; device framebuffer and frame-sequence captures recorded; physical hand review pending"
 ---
@@ -87,6 +87,9 @@ Host:
 - A hub that owns the serial port, merges sessions, sanitizes and caps fields, assigns distinct
   styles, removes a crashed session's pets, resyncs on GB_READY, supports release, and honours
   PI_PET_SOCKET and PI_PET_PORT=none.
+- USB and Wi-Fi per SPEC.md "Transports": automatic pairing over USB, keychain Wi-Fi provisioning
+  (/pet wifi), the board listening and the hub dialing out, the mutual HMAC handshake, USB-preferred
+  active links with resync on failover, and a non-blocking USB CDC on the board.
 
 Verify in layers and record only what ran:
 - tests/run.sh (contract, mutation, reference model, host bridge);
@@ -101,6 +104,10 @@ Verify in layers and record only what ran:
 
 ## Required behavior
 
+- The Stopwatch connects over USB or Wi-Fi:
+  - Plugging it in pairs it automatically and can hand it your Wi-Fi from the keychain (`/pet wifi`).
+  - Afterwards it keeps working unplugged, and USB takes over again whenever it's attached.
+  - No setup screen, no pairing code, and no firewall prompt.
 - Each pi session reports its state through a local hub to the Stopwatch:
   - thinking → Thinking;
   - a running tool → Working;
@@ -119,7 +126,7 @@ Verify in layers and record only what ran:
   - Thinking's traveling highlight;
   - Blocked's tapered stem that drops in and shakes.
 
-Wi-Fi transport, text-to-speech through an authenticated `devices.chan.dev/v1/speech`, and tool-call approvals are the roadmap in SPEC.md.
+Text-to-speech through an authenticated `devices.chan.dev/v1/speech`, battery care, and tool-call approvals are the roadmap in SPEC.md.
 
 ## Recorded evidence
 
@@ -130,6 +137,7 @@ Wi-Fi transport, text-to-speech through an authenticated `devices.chan.dev/v1/sp
   - A headless pi run through the installed extension drove thinking, working, and the error wince live.
   - Frame-by-frame device recordings were compared with screencasts of the post's live demo.
   - The device renders at about 24–31 fps in every state.
+  - With USB released, roster updates and sounds kept flowing over the paired Wi-Fi link in about 0.1–0.2 s.
 
 The images above are device framebuffers: injected-device evidence, not physical review.
 Physical review of the transitions, contour eyes, black level, tilt direction, and touch is still to come, as is the shared recalibration flow.

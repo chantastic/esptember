@@ -9,11 +9,13 @@ The device candidate is `days/day-34-pi-pet/.build/device-candidate/pi_pet/`, re
 - **Motion:** per-state tables, springs at 1/120 s, the four-hop bounce chain, and tilted-axis eye spins with orbit-ribbon lanes.
 - **Done:** the user's preferred choreography: chained spins, hops, and ribbons.
 - **Thinking and Blocked:** retained-head transitions per [glyph-morphs.md](glyph-morphs.md), with part compositing. Thinking is debounced by 350 ms, a labeled adaptation.
+- **Page dots and sounds:** state rings on the page dots, and synthesized transition sounds (pop, start, chime, wince, uh-oh).
+- **Links:** USB and Wi-Fi. Pairing is automatic over USB, the hub dials the board, and the link is mutually authenticated; see [embedded-rendering.md](embedded-rendering.md#wireless-link-wi-fi-and-usb).
 - **Performance:** about 24–31 fps in every state, measured by the injected-device `GB_FPS` line.
 - **Tests:** the host contract, the host bridge, and a 13-scenario device replay pass.
 
 Still unverified or open:
-- Physical review of the transitions, contour eyes, black-level smear, and ribbon look on the AMOLED.
+- Physical review of the transitions, contour eyes, black-level smear, ribbon look, sounds, and unplugged battery operation.
 - The IMU tilt direction.
 - The shared runtime recalibration flow (the candidate loads the map but offers no recalibration).
 - A possible Pi session-switch registration gap, never reproduced.

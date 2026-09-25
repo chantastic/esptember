@@ -19,16 +19,54 @@ App-only updates preserve NVS; nothing in this exercise writes NVS.
 ## System
 
 ```text
-pi session ─┐   JSON lines over          ┌──────────┐   USB serial text    ┌───────────┐
-pi session ─┼─► ~/.pi-pet/hub.sock  ────►│ pet hub  │ ───────────────────► │ Stopwatch │
-pi session ─┘   (one extension each)     └──────────┘ ◄─── GB_* events ─── └───────────┘
+pi session ─┐   JSON lines over          ┌──────────┐ ── USB serial (trusted) ──► ┌───────────┐
+pi session ─┼─► ~/.pi-pet/hub.sock  ────►│ pet hub  │ ── Wi-Fi TCP (paired) ────► │ Stopwatch │
+pi session ─┘   (one extension each)     └──────────┘ ◄──── GB_* events ───────── └───────────┘
 ```
 
 - **Extension:** one per pi process, loaded from `~/.pi/agent/extensions/pi-pet/`. It must never throw into pi or block an agent turn. `PI_PET=0` disables it.
-- **Hub:** a single local process that owns the serial port and merges every session. The first extension that cannot connect starts it detached. It exits after 5 minutes with no clients.
+- **Hub:** a single local process that owns the serial port, dials paired boards over Wi-Fi, and merges every session. The first extension that cannot connect starts it detached. It exits after 5 minutes with no clients. It opens no listening network port.
 - **Device:** renders the focused pet and drives mood from the reported state.
 
-Wi-Fi transport and text-to-speech are later phases (see *Roadmap*). They must not change the state rules below.
+Text-to-speech is a later phase (see *Roadmap*). Transports must not change the state rules below.
+
+## Transports: USB and Wi-Fi
+
+- **The same line protocol runs over both.** A board may be connected by USB, by Wi-Fi, or both.
+  - Per board, the hub uses one **active** link, preferring USB, and keeps the other on **standby**.
+  - It writes roster lines only to the active link and ignores device events arriving on a standby link.
+  - When the active link changes, the hub resyncs the new one (`unpet *` plus every pet).
+- **USB is the trusted provisioning channel.** When a board is on USB, the hub asks `hello` and reads its `GB_HELLO`:
+
+  ```text
+  GB_HELLO id=<12 hex> paired=<0|1> key=<8 hex|-> wifi=<none|saved|connected> ip=<ipv4|-> hub=<ip:port> link=<wifi|-> err=<code>
+  ```
+
+  - `key` is the first 8 hex of SHA-256(token).
+  - If the board is unpaired, or its key doesn't match the hub's record, the hub sends `pair <64-hex token> <host> <ip> <port>`.
+  - The hub records the board's `ip` for dialing, in `~/.pi-pet/devices.json` (mode 600).
+  - Provisioning commands (`wifi`, `pair`, `hubaddr`, `forget`) are accepted only from USB. Over Wi-Fi they answer `GB_ERROR usb_only`.
+- **Wi-Fi credentials** live in the shared ESPtember Wi-Fi slot (Preferences `day22`: `ssid`, `pass`). The Day 22 portal or any earlier network lesson may have set them already.
+  - `/pet wifi [ssid]` reads the password from the Mac's login keychain; macOS asks the user to allow it.
+  - With no argument, it uses the first preferred network (`networksetup -listpreferredwirelessnetworks en0`).
+  - It sends `wifi <base64 ssid> <base64 password>` over USB. The password is never logged or echoed, and the board confirms with `GB_WIFI saved ssid_len=<n>`.
+- **Wi-Fi link:** the board joins Wi-Fi with modem sleep enabled, advertises `pi-pet-<last 4 hex of id>.local` and `_pi-pet._tcp`, and listens on TCP 47837.
+  - The hub dials each paired board every 3 s while it has no Wi-Fi link, alternating the last known IP and the `.local` name.
+  - Outgoing connections pass the macOS application firewall without prompting. A hub-side listener was tried first and was silently dropped by the firewall in stealth mode.
+- **Handshake** (mutual HMAC-SHA256 with the pairing token as key; all hex):
+
+  ```text
+  board → HELLO <id> <nonceD:16>
+  hub   → CHALLENGE <nonceH:32> <HMAC(token, "hub:" nonceD ":" nonceH)>   (or DENY unpaired)
+  board → AUTH <HMAC(token, "dev:" nonceH ":" nonceD)>                   (board checks the hub's MAC first)
+  hub   → OK                                                             (or DENY auth; timing-safe compare)
+  ```
+
+  - Afterwards, protocol lines flow both ways, and every `GB_*` line the board prints is mirrored to the link.
+  - A newly authenticated connection replaces an old one, which covers a restarted hub.
+  - Traffic is authenticated but not encrypted. It carries session names and redacted activity lines on the local network only.
+- **USB never blocks the board.** The board sets its USB CDC write timeout to 0. Otherwise a closed host port (a released hub or a charger-only connection) stalled the main loop, and with it the Wi-Fi link, for about 25 s.
+- **`/pet forget`** clears the board's pairing (`GB_FORGOT`) and the hub's records. Plugging in over USB pairs again automatically.
 
 ## Host → hub protocol
 
@@ -40,7 +78,9 @@ Newline-delimited JSON on the Unix socket `~/.pi-pet/hub.sock`, overridable with
 | `{"t":"state","id","state","detail"}` | Report a state and a short activity line. |
 | `{"t":"bye","id"}` | The session ended. |
 | `{"t":"status"}` | Hub replies with the port, readiness, and the merged roster. |
-| `{"t":"release"}` | Close the serial port for 30 s so a flasher can use it. |
+| `{"t":"release"}` | Close the serial port for 30 s so a flasher can use it. Wi-Fi stays up. |
+| `{"t":"wifi","ssid"?}` | Send the keychain Wi-Fi credentials to the board over USB; replies `{"t":"result","ok","message"}`. |
+| `{"t":"forget"}` | Unpair every board; replies `{"t":"result",...}`. |
 | `{"t":"monitor"}` / `{"t":"raw","line"}` | Diagnostics: receive device lines / send a device command. |
 
 The hub derives a pet id from the last 8 alphanumerics of the session id.
@@ -74,6 +114,7 @@ Text lines at 115200 over USB CDC:
 
 - `pet <id> <state> <style> <name>|<detail>` upserts a pet.
 - `unpet <id>` removes one pet; `unpet *` removes all.
+- USB only: `hello`, `pair`, `hubaddr`, `wifi`, and `forget` (see *Transports*). `hello` is also answered over Wi-Fi.
 - Diagnostics:
   - `pets` reports `GB_PETS n= focus= mood= manual_sleep= demo_bot=` plus `id:state:unseen` per pet.
   - `act left|right|enter|hold` is semantic input.
@@ -87,6 +128,7 @@ The device emits:
 - `GB_FOCUS <id>` whenever focus changes.
 - `GB_ACK <id>` when the user acknowledges.
 - Evidence lines `GB_HARDWARE`, `GB_TOUCHMAP`, `GB_SPEAKER`, `GB_FPS`, `GB_EVENT`, `GB_SOUND`.
+- Link lines `GB_HELLO`, `GB_PAIRED key=`, `GB_WIFI saved ssid_len=`, `GB_FORGOT`.
 
 ## Portable state
 
@@ -206,12 +248,13 @@ The avatar shapes, expressions, and motion constants are xAI's design. Generated
 
 - **No hub or board:** the extension retries quietly every 1.5 s and pi is unaffected. The hub rescans for an Espressif USB device (vendor `303a`) every 2 s.
 - **Device resets** (opening the port may reset it): the hub resends the roster on `GB_READY`.
-- **Flashing:** `/pet release` in pi, or `{"t":"release"}`, frees the port for 30 s. The device must be flashed app-only at `0x10000`, which preserves NVS and the touch map. A merged image at `0x0` is a fresh install that can erase calibration.
+- **Flashing:** `/pet release` in pi, or `{"t":"release"}`, frees the port for 30 s, and the pets continue over Wi-Fi. The device must be flashed app-only at `0x10000`, which preserves NVS (touch map, Wi-Fi, and pairing). A merged image at `0x0` is a fresh install that can erase them.
+- **Wi-Fi loss:** a dropped or unauthenticated link falls back to USB when present. The hub keeps redialing, and the board keeps rejoining its network every 15 s.
 - **Malformed device lines** are rejected with `GB_ERROR` and do not change state. A full roster answers `GB_ERROR pets_full`.
 
 ## Roadmap (not in this contract)
 
-- **Wi-Fi transport:** the same line protocol over a LAN socket, with the hub unchanged.
+- **Battery care:** dim or sleep when every session is idle, and consider Bluetooth LE for lower power once the display's budget is known.
 - **Text-to-speech:** a new `POST /v1/speech` route on `devices.chan.dev` backed by xAI.
   - The device authenticates with its AuthKit device session, as the other Devices routes do.
   - Short spoken lines such as "your turn" or "tests failed" play on the Stopwatch speaker.
@@ -223,10 +266,11 @@ The avatar shapes, expressions, and motion constants are xAI's design. Generated
 1. **Host contract:** `tests/run.sh`.
    - The shared runner checks three reducer shapes and rejects a mutation.
    - `tests/reference_model.py` audits every scenario against these rules and fuzzes invariants.
-   - `tests/check_host.mjs` checks redaction and hub merging without a board.
+   - `tests/check_host.mjs` checks redaction and hub merging without a board. It also checks the Wi-Fi link against a fake board on localhost: the hub proves the token, a wrong key is refused, a good key links and resyncs, roster traffic flows, and no provisioning goes over Wi-Fi.
 2. **Compile evidence:** the pinned Arduino ESP32 3.3.10, M5Unified 0.2.19, and M5GFX 0.2.26 toolchain compiles the candidate for ESP32-S3 with OPI PSRAM.
 3. **Injected-device evidence:**
    - `tests/check_device.py` replays every scenario that has no `given` state and no long clock on the real board.
    - Framebuffer captures cover every state, the demo, a working pet, and a finished pet; `rec` sequences support frame-by-frame comparison with the web demo.
    - A headless `pi -p` run through the real extension and hub drives thinking, working, and the error wince.
+   - Wireless failover: release USB while the board is paired, then drive a session. Roster updates, sounds, and `pets` replies must arrive over the Wi-Fi link, and USB must resume as active when it returns. Stop the hub entirely, not just release it, before `check_device.py`; otherwise the hub drives the board over Wi-Fi during the replay.
 4. **Physical evidence:** [HAND-REVIEW.md](HAND-REVIEW.md).

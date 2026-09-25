@@ -43,6 +43,13 @@ Start two or three pi sessions in different directories.
 - [ ] A command containing `TOKEN=...` shows `***` on the device.
 - [ ] Bright backgrounds (DevBot) show no black bar at the bottom.
 
+## Wireless
+
+- [ ] Unplug the Stopwatch: within a second or two the pets keep updating; sounds still play.
+- [ ] Plug it back in: nothing visibly glitches, and `/pet` shows `usb*` as the active link again.
+- [ ] `/pet wifi` on a board without credentials: macOS asks for keychain access once, and the board joins the network.
+- [ ] Battery runtime unplugged with the display on: ______
+
 ## Findings
 
 | Finding | Owner (lesson / Stopwatch skill / prompt-first skill) | Change |

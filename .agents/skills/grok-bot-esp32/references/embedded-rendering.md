@@ -71,3 +71,11 @@ Precompute each contour's lid axis and centroid offline with the reference rule.
 - **Background:** the user chose pure black. AMOLED pixels are off there, which minimizes power and burn-in. Some OLEDs smear when pixels turn on from full black; if that is visible, use near-black. Eye holes show the background, so they are black too.
 - **Panel:** correct the panel to 468 × 466 with x offset 6 immediately after `M5.begin()`. Load `espt-touch/record` and map raw touches through the shared warp.
 - **Flashing:** flash app-only at `0x10000` to preserve NVS. Compare the partition table first. A merged image at `0x0` is a fresh install that can erase calibration.
+
+## Wireless link (Wi-Fi and USB)
+
+- **Let the Mac dial out.** A hub-side TCP listener was silently dropped by the macOS application firewall in stealth mode: the board connected, but no data came back and no prompt appeared for an unattended `node`. Have the board listen, advertising `pi-pet-<id4>.local` and `_pi-pet._tcp`, and let the hub dial it. Outgoing connections need no approval.
+- **Never let USB CDC block.** With the host port closed (a released hub or a charger-only connection), HWCDC writes wait out a timeout per call and stalled the main loop, and with it the Wi-Fi link, for about 25 s. Call `Serial.setTxTimeoutMs(0)` right after `Serial.begin()`.
+- **Keep the socket away from the render path.** Run Wi-Fi joins, accepts, and the handshake in a FreeRTOS task on core 0, so connects never stall the animation. The main loop owns the socket only while the link is up, with a mutex around reads, writes, and replacement. Buffer mirrored `GB_*` output per line; per-byte socket writes are slow.
+- **Latency and cost:** with modem sleep, hub-to-board latency was about 0.1–0.2 s. The Wi-Fi stack added about 600 KB of flash. USB is the trusted provisioning channel: pairing tokens and Wi-Fi credentials never cross the network.
+

@@ -81,4 +81,65 @@ try {
   hub.kill("SIGTERM");
   try { fs.unlinkSync(sock); } catch {}
 }
+// 3. Wi-Fi link: the hub dials a paired board, both sides prove the token, traffic flows.
+{
+  const crypto = await import("node:crypto");
+  const hmac = (k, m) => crypto.createHmac("sha256", k).update(m).digest("hex");
+  const home = fs.mkdtempSync(path.join(os.tmpdir(), "pi-pet-home-"));
+  const token = crypto.randomBytes(32).toString("hex"), devId = "a1b2c3d4e5f6";
+  fs.writeFileSync(path.join(home, "devices.json"), JSON.stringify({ [devId]: { token, ip: "127.0.0.1" } }));
+  let attempts = 0, hubProved = false, refusedBad = false, linked = false;
+  const received = [];
+  const board = net.createServer((c) => {
+    attempts++;
+    const bad = attempts === 1;  // first attempt answers with a wrong AUTH
+    const nonceD = crypto.randomBytes(8).toString("hex");
+    c.setEncoding("latin1");
+    c.write(`HELLO ${devId} ${nonceD}\n`);
+    let buf = "", stage = "challenge";
+    c.on("data", (d) => {
+      buf += d;
+      let i;
+      while ((i = buf.indexOf("\n")) >= 0) {
+        const line = buf.slice(0, i); buf = buf.slice(i + 1);
+        if (stage === "challenge") {
+          const [, nonceH, macH] = line.split(" ");
+          if (macH === hmac(token, `hub:${nonceD}:${nonceH}`)) hubProved = true;
+          c.write(`AUTH ${bad ? "0".repeat(64) : hmac(token, `dev:${nonceH}:${nonceD}`)}\n`);
+          stage = "ok";
+        } else if (stage === "ok") {
+          if (bad) { if (line === "DENY auth") refusedBad = true; }
+          else if (line === "OK") { linked = true; stage = "open"; }
+        } else received.push(line);
+      }
+    });
+    c.on("error", () => {});
+  });
+  await new Promise((r) => board.listen(0, "127.0.0.1", r));
+  const boardPort = board.address().port;
+  const sock2 = path.join(os.tmpdir(), `pi-pet-test-w-${process.pid}.sock`);
+  const hub2 = spawn(process.execPath, [path.join(dir, "hub.mjs")], {
+    env: { ...process.env, PI_PET_SOCKET: sock2, PI_PET_PORT: "none", PI_PET_HOME: home, PI_PET_DEVICE_PORT: String(boardPort) },
+    stdio: "ignore",
+  });
+  try {
+    await sleep(7500);  // dials every 3 s: first attempt refused, second links
+    ok(hubProved, "the hub proves the pairing token to the board");
+    ok(refusedBad, "a board with the wrong key is refused (DENY auth)");
+    ok(linked, "a board with the right key links (OK)");
+    const c = net.createConnection(sock2);
+    await new Promise((r) => c.on("connect", r));
+    c.write(JSON.stringify({ t: "hello", id: "session-wifi00000001", name: "wireless" }) + "\n");
+    c.write(JSON.stringify({ t: "state", id: "session-wifi00000001", state: "tool", detail: "$ make" }) + "\n");
+    await sleep(400);
+    ok(received.includes("unpet *"), "a new Wi-Fi link is resynced");
+    ok(received.some((l) => l.startsWith("pet 00000001 tool ") && l.endsWith("wireless|$ make")), "roster updates flow over Wi-Fi");
+    ok(!received.some((l) => /^(wifi|pair|hubaddr|forget)\b/.test(l)), "no provisioning traffic over Wi-Fi");
+    c.end();
+  } finally {
+    hub2.kill("SIGTERM"); board.close();
+    try { fs.unlinkSync(sock2); } catch {}
+    fs.rmSync(home, { recursive: true, force: true });
+  }
+}
 console.log(`pi-pet host bridge: ${checks} checks passed.`);

@@ -1,5 +1,18 @@
 # Pi Pet results
 
+## Revision 5: Wi-Fi and USB
+
+September 24, 2026 (Pacific).
+
+- **Provisioning:** the board already held Wi-Fi credentials in the shared `day22` slot from earlier network lessons, and joined the network on boot (192.168.0.214). The keychain path (`/pet wifi`) was therefore not needed and not exercised; it remains unverified. When the hub opened USB, it paired the board automatically, with no user step.
+- **Direction:** a hub-side TCP listener was tried first. The board reached the port but got no reply, because the macOS application firewall (stealth mode) silently dropped incoming connections to `node`. The final design has the board listen and the hub dial out, which needs no firewall prompt.
+- **Link:** the mutual HMAC handshake linked in about 3 s after hub start, and in 2 s after a board reboot.
+- **Failover:** with USB released (as if unplugged), the hub switched to Wi-Fi and resynced in about 0.1 s. A session's pop, start, chime, wince, and uh-oh played from roster lines sent over Wi-Fi, and `pets` replies returned in about 0.1 s. USB resumed as the active link when it reopened.
+- **Defect found:** with the host port closed, USB CDC writes blocked the main loop, and the first failover test showed a 25 s stall. The board now sets a zero USB write timeout.
+- **Tests:** `tests/check_host.mjs` gained six Wi-Fi checks (23 total). `tests/check_device.py` still passes 16 scenarios with 687 checks (hub stopped).
+- **Compile evidence:** 1,601,647 bytes, with the Wi-Fi stack.
+- **Not yet observed:** physically unplugged battery operation, battery life, and `/pet wifi` with a keychain prompt.
+
 ## Revision 4: state rings and transition sounds
 
 September 24, 2026 (Pacific).

@@ -62,8 +62,9 @@
    "kind": "initial research snapshot; read current-status first",
    "origin": "/Users/chan/.codex/visualizations/2026/09/24/01a0d559-ff01-7f11-8559-df32081677de/grok-bot-design-handoff.md",
    "url": null,
-   "sha256": "e7b9706edc3b2a86c2ada7a325431b900fcabefcd1644f515c63eb74f6b177a5",
-   "bytes": 11476
+   "sha256": "90b8e900110feb74052522e4d204c15f472b7326c4166ca70ef78919fed5d276",
+   "bytes": 11657,
+   "updated": "2026-09-24 (Wi-Fi link)"
   },
   {
    "path": "assets/review/eyes-sheet.png",
@@ -134,9 +135,10 @@
   {
    "path": "references/embedded-rendering.md",
    "kind": "measured ESP32-S3 rendering techniques and dead ends",
-   "sha256": "1d4bb8f86212851ab707dc144f895dfa39d6e2b38435f876f8aa2966392c2b4e",
-   "bytes": 7268,
-   "added": "2026-09-24 (Pi revision-3 update)"
+   "sha256": "f3edfa2ddb7789b92ba2c46ac4858ae53677af859844f053f1fe6785b22c2232",
+   "bytes": 8516,
+   "added": "2026-09-24 (Pi revision-3 update)",
+   "updated": "2026-09-24 (Wi-Fi link)"
   },
   {
    "path": "references/review-tools.md",
