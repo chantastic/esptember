@@ -1,0 +1,967 @@
+{
+  "schema": 1,
+  "lesson": "day-34-pi-pet",
+  "title": "Pi Pet",
+  "hardware": {
+    "board": "m5stack-stopwatch",
+    "width": 468,
+    "height": 466,
+    "offset_x": 6,
+    "offset_y": 0,
+    "rotation": 0,
+    "touch_map": "espt-touch/record"
+  },
+  "controls": {
+    "profile": "c25k",
+    "left_button": "BtnA",
+    "right_button": "BtnB",
+    "left": "previous_or_decrease",
+    "right": "next_or_increase",
+    "enter": "short_both",
+    "back": "hold_both_600ms",
+    "rationale": "Left/right page pi sessions (demo: bots). Short both acknowledges the focused pet (demo: next state). Hold both toggles manual sleep."
+  },
+  "state": {
+    "mode": {
+      "type": "enum",
+      "default": "demo",
+      "values": [
+        "demo",
+        "pets"
+      ]
+    },
+    "focus": {
+      "type": "enum",
+      "default": "none",
+      "values": [
+        "none",
+        "a",
+        "b",
+        "c"
+      ]
+    },
+    "a_state": {
+      "type": "enum",
+      "default": "none",
+      "values": [
+        "none",
+        "idle",
+        "thinking",
+        "tool",
+        "error",
+        "done",
+        "waiting",
+        "sleeping"
+      ]
+    },
+    "a_unseen": {
+      "type": "bool",
+      "default": false
+    },
+    "a_wince": {
+      "type": "bool",
+      "default": false
+    },
+    "a_age": {
+      "type": "enum",
+      "default": "fresh",
+      "values": [
+        "fresh",
+        "over_4s",
+        "over_30s",
+        "over_10m"
+      ]
+    },
+    "b_state": {
+      "type": "enum",
+      "default": "none",
+      "values": [
+        "none",
+        "idle",
+        "thinking",
+        "tool",
+        "error",
+        "done",
+        "waiting",
+        "sleeping"
+      ]
+    },
+    "b_unseen": {
+      "type": "bool",
+      "default": false
+    },
+    "b_wince": {
+      "type": "bool",
+      "default": false
+    },
+    "b_age": {
+      "type": "enum",
+      "default": "fresh",
+      "values": [
+        "fresh",
+        "over_4s",
+        "over_30s",
+        "over_10m"
+      ]
+    },
+    "c_state": {
+      "type": "enum",
+      "default": "none",
+      "values": [
+        "none",
+        "idle",
+        "thinking",
+        "tool",
+        "error",
+        "done",
+        "waiting",
+        "sleeping"
+      ]
+    },
+    "c_unseen": {
+      "type": "bool",
+      "default": false
+    },
+    "c_wince": {
+      "type": "bool",
+      "default": false
+    },
+    "c_age": {
+      "type": "enum",
+      "default": "fresh",
+      "values": [
+        "fresh",
+        "over_4s",
+        "over_30s",
+        "over_10m"
+      ]
+    },
+    "manual_sleep": {
+      "type": "bool",
+      "default": false
+    },
+    "demo_bot": {
+      "type": "int",
+      "default": 0,
+      "min": 0,
+      "max": 7
+    },
+    "demo_mood": {
+      "type": "enum",
+      "default": "idle",
+      "values": [
+        "idle",
+        "thinking",
+        "working",
+        "waiting",
+        "blocked",
+        "done",
+        "surprised",
+        "sleeping",
+        "happy",
+        "curious",
+        "excited",
+        "sad"
+      ]
+    },
+    "mood": {
+      "type": "enum",
+      "default": "idle",
+      "values": [
+        "idle",
+        "thinking",
+        "working",
+        "waiting",
+        "blocked",
+        "done",
+        "surprised",
+        "sleeping",
+        "happy",
+        "curious",
+        "excited",
+        "sad"
+      ]
+    },
+    "emit": {
+      "type": "string",
+      "default": "",
+      "max_length": 16
+    }
+  },
+  "scenarios": [
+    {
+      "name": "first report becomes the focused pet",
+      "steps": [
+        {
+          "action": {
+            "type": "report",
+            "id": "a",
+            "state": "idle"
+          },
+          "expect": {
+            "mode": "pets",
+            "focus": "a",
+            "a_state": "idle",
+            "emit": "focus a",
+            "mood": "idle"
+          }
+        }
+      ]
+    },
+    {
+      "name": "working pets think and use tools",
+      "steps": [
+        {
+          "action": {
+            "type": "report",
+            "id": "a",
+            "state": "thinking"
+          },
+          "expect": {
+            "mode": "pets",
+            "focus": "a",
+            "a_state": "thinking",
+            "mood": "thinking",
+            "emit": "focus a"
+          }
+        },
+        {
+          "action": {
+            "type": "report",
+            "id": "a",
+            "state": "tool"
+          },
+          "expect": {
+            "a_state": "tool",
+            "mood": "working",
+            "emit": ""
+          }
+        },
+        {
+          "action": {
+            "type": "report",
+            "id": "a",
+            "state": "thinking"
+          },
+          "expect": {
+            "a_state": "thinking",
+            "mood": "thinking",
+            "emit": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "an error wince outlasts a quick follow-up state",
+      "steps": [
+        {
+          "action": {
+            "type": "report",
+            "id": "a",
+            "state": "tool"
+          },
+          "expect": {
+            "mode": "pets",
+            "focus": "a",
+            "a_state": "tool",
+            "mood": "working",
+            "emit": "focus a"
+          }
+        },
+        {
+          "action": {
+            "type": "report",
+            "id": "a",
+            "state": "error"
+          },
+          "expect": {
+            "a_state": "error",
+            "a_unseen": true,
+            "a_wince": true,
+            "mood": "surprised",
+            "emit": ""
+          }
+        },
+        {
+          "action": {
+            "type": "report",
+            "id": "a",
+            "state": "thinking"
+          },
+          "expect": {
+            "a_state": "thinking",
+            "mood": "surprised"
+          }
+        },
+        {
+          "action": "advance_5s",
+          "expect": {
+            "a_wince": false,
+            "a_age": "over_4s",
+            "mood": "thinking"
+          }
+        }
+      ]
+    },
+    {
+      "name": "a settled error is blocked until acknowledged",
+      "steps": [
+        {
+          "action": {
+            "type": "report",
+            "id": "a",
+            "state": "error"
+          },
+          "expect": {
+            "mode": "pets",
+            "focus": "a",
+            "a_state": "error",
+            "a_unseen": true,
+            "a_wince": true,
+            "mood": "surprised",
+            "emit": "focus a"
+          }
+        },
+        {
+          "action": "advance_5s",
+          "expect": {
+            "a_wince": false,
+            "a_age": "over_4s",
+            "mood": "blocked",
+            "emit": ""
+          }
+        },
+        {
+          "action": "enter",
+          "expect": {
+            "a_unseen": false,
+            "emit": "ack a",
+            "mood": "blocked"
+          }
+        }
+      ]
+    },
+    {
+      "name": "done celebrates then waits until acknowledged",
+      "steps": [
+        {
+          "action": {
+            "type": "report",
+            "id": "a",
+            "state": "thinking"
+          },
+          "expect": {
+            "mode": "pets",
+            "focus": "a",
+            "a_state": "thinking",
+            "mood": "thinking",
+            "emit": "focus a"
+          }
+        },
+        {
+          "action": {
+            "type": "report",
+            "id": "a",
+            "state": "done"
+          },
+          "expect": {
+            "a_state": "done",
+            "a_unseen": true,
+            "mood": "done",
+            "emit": ""
+          }
+        },
+        {
+          "action": "advance_5s",
+          "expect": {
+            "a_age": "over_4s",
+            "mood": "waiting"
+          }
+        },
+        {
+          "action": "enter",
+          "expect": {
+            "a_unseen": false,
+            "mood": "idle",
+            "emit": "ack a"
+          }
+        }
+      ]
+    },
+    {
+      "name": "an unacknowledged done settles after thirty seconds",
+      "steps": [
+        {
+          "action": {
+            "type": "report",
+            "id": "a",
+            "state": "done"
+          },
+          "expect": {
+            "mode": "pets",
+            "focus": "a",
+            "a_state": "done",
+            "a_unseen": true,
+            "mood": "done",
+            "emit": "focus a"
+          }
+        },
+        {
+          "action": "advance_30s",
+          "expect": {
+            "a_age": "over_30s",
+            "mood": "idle",
+            "emit": "",
+            "a_unseen": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "repeated reports keep the state age",
+      "steps": [
+        {
+          "action": {
+            "type": "report",
+            "id": "a",
+            "state": "done"
+          },
+          "expect": {
+            "mode": "pets",
+            "focus": "a",
+            "a_state": "done",
+            "a_unseen": true,
+            "mood": "done",
+            "emit": "focus a"
+          }
+        },
+        {
+          "action": "advance_5s",
+          "expect": {
+            "a_age": "over_4s",
+            "mood": "waiting",
+            "emit": ""
+          }
+        },
+        {
+          "action": {
+            "type": "report",
+            "id": "a",
+            "state": "done"
+          },
+          "expect": {
+            "a_age": "over_4s",
+            "mood": "waiting"
+          }
+        }
+      ]
+    },
+    {
+      "name": "a finished pet takes focus from an idle pet and stays unseen",
+      "steps": [
+        {
+          "action": {
+            "type": "report",
+            "id": "a",
+            "state": "idle"
+          },
+          "expect": {
+            "mode": "pets",
+            "focus": "a",
+            "a_state": "idle",
+            "emit": "focus a"
+          }
+        },
+        {
+          "action": {
+            "type": "report",
+            "id": "b",
+            "state": "thinking"
+          },
+          "expect": {
+            "b_state": "thinking",
+            "emit": "",
+            "focus": "a"
+          }
+        },
+        {
+          "action": {
+            "type": "report",
+            "id": "b",
+            "state": "done"
+          },
+          "expect": {
+            "focus": "b",
+            "b_state": "done",
+            "b_unseen": true,
+            "mood": "done",
+            "emit": "focus b"
+          }
+        },
+        {
+          "action": "advance_5s",
+          "expect": {
+            "a_age": "over_4s",
+            "b_age": "over_4s",
+            "mood": "waiting",
+            "emit": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "a working pet keeps focus and paging clears unseen",
+      "steps": [
+        {
+          "action": {
+            "type": "report",
+            "id": "a",
+            "state": "tool"
+          },
+          "expect": {
+            "mode": "pets",
+            "focus": "a",
+            "a_state": "tool",
+            "mood": "working",
+            "emit": "focus a"
+          }
+        },
+        {
+          "action": {
+            "type": "report",
+            "id": "b",
+            "state": "done"
+          },
+          "expect": {
+            "b_state": "done",
+            "b_unseen": true,
+            "emit": "",
+            "focus": "a"
+          }
+        },
+        {
+          "action": "right",
+          "expect": {
+            "focus": "b",
+            "b_unseen": false,
+            "mood": "done",
+            "emit": "focus b"
+          }
+        },
+        {
+          "action": "left",
+          "expect": {
+            "focus": "a",
+            "mood": "working",
+            "emit": "focus a"
+          }
+        }
+      ]
+    },
+    {
+      "name": "pages wrap in slot order",
+      "steps": [
+        {
+          "action": {
+            "type": "report",
+            "id": "a",
+            "state": "idle"
+          },
+          "expect": {
+            "mode": "pets",
+            "focus": "a",
+            "a_state": "idle",
+            "emit": "focus a"
+          }
+        },
+        {
+          "action": {
+            "type": "report",
+            "id": "b",
+            "state": "idle"
+          },
+          "expect": {
+            "b_state": "idle",
+            "emit": ""
+          }
+        },
+        {
+          "action": {
+            "type": "report",
+            "id": "c",
+            "state": "idle"
+          },
+          "expect": {
+            "c_state": "idle"
+          }
+        },
+        {
+          "action": "right",
+          "expect": {
+            "focus": "b",
+            "emit": "focus b"
+          }
+        },
+        {
+          "action": "right",
+          "expect": {
+            "focus": "c",
+            "emit": "focus c"
+          }
+        },
+        {
+          "action": "right",
+          "expect": {
+            "focus": "a",
+            "emit": "focus a"
+          }
+        },
+        {
+          "action": "left",
+          "expect": {
+            "focus": "c",
+            "emit": "focus c"
+          }
+        }
+      ]
+    },
+    {
+      "name": "removing pets moves focus and the last removal returns to demo",
+      "steps": [
+        {
+          "action": {
+            "type": "report",
+            "id": "a",
+            "state": "idle"
+          },
+          "expect": {
+            "mode": "pets",
+            "focus": "a",
+            "a_state": "idle",
+            "emit": "focus a"
+          }
+        },
+        {
+          "action": {
+            "type": "report",
+            "id": "b",
+            "state": "thinking"
+          },
+          "expect": {
+            "b_state": "thinking",
+            "emit": ""
+          }
+        },
+        {
+          "action": {
+            "type": "remove",
+            "id": "a"
+          },
+          "expect": {
+            "focus": "b",
+            "a_state": "none",
+            "mood": "thinking",
+            "emit": "focus b"
+          }
+        },
+        {
+          "action": {
+            "type": "remove",
+            "id": "b"
+          },
+          "expect": {
+            "mode": "demo",
+            "focus": "none",
+            "b_state": "none",
+            "mood": "idle",
+            "emit": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "remove all clears every slot",
+      "steps": [
+        {
+          "action": {
+            "type": "report",
+            "id": "a",
+            "state": "error"
+          },
+          "expect": {
+            "mode": "pets",
+            "focus": "a",
+            "a_state": "error",
+            "a_unseen": true,
+            "a_wince": true,
+            "mood": "surprised",
+            "emit": "focus a"
+          }
+        },
+        {
+          "action": {
+            "type": "report",
+            "id": "c",
+            "state": "done"
+          },
+          "expect": {
+            "focus": "c",
+            "c_state": "done",
+            "c_unseen": true,
+            "mood": "done",
+            "emit": "focus c"
+          }
+        },
+        {
+          "action": "remove_all",
+          "expect": {
+            "mode": "demo",
+            "focus": "none",
+            "a_state": "none",
+            "a_unseen": false,
+            "a_wince": false,
+            "c_state": "none",
+            "c_unseen": false,
+            "mood": "idle",
+            "emit": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "manual sleep overrides the pet until any page or acknowledge",
+      "steps": [
+        {
+          "action": {
+            "type": "report",
+            "id": "a",
+            "state": "thinking"
+          },
+          "expect": {
+            "mode": "pets",
+            "focus": "a",
+            "a_state": "thinking",
+            "mood": "thinking",
+            "emit": "focus a"
+          }
+        },
+        {
+          "action": "hold",
+          "expect": {
+            "manual_sleep": true,
+            "mood": "sleeping",
+            "emit": ""
+          }
+        },
+        {
+          "action": {
+            "type": "report",
+            "id": "a",
+            "state": "tool"
+          },
+          "expect": {
+            "a_state": "tool",
+            "mood": "sleeping"
+          }
+        },
+        {
+          "action": "enter",
+          "expect": {
+            "manual_sleep": false,
+            "mood": "working",
+            "emit": "ack a"
+          }
+        },
+        {
+          "action": "hold",
+          "expect": {
+            "manual_sleep": true,
+            "mood": "sleeping",
+            "emit": ""
+          }
+        },
+        {
+          "action": "right",
+          "expect": {
+            "manual_sleep": false,
+            "mood": "working",
+            "emit": "focus a"
+          }
+        }
+      ]
+    },
+    {
+      "name": "idle pets doze after ten minutes",
+      "steps": [
+        {
+          "action": {
+            "type": "report",
+            "id": "a",
+            "state": "idle"
+          },
+          "expect": {
+            "mode": "pets",
+            "focus": "a",
+            "a_state": "idle",
+            "emit": "focus a"
+          }
+        },
+        {
+          "action": "advance_10m",
+          "expect": {
+            "a_age": "over_10m",
+            "mood": "sleeping",
+            "emit": ""
+          }
+        },
+        {
+          "action": {
+            "type": "report",
+            "id": "a",
+            "state": "thinking"
+          },
+          "expect": {
+            "a_state": "thinking",
+            "a_age": "fresh",
+            "mood": "thinking"
+          }
+        }
+      ]
+    },
+    {
+      "name": "demo mode cycles bots and states",
+      "steps": [
+        {
+          "action": "right",
+          "expect": {
+            "demo_bot": 1
+          }
+        },
+        {
+          "action": "left",
+          "expect": {
+            "demo_bot": 0
+          }
+        },
+        {
+          "action": "left",
+          "expect": {
+            "demo_bot": 7
+          }
+        },
+        {
+          "action": "enter",
+          "expect": {
+            "demo_mood": "happy",
+            "mood": "happy"
+          }
+        },
+        {
+          "action": "enter",
+          "expect": {
+            "demo_mood": "curious",
+            "mood": "curious"
+          }
+        },
+        {
+          "action": "hold",
+          "expect": {
+            "demo_mood": "sleeping",
+            "mood": "sleeping"
+          }
+        },
+        {
+          "action": "enter",
+          "expect": {
+            "demo_mood": "idle",
+            "mood": "idle"
+          }
+        },
+        {
+          "action": "hold",
+          "expect": {
+            "demo_mood": "sleeping",
+            "mood": "sleeping"
+          }
+        },
+        {
+          "action": "right",
+          "expect": {
+            "demo_bot": 0,
+            "demo_mood": "idle",
+            "mood": "idle"
+          }
+        }
+      ]
+    },
+    {
+      "name": "demo state cycle wraps after sad",
+      "steps": [
+        {
+          "action": "enter",
+          "expect": {
+            "demo_mood": "idle",
+            "mood": "idle"
+          }
+        }
+      ],
+      "given": {
+        "demo_mood": "sad",
+        "mood": "sad"
+      }
+    }
+  ],
+  "layout": {
+    "safe_radius": 226,
+    "focus_inset": 3,
+    "controls": [
+      {
+        "id": "pet_body",
+        "bounds": [
+          102,
+          130,
+          264,
+          220
+        ]
+      },
+      {
+        "id": "session_name",
+        "bounds": [
+          110,
+          376,
+          248,
+          28
+        ]
+      },
+      {
+        "id": "activity_line",
+        "bounds": [
+          116,
+          405,
+          236,
+          24
+        ]
+      },
+      {
+        "id": "page_dots",
+        "bounds": [
+          153,
+          430,
+          162,
+          16
+        ]
+      }
+    ]
+  },
+  "visual": {
+    "kind": "card",
+    "eyebrow": "PI PET",
+    "title": "chan-services",
+    "lines": [
+      "your turn"
+    ],
+    "accent": "#1084FE",
+    "scenario": "a finished pet takes focus from an idle pet and stays unseen",
+    "evidence": "device"
+  }
+}

@@ -171,3 +171,21 @@
   scale to cover 368×448 without stretching, then crop with the picture
   shifted left 26px (7% of screen width). User confirmed the opaque-frame
   fix preserves all fills and the full-screen version works.
+
+- **Day 34 Pi Pet · September 24** — one Grok Bot–style pet per pi session
+  (extension → local hub → USB serial). Lessons and follow-ups:
+  - Port the reference engine; imitation stalled. The xAI demo's engine,
+    contours and constants are captured in `.agents/skills/grok-bot-esp32/`
+    (published at the user's direction; xAI's design — revisit before any
+    broader release).
+  - Frame-by-frame review (web screencast vs firmware `rec`) found every
+    motion defect; keep it as the acceptance habit for animated lessons.
+  - Exact 48-edge polygon SDF was too slow on the S3 (7–19 fps); per-contour
+    SDF textures with exact lid inversion hold ~30 fps.
+  - Retest / open: physical hand review (transitions, contour eyes, black
+    level smear, ribbons), IMU tilt direction, shared recalibration flow,
+    possible pi session-switch registration gap.
+  - Lesson ideas: Wi-Fi transport for the same line protocol; text-to-speech
+    via an authenticated `devices.chan.dev/v1/speech` (xAI) playing on the
+    Stopwatch speaker; answering pi tool-call approvals from the pushers.
+

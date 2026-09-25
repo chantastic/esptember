@@ -1,0 +1,10 @@
+[
+  {"in": "$ GITHUB_TOKEN=ghp_abc123 gh pr list", "must_not_contain": "ghp_abc123"},
+  {"in": "$ curl -H \"Authorization: Bearer sk-live-xyz\" https://x", "must_not_contain": "sk-live-xyz"},
+  {"in": "$ export API_KEY=\"hunter2\" && make", "must_not_contain": "hunter2"},
+  {"in": "$ npm test -- --password hunter2", "must_not_contain": "hunter2"},
+  {"in": "$ mysql --user=root --password=s3cr3t db", "must_not_contain": "s3cr3t"},
+  {"in": "$ echo client_secret: abcd1234", "must_not_contain": "abcd1234"},
+  {"in": "$ ls -la src", "equals": "$ ls -la src"},
+  {"in": "$ arduino-cli compile --fqbn esp32:esp32:esp32s3", "equals": "$ arduino-cli compile --fqbn esp32:esp32:esp32s3"}
+]

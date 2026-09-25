@@ -40,6 +40,7 @@ retargeted to the Stopwatch — the 1.75-B is missing in action.)
 | 30 | WorkOS AuthKit — Device Grant | 1.8 | planned |
 | 31 | Connected (resident session) | 1.8 | bonus |
 | 32 | Pipes (connections + gateway) | 1.8 | bonus |
+| 34 | Pi Pet (Grok Bot companion for pi sessions) | Stopwatch | bonus · shipped as `days/day-34-pi-pet` |
 
 Arc logic: display/assets (1–6) → UI + per-board I/O taught once each (7–11) →
 timing capstones (12–13) → audio-in (14–15) → persistence/assets at scale
