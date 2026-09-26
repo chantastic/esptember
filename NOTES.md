@@ -188,4 +188,17 @@
   - Lesson ideas: Wi-Fi transport for the same line protocol; text-to-speech
     via an authenticated `devices.chan.dev/v1/speech` (xAI) playing on the
     Stopwatch speaker; answering pi tool-call approvals from the pushers.
+- **Day 34 follow-ups · September 25** — remember several Wi-Fi networks
+  (home plus phone hotspot) instead of the single shared `day22` slot; a small
+  USB/Wi-Fi link indicator on screen; measure battery runtime with dimming
+  (`GB_HELLO battery=`); physical hand review. The installed pi extension is a
+  symlink into the lesson's ignored `.build/host-candidate/`, so deleting
+  `.build/` silently removes the pets. `pnpm` dropped off PATH after a Node
+  re-bundle (use `npx pnpm@10` until restored).
+- **Stopwatch-wide candidates (for build-stopwatch-lessons, pending its
+  owner's in-flight edits)** — `Serial.setTxTimeoutMs(0)` after
+  `Serial.begin()` (a closed host port otherwise stalls the loop), raising it
+  only around bulk dumps; for LAN links the board listens and the Mac dials
+  out (the macOS firewall silently drops unattended inbound); IMU +x points
+  toward the lanyard (screen down), +y screen-left.
 

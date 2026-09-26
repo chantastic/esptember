@@ -135,17 +135,18 @@
   {
    "path": "references/embedded-rendering.md",
    "kind": "measured ESP32-S3 rendering techniques and dead ends",
-   "sha256": "f3edfa2ddb7789b92ba2c46ac4858ae53677af859844f053f1fe6785b22c2232",
-   "bytes": 8516,
+   "sha256": "d69c0eea737002e0a24ee85a58cf7065d4813b8bc421efdb87a31fd4886ced96",
+   "bytes": 9170,
    "added": "2026-09-24 (Pi revision-3 update)",
-   "updated": "2026-09-24 (Wi-Fi link)"
+   "updated": "2026-09-25 (screensaver, tilt, pause)"
   },
   {
    "path": "references/review-tools.md",
    "kind": "frame-by-frame capture and comparison workflow",
-   "sha256": "a0ecc49a3ee30af0b531c248e731230d7dc4c92e8ece4decb323291f35684fe1",
-   "bytes": 4157,
-   "added": "2026-09-24 (Pi revision-3 update)"
+   "sha256": "eacf2a7763e5fae0e4961c791d2231642afb17f19e8df042180b5fbba9c4a7be",
+   "bytes": 4477,
+   "added": "2026-09-24 (Pi revision-3 update)",
+   "updated": "2026-09-25 (screensaver, tilt, pause)"
   },
   {
    "path": "scripts/capture-web-demo.mjs",
@@ -165,9 +166,10 @@
   {
    "path": "scripts/device-recorder.py",
    "kind": "Pi Pet firmware rec/shot capture over USB serial",
-   "sha256": "4aad0fd28079f67a47c6c81d7ee795f5d0c2479ee0ac17ab883b5760c2df1d5a",
-   "bytes": 4259,
-   "added": "2026-09-24 (Pi revision-3 update)"
+   "sha256": "508248358e5f72bd6f2d4d0c83e32c12c52bb528fd1e30b809b28fea733a81fc",
+   "bytes": 4349,
+   "added": "2026-09-24 (Pi revision-3 update)",
+   "updated": "2026-09-25 (screensaver, tilt, pause)"
   },
   {
    "path": "assets/review/web-idle.png",

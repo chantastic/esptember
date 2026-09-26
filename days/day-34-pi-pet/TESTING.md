@@ -9,7 +9,7 @@ days/day-34-pi-pet/tests/run.sh
 It runs four checks:
 
 1. **Contract.** It generates three reducer shapes from `tests/contract.json` and checks each with the shared runner. That covers defaults, bounds, determinism, nonmutation, every scenario step, 10,000 generated actions, Stopwatch metadata, the C25K control profile, and round-screen bounds for the pet body, name, activity line, and page dots. It then drops one transition and requires that mutation to fail.
-2. **Reference model.** `tests/reference_model.py` is an executable reading of SPEC.md. It requires every scenario expectation to be complete (no silently omitted field changes) and to agree with the written rules. It then fuzzes 40,000 random actions for these invariants:
+2. **Reference model.** Scenarios are written in `tests/author_contract.py`, which fills every expectation from the model and aborts on any claim that disagrees; `contract.json` is its output. `tests/reference_model.py` is an executable reading of SPEC.md. It requires every scenario expectation to be complete (no silently omitted field changes) and to agree with the written rules. It then fuzzes 40,000 random actions for these invariants:
    - focus exists exactly when pets exist;
    - focus points at a pet;
    - moods stay valid;

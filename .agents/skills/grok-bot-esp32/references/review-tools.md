@@ -45,8 +45,8 @@ python3 <skill>/scripts/device-recorder.py rec out.png 60 "mood thinking" 0.2
 python3 <skill>/scripts/device-recorder.py shot out.png "expr 20;look 0 0" 1
 ```
 
-- **Default crop:** `--box 84,54,300,2`, a 300 px square around the head downsampled 2×, gives about 45 KB per frame. The recorder captures at the real frame rate because it doesn't block the loop, unlike `shot`: a full dump takes about 0.5 s and ruins any concurrent fps sample.
-- **Port ownership:** the pi-pet hub owns the port. Stop it or run `/pet release` first. Opening the port can reset the board; the script waits for it.
+- **Default crop:** `--box 84,54,300,2` (the head sits at y 204 with pets and y 233 in demo; adjust `y` for demo shots), a 300 px square around the head downsampled 2×, gives about 45 KB per frame. The recorder captures at the real frame rate because it doesn't block the loop, unlike `shot`: a full dump takes about 0.5 s and ruins any concurrent fps sample.
+- **Port ownership:** the pi-pet hub owns the USB port and, when the board is paired, also drives it over Wi-Fi. Send the hub `{"t":"pause","seconds":300}` on `~/.pi-pet/hub.sock` before recording, and `{"t":"resume"}` after. `/pet release` frees only USB, and killing the hub doesn't stick, because running sessions respawn it. Opening the port can reset the board; the script waits for it.
 - **Saved sequences:** `assets/review/device-*.png` hold device sequences from the revision-3 candidate.
   - Recorded with contour eyes: the Working spin, Thinking→Blocked, Done, a blink, and all 25 settled contours.
   - Recorded after the compositing fix but before contour eyes (capsule eyes): Idle→Thinking and Blocked→Idle.

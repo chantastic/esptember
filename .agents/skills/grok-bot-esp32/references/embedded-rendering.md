@@ -75,7 +75,12 @@ Precompute each contour's lid axis and centroid offline with the reference rule.
 ## Wireless link (Wi-Fi and USB)
 
 - **Let the Mac dial out.** A hub-side TCP listener was silently dropped by the macOS application firewall in stealth mode: the board connected, but no data came back and no prompt appeared for an unattended `node`. Have the board listen, advertising `pi-pet-<id4>.local` and `_pi-pet._tcp`, and let the hub dial it. Outgoing connections need no approval.
-- **Never let USB CDC block.** With the host port closed (a released hub or a charger-only connection), HWCDC writes wait out a timeout per call and stalled the main loop, and with it the Wi-Fi link, for about 25 s. Call `Serial.setTxTimeoutMs(0)` right after `Serial.begin()`.
+- **Never let USB CDC block.** With the host port closed (a released hub or a charger-only connection), HWCDC writes wait out a timeout per call and stalled the main loop, and with it the Wi-Fi link, for about 25 s. Call `Serial.setTxTimeoutMs(0)` right after `Serial.begin()`. Raise the timeout (2 s) only around bulk dumps a reader requested (`shot`, `recdump`); otherwise their bytes are dropped and the reader hangs.
 - **Keep the socket away from the render path.** Run Wi-Fi joins, accepts, and the handshake in a FreeRTOS task on core 0, so connects never stall the animation. The main loop owns the socket only while the link is up, with a mutex around reads, writes, and replacement. Buffer mirrored `GB_*` output per line; per-byte socket writes are slow.
 - **Latency and cost:** with modem sleep, hub-to-board latency was about 0.1–0.2 s. The Wi-Fi stack added about 600 KB of flash. USB is the trusted provisioning channel: pairing tokens and Wi-Fi credentials never cross the network.
+
+## IMU
+
+- **Axes on the Stopwatch** (lanyard down, standing upright): ax ≈ −0.83, so IMU +x points toward the lanyard (screen down). With +z out of the screen, +y points screen-left, and downhill on the screen is (`ay`, −`ax`). Treating `ax` as horizontal slid the pet about 34 px right whenever the board stood upright.
+- **React to changes, not absolute tilt:** a baseline with a 2.5 s time constant and a small deadband keep the character centered in any resting pose while still sloshing when moved.
 

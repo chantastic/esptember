@@ -181,7 +181,10 @@ Clock actions `advance_5s`, `advance_30s`, and `advance_10m` stand in for elapse
     - Drag the pet to move it; release springs it home with a wobble.
     - Tap elsewhere to make it glance there.
     - Any touch wakes manual sleep.
-12. **Tilt:** the pet slides gently downhill and looks that way while wandering. A shake of more than 2.2 g makes it hop.
+12. **Tilt:** the pet reacts to *changes* in orientation, never to the resting pose.
+    - Downhill on the screen is (IMU `ay`, −`ax`); this mapping was measured on the device (see *Character and motion*).
+    - A baseline follows it with a 2.5 s time constant. The difference (deadband 0.05 g, gain 1.5) slides the pet up to 40 px horizontally and 30 px vertically, and steers its glances. The pet drifts back to center as the baseline settles, so it stays centered lying flat, standing upright on its lanyard, or leaning.
+    - A shake of more than 2.2 g makes it bounce and spin.
 
 ## Character and motion
 
@@ -238,6 +241,8 @@ The device ports the web avatar engine rather than imitating it. Measured behavi
   - Sleeping: 70.
   - `GB_HELLO` reports `battery=<percent> charging=<0|1>` for runtime measurements.
 - **Sleeping:** closed-line expressions, drifting `z`, dim backlight.
+- **Placement:** the head's home is x 234 (the round face's center). Vertically, it sits at y 204 when the name/activity band shows (pet mode) and at y 233, centered, in demo/screensaver mode, easing between the two in about 0.3 s. Measured on the device: body center (233.5, 232.0) in demo and (232.5, 204) with a pet.
+- **IMU axes** (Stopwatch, lanyard down, standing upright: ax ≈ −0.83): IMU +x points toward the lanyard (screen down); with +z out of the screen, +y points screen-left.
 - **Rendering:**
   - antialiased distance fields at every scale;
   - two-level tile classification with shading only near edges;
@@ -275,6 +280,7 @@ The avatar shapes, expressions, and motion constants are xAI's design. Generated
 1. **Host contract:** `tests/run.sh`.
    - The shared runner checks three reducer shapes and rejects a mutation.
    - `tests/reference_model.py` audits every scenario against these rules and fuzzes invariants.
+   - `tests/author_contract.py` generates `contract.json` from compact scenarios, filling complete expectations from the model. Edit scenarios there, not in the JSON.
    - `tests/check_host.mjs` checks redaction and hub merging without a board. It also checks the Wi-Fi link against a fake board on localhost: the hub proves the token, a wrong key is refused, a good key links and resyncs, roster traffic flows, and no provisioning goes over Wi-Fi.
 2. **Compile evidence:** the pinned Arduino ESP32 3.3.10, M5Unified 0.2.19, and M5GFX 0.2.26 toolchain compiles the candidate for ESP32-S3 with OPI PSRAM.
 3. **Injected-device evidence:**

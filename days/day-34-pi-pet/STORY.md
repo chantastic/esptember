@@ -68,9 +68,29 @@ The pet was back to 30 frames per second, with bean-shaped eyes.
 The reference turned out to use capsules only mid-morph.
 The shortcut had been right half the time, which is exactly how it hid.
 
+## Cutting the cord
+
+The next wish was simple: unplug it.
+
+USB already made a perfect trust channel, since a board plugged into your Mac is yours.
+So the hub pairs it automatically, and could hand it your Wi-Fi from the keychain; this board already knew the network from an earlier lesson.
+
+The first design had the Mac listen for the board.
+The board connected, and nothing came back.
+The Mac's firewall, in stealth mode, was silently dropping every connection to an unattended `node`, with no prompt to click.
+So the direction flipped: the board listens, and the hub dials out.
+
+Then the first unplug test froze for twenty-five seconds.
+With the USB port closed, every serial print waited out a timeout and stalled the whole loop, the Wi-Fi link included.
+One line fixed it, and the next unplug switched to Wi-Fi in a tenth of a second.
+
+The screensaver arrived by accident.
+With no hub, the board simply showed its demo bot, and that looked so right that we made it official: a heartbeat, a silent drift through moods, and dimming for the battery.
+
 ## What we learned
 
 - Port before you polish. Imitating a character's motion by eye stalls; its engine was a download away.
 - Frames beat source. The code said what was possible; sixty frames a second showed what actually happens.
 - The contract finds real bugs. Writing the rules as an executable model caught firmware defects that the device had rendered without complaint.
 - Budgets shape fidelity. The right contour renderer wasn't the exact one; it was the one that kept thirty frames a second.
+- Let the trusted wire do the setup. USB paired the board and could carry the Wi-Fi password; the network only ever sees authenticated traffic.

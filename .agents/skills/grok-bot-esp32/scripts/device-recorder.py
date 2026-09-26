@@ -8,7 +8,8 @@
 rate (`rec <n> <x> <y> <size> <step>`), then dumps them (`recdump`) into a contact sheet with
 per-frame timestamps. `shot` dumps the full 468x466 RGB565 framebuffer. Commands (e.g.
 `mood thinking`, `expr 11`, `look 0 0`, `blink`, `spin`) are sent first. Stop the pi-pet hub
-first: it owns the port (`/pet release` in pi frees it for 30 s). Opening the port can reset
+first: it owns the port and may also drive a paired board over Wi-Fi. Send the hub
+{"t":"pause","seconds":300} (then {"t":"resume"}) on ~/.pi-pet/hub.sock. Opening the port can reset
 the board; the tool waits for it. Pixel data is byte-swapped RGB565 as M5GFX stores it.
 """
 import argparse, glob, sys, time

@@ -1,5 +1,17 @@
 # Pi Pet results
 
+## Revision 7: centering, tilt axes, and bulk dumps
+
+September 25, 2026 (Pacific).
+
+- **Defect (reported by the user):** the pet sat to the right. The IMU reported ax = −0.83 with the board standing upright on its lanyard, so its x axis runs toward the lanyard (screen down). The old code treated `ax` as horizontal tilt and slid the pet about 34 px right.
+  - Tilt now uses the measured mapping (downhill = (`ay`, −`ax`)) and responds only to *changes* in orientation, through a 2.5 s baseline, so any resting pose stays centered.
+  - Framebuffer measurements: body center (233.5, 232.0) in demo and (232.5, 204.0) with a pet, against the face center at x 233–234.
+- **Vertical centering:** in demo and screensaver mode (no name band), the head now centers vertically at y 233. With pets it stays at y 204 above the band.
+- **Defect found:** the zero USB write timeout from revision 5 made the 436 KB `shot` and `rec` dumps drop bytes, so readers hung. The dumps now raise the timeout to 2 s while a reader is attached, then restore 0.
+- **Authoring:** `tests/author_contract.py` is now durable source. It regenerated a byte-identical `contract.json`.
+- **Tests:** `tests/check_device.py` passed 16 scenarios with 687 checks (hub paused).
+
 ## Revision 6: screensaver and battery care
 
 September 25, 2026 (Pacific).

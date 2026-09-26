@@ -25,7 +25,7 @@ Start in demo mode (no pi sessions running, or after `reset`), lanyard down.
 - [ ] Holding both for 600 ms sleeps: closed-line eyes, drifting `z`, dim screen. A page press wakes it.
 - [ ] Tapping the pet makes it bounce (sometimes spin); dragging moves it and releasing wobbles it home; tapping elsewhere makes it look there.
 - [ ] Touch lands where the finger is across the whole face, including near the edges.
-- [ ] Tilting slides the pet downhill and it looks downhill; a firm shake makes it hop. Note the actual direction: ________
+- [ ] At rest (flat, upright on the lanyard, or leaning) the pet is centered; tilting slides it downhill and it drifts back to center within a few seconds; a firm shake makes it bounce. Direction feels right: ________
 
 ## With pi
 
