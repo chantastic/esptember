@@ -5,6 +5,10 @@
   before changing a lesson prompt, contract, tests, or disposable device build.
 - For prompt-first lesson conversions, also read and apply
   [.agents/skills/prompt-first-embedded-lessons/SKILL.md](.agents/skills/prompt-first-embedded-lessons/SKILL.md).
+- For printable hardware under `hardware/` (stands, docks, cases), read and apply
+  [.agents/skills/openscad-parts/SKILL.md](.agents/skills/openscad-parts/SKILL.md)
+  and, for anything that holds the Stopwatch,
+  [.agents/skills/m5-stopwatch-mechanical/SKILL.md](.agents/skills/m5-stopwatch-mechanical/SKILL.md).
 - Day 07 is Touch Calibration; LVGL and the existing lineup follow it. From
   Day 07 onward, target the M5Stack Stopwatch and work one lesson at a time.
 - The durable lesson source is a detailed human-readable build prompt, behavior

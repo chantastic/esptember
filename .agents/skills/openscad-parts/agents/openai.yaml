@@ -1,0 +1,4 @@
+interface:
+  display_name: "OpenSCAD printable parts"
+  short_description: "Design, verify and reverse-engineer 3D-printed hardware"
+  default_prompt: "Use $openscad-parts to design or verify this printable part."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "M5 Stopwatch mechanical reference"
+  short_description: "Button, port, magnet and speaker geometry for stands and cases"
+  default_prompt: "Use $m5-stopwatch-mechanical with $openscad-parts to design hardware that holds the M5Stack Stopwatch."
