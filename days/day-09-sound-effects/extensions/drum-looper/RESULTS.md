@@ -39,3 +39,5 @@ The regenerated candidate passed the unread-USB clock check and the complete inj
 
 The first candidate treated 16 as the measure count; the intended musical length was 16 quarter notes: four measures of 4/4.
 The source prompt, specification, portable contract, reference frame, generated candidate, and device checks were all revised to make 64 sixteenth-note positions the single loop boundary.
+
+Physical hand review on September 24, 2026 accepted the revised trap kit and automatic eighth-note Hi-Hat as ready to continue from. Review then moved to the sampler and voice changer exercise.
