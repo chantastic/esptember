@@ -21,6 +21,7 @@ The character and motion port the avatar system from xAI's [*Designing Grok Bot*
 
 The durable source is this prompt, [SPEC.md](https://github.com/chantastic/esptember/blob/main/days/day-34-pi-pet/SPEC.md), the machine-readable contract, and its layered acceptance criteria.
 Generated firmware and host code are disposable candidates.
+The reviewed build, its source, and its host bridge are kept in [kept-build/](https://github.com/chantastic/esptember/tree/main/days/day-34-pi-pet/kept-build).
 
 ## Reference frame
 

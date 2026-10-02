@@ -1,0 +1,7 @@
+{
+  "name": "pi-pet",
+  "private": true,
+  "type": "module",
+  "dependencies": { "serialport": "^13.0.0" },
+  "pi": { "extensions": ["./index.ts"] }
+}
