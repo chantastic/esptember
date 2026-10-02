@@ -11,6 +11,13 @@ recording as CAD evidence:
   - non-manifold edges: edges not shared by exactly two triangles. Must be 0.
     OpenSCAD can report "NoError" while the exported STL still has these,
     usually where two coincident surfaces with different facet counts meet.
+  - inconsistently wound edges: edges both of whose faces run the same way.
+    Must be 0. A mesh can have a positive volume and no bad edges and still
+    fail this, for example a polyhedron whose end caps are inverted. OpenSCAD
+    then warns "PolySet -> Manifold conversion failed" and booleans with it
+    go wrong.
+  - signed volume: positive when faces point outward. A negative value
+    means a hand-built polyhedron has its winding reversed.
   - near-duplicate vertices: distinct vertices closer than 1e-4 mm. They are
     usually harmless slivers from boolean seams, but a rising count after an
     edit points at coincident surfaces worth rebuilding.
@@ -79,7 +86,18 @@ def main():
         E = {frozenset((key(tris[i][a]), key(tris[i][b]))) for i in s for a, b in ((0, 1), (1, 2), (2, 0))}
         chi = len(V) - len(E) + len(s)
         print(f"shell: {len(s)} triangles, genus {1 - chi // 2}")
+    vol = sum((t[0][0] * (t[1][1] * t[2][2] - t[1][2] * t[2][1])
+               - t[0][1] * (t[1][0] * t[2][2] - t[1][2] * t[2][0])
+               + t[0][2] * (t[1][0] * t[2][1] - t[1][1] * t[2][0])) / 6 for t in tris)
+    print(f"signed volume: {vol:.0f} mm³ ({'faces point outward' if vol > 0 else 'INSIDE OUT: flip the face winding'})")
     print(f"non-manifold edges: {len(bad)}")
+    directed = collections.Counter()
+    for t in tris:
+        k = [key(p) for p in t]
+        for a2, b2 in ((0, 1), (1, 2), (2, 0)):
+            directed[(k[a2], k[b2])] += 1
+    flipped = sum(1 for (u, w), c in directed.items() if c > 1 or directed.get((w, u), 0) != 1)
+    print(f"inconsistently wound edges: {flipped}" + ("  (some faces point the wrong way)" if flipped else ""))
     cells = collections.defaultdict(list)
     for v in {key(p) for t in tris for p in t}:
         cells[tuple(round(c, 4) for c in v)].append(v)

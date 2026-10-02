@@ -63,12 +63,20 @@ Stopwatch dock:
 
 ## Thin features: think in layers and lines
 
-- The user's printer is a Bambu Lab A1 mini with a 0.4 mm nozzle. Draft
-  test prints use 0.24 mm layers; real prints are normally finer, so ask
-  the layer height whenever a feature depends on it. At draft settings, two
-  layers are 0.48 mm, and an extrusion line is about 0.4 mm wide. The A1 mini's bed is 180 × 180 mm.
-- **Layer grid.** The first layer is 0.2 mm, so layer boundaries fall at
-  `0.2 + 0.24·n`: 0.2, 0.44, 0.68 … 2.12, 2.36, 2.60 mm. A flat feature that
+- The user's printer is a Bambu Lab A1 mini with a 0.4 mm nozzle. They
+  print tests on the **Draft** profile (0.24 mm layers) and everything else
+  on **Optimal** (0.16 mm layers). Both start with a 0.2 mm first layer. An
+  extrusion line is about 0.4 mm wide, and the bed is 180 × 180 mm.
+- **Design for both grids.** Draft boundaries fall at `0.2 + 0.24·n` and
+  Optimal at `0.2 + 0.16·n`. They coincide every 0.48 mm: 0.2, 0.68, 1.16,
+  1.64, 2.12, 2.60 mm. Put depths that matter, such as a magnet pocket's
+  floor, on a shared boundary. A thin skin sized in Optimal layers still
+  prints on Draft, because the slicer samples each layer at its middle. The
+  clip's 0.32 mm magnet skin (2.12–2.44) is two Optimal layers, or one Draft
+  layer sampled at 2.24. The user is happy with two layers wherever "about
+  one layer" is asked for, and two is sturdier for a bridged skin.
+- **Layer grid (Draft).** The first layer is 0.2 mm, so Draft layer
+  boundaries fall at `0.2 + 0.24·n`: 0.2, 0.44, 0.68 … 2.12, 2.36, 2.60 mm. A flat feature that
   must be an exact number of layers needs its top and bottom on that grid.
   Otherwise the slicer smears it across an extra layer. A 0.4 mm skin from
   2.1 to 2.5 mm showed three layer lines; 2.12–2.60 mm would give exactly
@@ -132,6 +140,164 @@ Stopwatch dock:
   2-hour one.
 - Include translucent `%` previews of the device and its keep-outs, so
   review renders show the relationship.
+
+## Organic forms
+
+The user prefers soft, organic parts: no hard edges, curves instead of
+walls, and channels instead of holes. CSG unions of slabs and cylinders
+always leave creases, so build the main body as a single lofted surface
+instead:
+
+- **One loft, one profile per angle.** Write `profile(a)` to return the
+  whole cross-section at angle `a`, as world points from the foot's bottom
+  edge round to the seat floor. Build it from N angles, and cap the two
+  ends. Every profile must have the same number of points, so vary lengths
+  and heights, never the point count. The stopwatch puck dock is the worked
+  example.
+- **Vary features along the angle with cosine blends**
+  (`(1 - cos(180x)) / 2`) instead of cutting them. The dock's rim height
+  runs 1.2 → 7.2 → 3.7 mm around the device, so it needs no windows. Blend
+  over at least about 35° of arc. Shorter blends read as a fold running down
+  the skirt.
+- **Tangent continuity.** Join sections with a cubic Bézier whose handles
+  follow the neighbouring surfaces: along the rim's lean at the top, and
+  vertical at the foot. A shoulder crease comes from mismatched tangents.
+- **Round over thin edges.** End a rim with a semicircle of radius
+  `rim_t / 2` between its inner and outer faces. About 1 mm (2–3 lines) is
+  printable, and it reads as the part rounding right into the device.
+- **Cut grooves with a swept scoop, not by pushing the loft in.** Pushing
+  loft points inward (a displacement "funnel") works for broad, gentle
+  dips. For a narrow, steep groove it stair-steps: the grid can't follow a
+  wall that changes position with height. Instead, sweep an elliptical
+  tube along the ball's meridian as one polyhedron loft (`scoop()`). Bury
+  it partway, so its cut depth is `d` and its semi-axis along the normal is
+  `scoop_soft × d` (2.6 on the dock). Ease its width and depth along its
+  length. The groove's edges then meet the surface on a soft, clean curve.
+  Check each scoop cutter alone with `mesh_check.py`.
+- **Don't turn sketch shading into geometry.** The user's hatching around
+  the channel was shading, not roots, funnels or flares. They asked for
+  "smooth on both front and back" and "we don't need all those extra
+  grooves". The final dock has one front groove, a plain arch at the back,
+  and a gently widening channel. Before adding a feature from a sketch,
+  ask whether the marks are form or shading.
+- **Lead a groove to where the cable really comes from.** A funnel that
+  stops partway up reads as a face (the user saw Mike Wazowski). At the
+  dock's front, the rim dips at 6 o'clock under the USB-C port (`h_dip`,
+  eased over ±0.6 clock hours). One scoop then sweeps from that dip down
+  the ball's front meridian, below the table, and into the channel.
+- **A ball cut by the seat and the table.** The user wanted the body "more
+  ball shaped, as if it were a ball with a hard cut to make it sit on the
+  table". Put the ball's centre C on the device's axis, behind the seat
+  (`ball_e`), with a radius that passes through the rim. A sphere through
+  a circle has its centre on the circle's axis, so the rim meets the ball
+  exactly. Generate each profile along the ball's meridian in the plane of
+  the device's axis and that profile's radial direction, so the rim's
+  round-over and the ball share a plane. `meridian_at_z()` solves for where
+  the meridian meets the table. Let the rim's height variation depart from
+  the ball over only the top `ridge` share of the profile, so cheeks read
+  as ridges on the ball. Keep the ball's centre height under about
+  0.45 × its radius, so the table cut stays under about 27° of overhang.
+- **Read sketches for outline and form.** The user's bottom view showed
+  the channel's outline, which is worth matching. Their hatching was
+  shading (see above).
+- **Loft cutters instead of chaining hulls.** A chain of `hull()` segments
+  shares identical stations, which leaves near-duplicate vertices and
+  non-manifold edges. Build a variable cross-section cutter, such as the
+  hourglass channel, as one polyhedron loft of sections. Then run
+  `mesh_check.py` on the cutter alone: inconsistently wound edges must be
+  0, as well as the volume being positive.
+- **A deliberate hard cut can contrast a soft form.** The user asked for
+  the front "cut off with a knife or laser" at 75–80°, and meant it
+  leaning forward: an undercut, which they wrote as −78. Ask which way an
+  angle leans. The cut is one flat half-space,
+  `translate(q) rotate([tilt, 0, 0])` of a large cube, with
+  `tilt = angle < 0 ? 90 + angle : angle − 90`. A 12° undercut prints fine. Where the ball already curves inward below the rim, a plane
+  that only grazes the rim cuts nothing. Anchor the plane where it meets
+  the table (`front_cut_depth` into the foot), and check what it removes:
+  on the dock it takes the lower lip from 4:30 to 7:30, which changes
+  retention. Keep alternatives behind a style switch (`front_style`).
+- **Fillet an opening in a tilted cut face the same way.** Compute the
+  face's position at height z (`front_cut_y(z)`), and key the fillet
+  stations to where the fillet's top meets it. On a 12° undercut, the short
+  walls near the desk leave the face before the fillet starts, so they stay
+  crisp. The arch, which is what shows, is rounded.
+- **Fillet an exit on an overhanging surface at the fillet's top.** Where
+  a channel leaves an overhanging ball, place the quarter-circle fillet
+  stations so the fillet's highest point meets the surface. Grow the
+  cutter only slightly past it (0.3 mm). A large growth beyond the surface
+  cuts a hard crescent into the overhang.
+- **Level floors on a tilted part.** When a pocket sits in a tilted face,
+  the user wants its full depth "on the same layer". Loft the pocket from
+  sections in level world planes along its centreline. Give each section
+  a flat floor band at one world height, snapped to the layer grid
+  (`0.2 + 0.24·n`), walls rising tangentially (`u^2.2`), and a rounded lip.
+  Verify the result by summing the area of horizontal facets at that height:
+  one height, a large area. A superellipse bottom looks flat but isn't, so
+  it spreads over several layers.
+- **One curve, not wall + lip.** A wall curve followed by a separate
+  rounded lip reads as a "double lip". Make each side one S-curve,
+  `smooth(u) = (1 − cos(180u)) / 2`, from tangent-to-floor to
+  tangent-to-surface. Stop it at about u = 0.95, just below tangency, then
+  turn up into air, so nothing lies on the surface and makes slivers. The
+  gentler walls leave less clearance near the edges, so re-run the keep-out
+  test. Here it flagged a rough early speaker box, which the drawing then
+  replaced with measured values.
+- **Not everything wants the same curve.** The one-curve treatment that
+  worked for the finger pocket was tried on the rim too: a Bézier crest in
+  place of the round-over bead, rising with the step at the bottom. The
+  user called it a step backward and asked for the bead back. Keep the
+  small round-over bead on the rim, and try a styling change on one feature
+  at a time.
+- **Bloom a tube into a plate with one Bézier per surface line.** For a
+  tube leaving a plate at an angle (the tripod mount), take each line on
+  the tube's surface. Where it meets the plate's plane is the corner Q.
+  Run a quadratic Bézier from a point `bloom_up` up the tube, with Q as its
+  control point, to a point `bloom_out` across the plate along that side's
+  outward direction. Loft those curves into the tube's rings. Each curve is
+  tangent to the tube at one end and to the plate at the other. The acute
+  side's corner (45° of air) gets most of the fillet, and the obtuse side
+  (135°) needs only a few millimetres, so blend `bloom_out` by angle. Keep
+  the bloom's footprint clear of anything cut through the plate, and check
+  with `difference(intersection(tube, slab above the back), plate)`, which
+  must be empty. Extend the last ring 0.6 mm into the plate for the union.
+- **Breakaway fins for tall, narrow parts. Unproven: the first one failed
+  badly (2026-10-01). The cause wasn't recorded. Before relying on one,
+  ask how it failed and print a test.** On a bed-slinger (A1 mini:
+  the bed moves in Y), a tall part on a small footprint wobbles long before
+  its overhangs need support. Model a fin into the export as a separate
+  shell: a wall two lines thick (0.84 mm), in a plane along Y, standing on
+  the bed with a long foot and stopping one layer (about 0.2 mm) short of
+  the part, under its farthest-out low point. The slicer's lines just fuse
+  across that gap, so the fin holds while printing and snaps off by hand.
+  Build it from the part's own 2D section in that plane:
+  `minkowski(section, triangle)` casts the part's shadow down, and out at
+  the fin's lean. Intersect that with the fin's span, then subtract
+  `offset(delta = gap)` of the section. Don't `hull()` the shadow to a foot
+  point: the hull bridges notches above the part and leaves stray slivers.
+  Check that the fin's 2D outline is one piece.
+- **Simplify after a physical print.** Once the user has held a print, act
+  on what they liked and drop the rest. On the dock that meant one uniform
+  rim instead of cheeks, dips and cuts; the ball's natural front; and seat
+  features that match the device (a finger pocket and a registration step)
+  instead of generic cut-outs. The simpler loft (constant rim height, ball
+  through the rim) removed most of the special-case code.
+- **Nudge away slivers.** If `mesh_check.py` reports a few near-duplicate
+  vertices where a cutter crosses the loft, move the cutter by about
+  0.1 mm. The crossing lands off the loft's grid and the sliver disappears.
+- **Soft cutters.** Where something must be cut, use a hull of spheres:
+  large radii, with centres set back from the surface so the cut meets it
+  at a shallow angle. Give tunnels and grooves a small teardrop peak, so
+  the roof prints at 45°. Give lips that meet the bed a 45° flare
+  (a hull of a disc at z = 0 and a sphere).
+- **Check the loft three ways:** `mesh_check.py`'s signed volume is
+  positive; `openscad --preview=throwntogether` shows no purple
+  (inside-out) faces; and a clearance test is run against every keep-out.
+  OpenSCAD's direct render (F6) of a complex Manifold result can drop
+  faces and show background through a solid part. On this dock it showed
+  phantom windows in the skirt and white patches inside the rim. Before
+  calling anything a hole, slice the part (`projection(cut = true)`) and
+  render the exported STL through `import()`. Make review and README images
+  from the exported STL.
 
 ## Robust geometry
 

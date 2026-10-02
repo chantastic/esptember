@@ -28,8 +28,10 @@ the face is at −Y. Clock positions below use that view.
 | Power (red) | 7:30, about 5.7–11.6 mm from the back. Barely proud. | [D]; [C] recesses it from 5.5 mm |
 | USB-C | 6:00, about 6.4–11.6 mm from the back. The lanyard hole sits beside it. | [D] |
 | HY2.0-4P (Grove: GND, 5V, G10, G11) | 4:30, about 4.3–10.7 mm from the back | [D] |
-| Speaker (1 W) | Back, grille about 17 mm above centre, roughly 10 × 10 mm | [D], [P] |
+| Speaker (1 W) | Back, grille centred 15.7 mm above centre; the dots span about x ±3.3, z 12.6–18.7. `m5_speaker()` = 7.5 × 7 mm. | [D] rear view at full resolution (the earlier 10 × 10 guess was too big) |
 | Magnets | Back, four at (±12.5, ±12.5), with Ø6.2 holes. [D] draws 4 × Ø5 on 25.46; use 25.0. | [C]. **[F] Proven** by the seat test. |
+| Speaker recess | Back, top: tongue-shaped, 2.4 mm deep, open at the top edge. Its tip is 9.5 mm above centre and it widens to ±10.7 mm at 22 mm; the grille is centred about 15.7 mm up. Modelled by `m5_speaker_recess_2d()`. | [D] rear view (outline) and the top edge view (the 2.4 mm slot), read with `drawing_measure.py` |
+| Logo recess | Back, bottom: the M5 segment, 1.48 mm deep beyond 19.8 mm below centre, with a 45° ramp up to the main plate at 18.1 mm. Modelled by `m5_logo_recess()`. | [D] side edge views (a 34 px step) |
 | Rear ø4 features | Back, at (±20, 0). Ø2.2 screws also sit on that axis. | [D]; [C] clears them with Ø4.2 |
 | Rear headers | 2.54 mm, 7-pin and 6-pin, flush along the left and right of the back | [P] |
 | Microphone | Bottom edge, near USB-C | [P] |
@@ -67,6 +69,12 @@ what it didn't.
   notch, port windows and cable path are not yet proven. It was printed on
   a Bambu Lab A1 mini with a 0.4 mm nozzle at 0.24 mm draft layers. The
   filament wasn't recorded.
+- **2026-09-30 · full puck dock (knife-cut ball version)**, printed by the
+  user. Their verdict: the 1.2 mm top rim was best, so use it all the way
+  round. The front cut wasn't needed. The seat should match the back: a
+  deeper finger pocket at the speaker recess to pull the device out, a step
+  matching the logo recess, and no screw holes. That's the current design,
+  which isn't printed yet.
 - **2026-09-29 · first seat test** (superseded). A straight Ø52.75 pocket
   (`fit = 0.4`) with a 4 mm lip felt slightly large. The lip only reached the
   narrow, rounded back of the body.
@@ -114,13 +122,19 @@ These all happened while designing the first stands:
   USB-C (an overmold is about 12 × 7 mm) and at Grove, and an air gap behind
   the speaker. `m5_keepouts()` models all of these. Subtract it, or prove an
   empty intersection.
-- **Where to grip:** support the rim at 2:30–4:00 and 8:00–9:30, the arcs
-  between the buttons and the bottom-edge features. Anything wrapping the
-  lower half must cut windows for power, USB-C and Grove. A lip low enough
-  to pass under them (below 4.3 mm) sits on the back fillet and doesn't
-  grip.
-- **Seat on the back.** It's flat. Clear the ø4 features at (±20, 0), and
-  put magnet holes at the four positions. Ø6.2 × 3.2 blind holes are a proven
+- **Where to grip:** grip at 2:30–4:00 and 8:00–9:30, the arcs between
+  the buttons and the bottom-edge features. There the rim can rise to about
+  7 mm. Across the bottom arc, keep it under 4.3 mm so it passes below
+  power, USB-C and Grove (see "No windows needed" below). A rim that's low
+  all the way round sits on the back fillet and doesn't grip.
+- **Seat on the back.** It isn't flat: it has a 2.4 mm speaker recess at the
+  top and a 1.48 mm logo recess at the bottom. Test clearance against
+  `m5_body_true()`, which includes them. A pocket that follows the speaker
+  recess but sinks about 6 mm is a natural finger pull. A step that fills
+  the logo recess registers the device, and it pivots on that step when
+  pulled from the top. The ø4 features at (±20, 0) don't need clearance
+  holes; the user asked for them to be removed. Put magnet holes at the
+  four positions. Ø6.2 holes are a proven
   press fit for the user's 6 × 2 mm magnets, with no glue. Make blind
   pockets the magnet's thickness plus about two layers (2.4 mm for 6 × 2).
   The user prefers a magnet slightly deep to one that doesn't go in fully:
@@ -128,7 +142,8 @@ These all happened while designing the first stands:
   costs only a little pull. Check each magnet's polarity against
   the device before pressing it in, because pulling one back out damages the
   hole.
-- **Buried magnets** (`magnet_skin`, untested): keep the Ø6.2 press-fit
+- **Buried magnets** (`magnet_skin`, parked and untested; only the upright
+  cradle still has the option): keep the Ø6.2 press-fit
   pocket, leave a skin between it and the seat, and load the magnets from
   behind through a Ø6.6 channel along the magnet axis. Print-in magnets,
   with a pause at a layer, don't work on a tilted seat: the skin starts
@@ -143,11 +158,21 @@ These all happened while designing the first stands:
   not of the drawing. On a new printer or filament, re-run the seat test
   before a full print, and adjust `fit` in 0.05 mm steps.
 - **Grip height.** The back 2 mm is the R2 fillet, so a lip shorter than
-  about 4 mm barely touches the body. Make lips 6–8 mm tall and cut windows
-  for Grove, USB-C and power from `m5_keepouts(grow = 0.1)`.
-- **Cable.** USB-C points straight down out of the bottom edge. Give it a
-  slot at 6 o'clock and a channel that returns behind, and tell the user a
-  right-angle (90°) plug is the tidy choice.
+  about 4 mm barely touches the body. Grip with 6–8 mm, but only where
+  there's nothing to clear. Prefer varying the rim height to cutting
+  windows. If a design does need windows, cut them from
+  `m5_keepouts(grow = 0.1)`.
+- **Cable.** USB-C points straight down out of the bottom edge. The user's
+  cables won't thread through a tunnel, so give them an open, rounded
+  channel under the part that the cable lies into from below. Keep
+  `m5_usb_plug()` (a 28 mm straight plug) clear of the part and of the
+  desk: on a tilted dock, that sets how high the front must sit (11.5 mm on
+  the 30° puck dock).
+- **No windows needed below 4.3 mm.** A rim that stays under 4.3 mm from
+  the back across the bottom arc (4:00–8:00) clears Grove, USB-C and power
+  without cutting anything. Grip higher (about 7 mm) at 3 and 9 o'clock, and
+  just cover the R2 fillet (about 1.2 mm) across the top, so the part ends
+  at the device's silhouette.
 - **IMU.** The measured axes (+x toward the lanyard) assume the device
   stands upright. A stand that tilts it offsets every tilt-reading app by
   the tilt angle. Say so in the part's README.

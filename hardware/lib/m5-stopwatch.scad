@@ -60,8 +60,8 @@ function m5_features() = [
 function m5_magnets(pitch = 25.0) =                  // [C][F] 25.0 proven by the seat test; [D] draws 25.46
   [for (sx = [-1, 1], sz = [-1, 1]) [sx * pitch / 2, sz * pitch / 2]];
 function m5_magnet_d() = 5.0;                        // [D]
-function m5_rear_bosses() = [[-20, 0], [20, 0]];     // [D] 2-ø4 at 40 mm; [C] clears them with Ø4.2
-function m5_speaker() = [0, 17, 10, 10];             // ~[D] grille centre x, z, then width, height
+function m5_rear_bosses() = [[-20, 0], [20, 0]];     // [D] 2-ø4 at 40 mm; [C] clears them with Ø4.2 (the dock doesn't need to)
+function m5_speaker() = [0, 15.7, 7.5, 7];           // [D] grille centre x, z, then width, height (dots span x ±3.3, z 12.6–18.7)
 
 // The device itself: a tapered body with rounded edges. `fit` grows it
 // outward and along the axis by the same amount, so it works as a pocket cutter.
@@ -78,6 +78,55 @@ module m5_body(fit = 0) {
   }
 }
 
+// The back is not flat. [D]'s rear view and edge views, read at full
+// resolution (22.9 px/mm), show two recesses in the back face (lanyard-down):
+//   - Speaker recess (top): a tongue-shaped pocket 2.4 mm deep, open at the
+//     top edge, with sloped sides. Its outer edge's rounded tip is 9.5 mm
+//     above centre, and it widens to ±10.7 mm by 22 mm up. The grille sits
+//     inside it, centred about 15.7 mm up.
+//   - Logo recess (bottom): the segment carrying the M5 logo, 1.48 mm deep,
+//     from 19.8 mm below centre out to the edge, with a 45° ramp back up to
+//     the main plate by 18.1 mm.
+// The main plate between them carries the magnets and the header slots.
+function m5_speaker_recess_depth() = 2.4;
+function m5_speaker_recess_half() = [    // [z, half-width] of the outer edge, bottom to top
+  [9.5, 0], [10.0, 2.3], [10.8, 3.8], [11.7, 4.8], [12.6, 5.4], [13.5, 5.9], [14.3, 6.4],
+  [15.2, 6.9], [16.1, 7.4], [17.0, 7.9], [17.8, 8.4], [18.7, 9.0], [19.6, 9.5], [20.5, 10.0],
+  [21.3, 10.5], [22.2, 10.7], [30, 11.0]];                    // the last row runs past the edge
+function m5_logo_recess() = [-19.8, -18.1, 1.48];           // flat from z, ramp starts at z, depth
+
+// The speaker recess outline in the device's XZ plane (x, z), grown by `grow`.
+module m5_speaker_recess_2d(grow = 0) {
+  hw = m5_speaker_recess_half();
+  offset(delta = grow) polygon(concat(
+    [for (p = hw) [p[1], p[0]]],
+    [for (i = [len(hw) - 1:-1:0]) [-hw[i][1], hw[i][0]]]));
+}
+
+// The circle segment below height z (device XZ plane), for the logo recess.
+module m5_segment_2d(z, r = 40) intersection() {
+  circle(r, $fn = 160);
+  translate([-r, -r]) square([2 * r, r + z]);
+}
+
+// The two recesses as solids behind the back face (y > m5_t()/2 - depth).
+module m5_back_recesses() {
+  h = m5_t() / 2;
+  translate([0, h + 1, 0]) rotate([90, 0, 0])
+    linear_extrude(1 + m5_speaker_recess_depth()) m5_speaker_recess_2d();
+  lr = m5_logo_recess();
+  hull() {
+    translate([0, h + 1, 0]) rotate([90, 0, 0]) linear_extrude(1 + lr[2]) m5_segment_2d(lr[0]);
+    translate([0, h + 1, 0]) rotate([90, 0, 0]) linear_extrude(1) m5_segment_2d(lr[1]);
+  }
+}
+
+// The device with its back recesses: use this for clearance tests.
+module m5_body_true() difference() {
+  m5_body();
+  m5_back_recesses();
+}
+
 module m5_feature_box(f, radial_in, radial_out, extra_w = 0, extra_axial = 0) {
   span = f[3];
   rotate([0, 30 * f[1], 0])   // put the box at the feature's clock position
@@ -87,8 +136,17 @@ module m5_feature_box(f, radial_in, radial_out, extra_w = 0, extra_axial = 0) {
 
 // Device plus button nubs, for translucent previews.
 module m5_ghost() {
-  m5_body();
+  m5_body_true();
   for (f = m5_features()) if (f[4] > 0) m5_feature_box(f, 0.5, f[4]);
+}
+
+// A straight USB-C plug in the 6 o'clock port: an overmold about 12.5 × 7 mm,
+// `length` long from the body edge. A stand must leave it clear, and in the
+// posed world its lowest point should stay above the desk (z ≥ 0).
+module m5_usb_plug(length = 28, w = 12.5, th = 7) {
+  f = [for (x = m5_features()) if (x[0] == "usb_c") x][0];
+  mid = (f[3][0] + f[3][1]) / 2;   // axial centre, from the back
+  translate([-w / 2, m5_from_back(mid) - th / 2, -m5_r() - length]) cube([w, th, length + 0.5]);
 }
 
 // Space that a stand must leave empty: finger room at each button and at
