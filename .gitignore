@@ -9,3 +9,4 @@ days/*/firmware/sdkconfig
 days/*/firmware/sdkconfig.old
 days/*/firmware/managed_components/
 days/*/firmware/dependencies.lock
+.DS_Store
