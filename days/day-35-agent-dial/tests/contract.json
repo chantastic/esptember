@@ -1,0 +1,2281 @@
+{
+  "schema": 1,
+  "lesson": "day-35-agent-dial",
+  "title": "Agent Dial",
+  "hardware": {
+    "board": "m5stack-stopwatch",
+    "width": 468,
+    "height": 466,
+    "offset_x": 6,
+    "offset_y": 0,
+    "rotation": 0,
+    "touch_map": "espt-touch/record"
+  },
+  "controls": {
+    "profile": "c25k",
+    "left_button": "BtnA",
+    "right_button": "BtnB",
+    "left": "previous_or_decrease",
+    "right": "next_or_increase",
+    "enter": "short_both",
+    "back": "hold_both_600ms",
+    "rationale": "Left/right replace upstream's chevrons and horizontal swipes. Enter is the tile's Voice button (stop-and-send while recording). Back is upstream's BOOT press: dismiss, Cancel task?, abort, or close."
+  },
+  "state": {
+    "a_state": {
+      "type": "enum",
+      "default": "none",
+      "values": [
+        "none",
+        "idle",
+        "working"
+      ]
+    },
+    "a_asking": {
+      "type": "bool",
+      "default": false
+    },
+    "a_unread": {
+      "type": "enum",
+      "default": "none",
+      "values": [
+        "none",
+        "done",
+        "question"
+      ]
+    },
+    "a_stop": {
+      "type": "bool",
+      "default": false
+    },
+    "a_prompt": {
+      "type": "bool",
+      "default": false
+    },
+    "b_state": {
+      "type": "enum",
+      "default": "none",
+      "values": [
+        "none",
+        "idle",
+        "working"
+      ]
+    },
+    "b_asking": {
+      "type": "bool",
+      "default": false
+    },
+    "b_unread": {
+      "type": "enum",
+      "default": "none",
+      "values": [
+        "none",
+        "done",
+        "question"
+      ]
+    },
+    "b_stop": {
+      "type": "bool",
+      "default": false
+    },
+    "b_prompt": {
+      "type": "bool",
+      "default": false
+    },
+    "c_state": {
+      "type": "enum",
+      "default": "none",
+      "values": [
+        "none",
+        "idle",
+        "working"
+      ]
+    },
+    "c_asking": {
+      "type": "bool",
+      "default": false
+    },
+    "c_unread": {
+      "type": "enum",
+      "default": "none",
+      "values": [
+        "none",
+        "done",
+        "question"
+      ]
+    },
+    "c_stop": {
+      "type": "bool",
+      "default": false
+    },
+    "c_prompt": {
+      "type": "bool",
+      "default": false
+    },
+    "connected": {
+      "type": "bool",
+      "default": false
+    },
+    "screen": {
+      "type": "enum",
+      "default": "overview",
+      "values": [
+        "overview",
+        "agent",
+        "question",
+        "drawer",
+        "confirm",
+        "voice",
+        "settings"
+      ]
+    },
+    "focus": {
+      "type": "enum",
+      "default": "none",
+      "values": [
+        "none",
+        "a",
+        "b",
+        "c"
+      ]
+    },
+    "voice": {
+      "type": "enum",
+      "default": "off",
+      "values": [
+        "off",
+        "recording",
+        "routing"
+      ]
+    },
+    "voice_target": {
+      "type": "enum",
+      "default": "none",
+      "values": [
+        "none",
+        "a",
+        "b",
+        "c",
+        "routed"
+      ]
+    },
+    "awake": {
+      "type": "bool",
+      "default": true
+    },
+    "badge": {
+      "type": "int",
+      "default": 0,
+      "min": 0,
+      "max": 3
+    },
+    "emit": {
+      "type": "string",
+      "default": "",
+      "max_length": 24
+    },
+    "sound": {
+      "type": "enum",
+      "default": "none",
+      "values": [
+        "none",
+        "beep"
+      ]
+    },
+    "toast": {
+      "type": "string",
+      "default": "",
+      "max_length": 40
+    }
+  },
+  "scenarios": [
+    {
+      "name": "the first session is focused without an echo",
+      "steps": [
+        {
+          "action": "welcome",
+          "expect": {
+            "connected": true
+          }
+        },
+        {
+          "action": {
+            "type": "agent",
+            "id": "a",
+            "stop": true,
+            "prompt": true
+          },
+          "expect": {
+            "a_state": "idle",
+            "a_stop": true,
+            "a_prompt": true,
+            "focus": "a",
+            "screen": "overview",
+            "emit": ""
+          }
+        },
+        {
+          "action": {
+            "type": "agent",
+            "id": "b",
+            "stop": false,
+            "prompt": false
+          },
+          "expect": {
+            "b_state": "idle",
+            "focus": "a"
+          }
+        }
+      ]
+    },
+    {
+      "name": "pushers leave the overview for the focused tile and page with wrap",
+      "steps": [
+        {
+          "action": "welcome",
+          "expect": {
+            "connected": true
+          }
+        },
+        {
+          "action": {
+            "type": "agent",
+            "id": "a",
+            "stop": true,
+            "prompt": true
+          },
+          "expect": {
+            "a_state": "idle",
+            "a_stop": true,
+            "a_prompt": true,
+            "focus": "a",
+            "emit": ""
+          }
+        },
+        {
+          "action": {
+            "type": "agent",
+            "id": "b",
+            "stop": false,
+            "prompt": false
+          },
+          "expect": {
+            "b_state": "idle"
+          }
+        },
+        {
+          "action": {
+            "type": "agent",
+            "id": "c",
+            "stop": true,
+            "prompt": true
+          },
+          "expect": {
+            "c_state": "idle",
+            "c_stop": true,
+            "c_prompt": true
+          }
+        },
+        {
+          "action": "right",
+          "expect": {
+            "screen": "agent",
+            "emit": "focus a",
+            "focus": "a"
+          }
+        },
+        {
+          "action": "right",
+          "expect": {
+            "focus": "b",
+            "emit": "focus b"
+          }
+        },
+        {
+          "action": "right",
+          "expect": {
+            "focus": "c",
+            "emit": "focus c"
+          }
+        },
+        {
+          "action": "right",
+          "expect": {
+            "focus": "a",
+            "emit": "focus a"
+          }
+        },
+        {
+          "action": "left",
+          "expect": {
+            "focus": "c",
+            "emit": "focus c"
+          }
+        }
+      ]
+    },
+    {
+      "name": "bottom-edge swipe toggles tile and overview",
+      "steps": [
+        {
+          "action": "welcome",
+          "expect": {
+            "connected": true
+          }
+        },
+        {
+          "action": {
+            "type": "agent",
+            "id": "a",
+            "stop": true,
+            "prompt": true
+          },
+          "expect": {
+            "a_state": "idle",
+            "a_stop": true,
+            "a_prompt": true,
+            "focus": "a",
+            "emit": ""
+          }
+        },
+        {
+          "action": "swipe_up_bottom",
+          "expect": {
+            "screen": "agent",
+            "emit": "focus a"
+          }
+        },
+        {
+          "action": "swipe_up_bottom",
+          "expect": {
+            "screen": "overview",
+            "emit": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "a working tile shows the turn and returns to idle silently",
+      "steps": [
+        {
+          "action": "welcome",
+          "expect": {
+            "connected": true
+          }
+        },
+        {
+          "action": {
+            "type": "agent",
+            "id": "a",
+            "stop": true,
+            "prompt": true
+          },
+          "expect": {
+            "a_state": "idle",
+            "a_stop": true,
+            "a_prompt": true,
+            "focus": "a",
+            "emit": ""
+          }
+        },
+        {
+          "action": {
+            "type": "turn_started",
+            "id": "a"
+          },
+          "expect": {
+            "a_state": "working",
+            "sound": "none"
+          }
+        },
+        {
+          "action": {
+            "type": "turn_done",
+            "id": "a"
+          },
+          "expect": {
+            "a_state": "idle",
+            "sound": "none",
+            "badge": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "a turn error toasts without a drawer row",
+      "steps": [
+        {
+          "action": "welcome",
+          "expect": {
+            "connected": true
+          }
+        },
+        {
+          "action": {
+            "type": "agent",
+            "id": "a",
+            "stop": true,
+            "prompt": true
+          },
+          "expect": {
+            "a_state": "idle",
+            "a_stop": true,
+            "a_prompt": true,
+            "focus": "a",
+            "emit": ""
+          }
+        },
+        {
+          "action": {
+            "type": "turn_started",
+            "id": "a"
+          },
+          "expect": {
+            "a_state": "working"
+          }
+        },
+        {
+          "action": {
+            "type": "turn_error",
+            "id": "a"
+          },
+          "expect": {
+            "a_state": "idle",
+            "toast": "turn error",
+            "badge": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "a summary beeps and files a row unless you are looking",
+      "steps": [
+        {
+          "action": "welcome",
+          "expect": {
+            "connected": true
+          }
+        },
+        {
+          "action": {
+            "type": "agent",
+            "id": "a",
+            "stop": true,
+            "prompt": true
+          },
+          "expect": {
+            "a_state": "idle",
+            "a_stop": true,
+            "a_prompt": true,
+            "focus": "a",
+            "emit": ""
+          }
+        },
+        {
+          "action": {
+            "type": "agent",
+            "id": "b",
+            "stop": false,
+            "prompt": false
+          },
+          "expect": {
+            "b_state": "idle"
+          }
+        },
+        {
+          "action": "right",
+          "expect": {
+            "screen": "agent",
+            "emit": "focus a",
+            "focus": "a"
+          }
+        },
+        {
+          "action": {
+            "type": "turn_started",
+            "id": "b"
+          },
+          "expect": {
+            "b_state": "working",
+            "emit": ""
+          }
+        },
+        {
+          "action": {
+            "type": "summary",
+            "id": "b",
+            "quiet": false
+          },
+          "expect": {
+            "b_state": "idle",
+            "b_unread": "done",
+            "badge": 1,
+            "sound": "beep"
+          }
+        },
+        {
+          "action": {
+            "type": "summary",
+            "id": "a",
+            "quiet": false
+          },
+          "expect": {
+            "a_unread": "none",
+            "badge": 1,
+            "sound": "beep"
+          }
+        },
+        {
+          "action": "right",
+          "expect": {
+            "b_unread": "none",
+            "focus": "b",
+            "badge": 0,
+            "emit": "focus b",
+            "sound": "none"
+          }
+        }
+      ]
+    },
+    {
+      "name": "a quiet summary still beeps but files no row",
+      "steps": [
+        {
+          "action": "welcome",
+          "expect": {
+            "connected": true
+          }
+        },
+        {
+          "action": {
+            "type": "agent",
+            "id": "a",
+            "stop": true,
+            "prompt": true
+          },
+          "expect": {
+            "a_state": "idle",
+            "a_stop": true,
+            "a_prompt": true,
+            "focus": "a",
+            "emit": ""
+          }
+        },
+        {
+          "action": {
+            "type": "summary",
+            "id": "a",
+            "quiet": true
+          },
+          "expect": {
+            "sound": "beep",
+            "a_unread": "none",
+            "badge": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "a summary wakes a sleeping dial onto the drawer",
+      "steps": [
+        {
+          "action": "welcome",
+          "expect": {
+            "connected": true
+          }
+        },
+        {
+          "action": {
+            "type": "agent",
+            "id": "a",
+            "stop": true,
+            "prompt": true
+          },
+          "expect": {
+            "a_state": "idle",
+            "a_stop": true,
+            "a_prompt": true,
+            "focus": "a",
+            "emit": ""
+          }
+        },
+        {
+          "action": "idle_5m",
+          "expect": {
+            "awake": false
+          }
+        },
+        {
+          "action": {
+            "type": "summary",
+            "id": "a",
+            "quiet": false
+          },
+          "expect": {
+            "a_unread": "done",
+            "screen": "drawer",
+            "awake": true,
+            "badge": 1,
+            "sound": "beep"
+          }
+        },
+        {
+          "action": {
+            "type": "open_row",
+            "id": "a"
+          },
+          "expect": {
+            "a_unread": "none",
+            "screen": "agent",
+            "badge": 0,
+            "emit": "agent.open a",
+            "sound": "none",
+            "focus": "a"
+          }
+        }
+      ]
+    },
+    {
+      "name": "a working tile keeps the dial awake",
+      "steps": [
+        {
+          "action": "welcome",
+          "expect": {
+            "connected": true
+          }
+        },
+        {
+          "action": {
+            "type": "agent",
+            "id": "a",
+            "stop": true,
+            "prompt": true
+          },
+          "expect": {
+            "a_state": "idle",
+            "a_stop": true,
+            "a_prompt": true,
+            "focus": "a",
+            "emit": ""
+          }
+        },
+        {
+          "action": "right",
+          "expect": {
+            "screen": "agent",
+            "emit": "focus a"
+          }
+        },
+        {
+          "action": {
+            "type": "turn_started",
+            "id": "a"
+          },
+          "expect": {
+            "a_state": "working",
+            "emit": ""
+          }
+        },
+        {
+          "action": "idle_5m",
+          "expect": {
+            "awake": true
+          }
+        },
+        {
+          "action": {
+            "type": "turn_done",
+            "id": "a"
+          },
+          "expect": {
+            "a_state": "idle"
+          }
+        },
+        {
+          "action": "idle_5m",
+          "expect": {
+            "awake": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "the waking input is swallowed",
+      "steps": [
+        {
+          "action": "welcome",
+          "expect": {
+            "connected": true
+          }
+        },
+        {
+          "action": {
+            "type": "agent",
+            "id": "a",
+            "stop": true,
+            "prompt": true
+          },
+          "expect": {
+            "a_state": "idle",
+            "a_stop": true,
+            "a_prompt": true,
+            "focus": "a",
+            "emit": ""
+          }
+        },
+        {
+          "action": "idle_5m",
+          "expect": {
+            "awake": false
+          }
+        },
+        {
+          "action": "right",
+          "expect": {
+            "awake": true,
+            "screen": "overview",
+            "emit": ""
+          }
+        },
+        {
+          "action": "right",
+          "expect": {
+            "screen": "agent",
+            "emit": "focus a"
+          }
+        }
+      ]
+    },
+    {
+      "name": "an approval opens, is answered, and returns to the tile",
+      "steps": [
+        {
+          "action": "welcome",
+          "expect": {
+            "connected": true
+          }
+        },
+        {
+          "action": {
+            "type": "agent",
+            "id": "a",
+            "stop": true,
+            "prompt": true
+          },
+          "expect": {
+            "a_state": "idle",
+            "a_stop": true,
+            "a_prompt": true,
+            "focus": "a",
+            "emit": ""
+          }
+        },
+        {
+          "action": {
+            "type": "agent",
+            "id": "b",
+            "stop": false,
+            "prompt": false
+          },
+          "expect": {
+            "b_state": "idle"
+          }
+        },
+        {
+          "action": {
+            "type": "turn_started",
+            "id": "b"
+          },
+          "expect": {
+            "b_state": "working"
+          }
+        },
+        {
+          "action": {
+            "type": "question",
+            "id": "b"
+          },
+          "expect": {
+            "b_asking": true,
+            "b_unread": "question",
+            "screen": "question",
+            "focus": "b",
+            "badge": 1,
+            "emit": "agent.open b",
+            "sound": "beep"
+          }
+        },
+        {
+          "action": "answer",
+          "expect": {
+            "b_asking": false,
+            "b_unread": "none",
+            "screen": "agent",
+            "badge": 0,
+            "emit": "answer b",
+            "sound": "none"
+          }
+        }
+      ]
+    },
+    {
+      "name": "back dismisses a question but keeps its row until answered",
+      "steps": [
+        {
+          "action": "welcome",
+          "expect": {
+            "connected": true
+          }
+        },
+        {
+          "action": {
+            "type": "agent",
+            "id": "a",
+            "stop": true,
+            "prompt": true
+          },
+          "expect": {
+            "a_state": "idle",
+            "a_stop": true,
+            "a_prompt": true,
+            "focus": "a",
+            "emit": ""
+          }
+        },
+        {
+          "action": {
+            "type": "question",
+            "id": "a"
+          },
+          "expect": {
+            "a_asking": true,
+            "a_unread": "question",
+            "screen": "question",
+            "badge": 1,
+            "emit": "agent.open a",
+            "sound": "beep"
+          }
+        },
+        {
+          "action": "back",
+          "expect": {
+            "screen": "agent",
+            "emit": "",
+            "sound": "none",
+            "a_asking": true,
+            "a_unread": "question",
+            "badge": 1
+          }
+        },
+        {
+          "action": "swipe_down_top",
+          "expect": {
+            "screen": "drawer"
+          }
+        },
+        {
+          "action": {
+            "type": "open_row",
+            "id": "a"
+          },
+          "expect": {
+            "screen": "question",
+            "emit": "agent.open a",
+            "a_unread": "question"
+          }
+        },
+        {
+          "action": "answer",
+          "expect": {
+            "a_asking": false,
+            "a_unread": "none",
+            "screen": "agent",
+            "badge": 0,
+            "emit": "answer a"
+          }
+        }
+      ]
+    },
+    {
+      "name": "a second question waits in the drawer",
+      "steps": [
+        {
+          "action": "welcome",
+          "expect": {
+            "connected": true
+          }
+        },
+        {
+          "action": {
+            "type": "agent",
+            "id": "a",
+            "stop": true,
+            "prompt": true
+          },
+          "expect": {
+            "a_state": "idle",
+            "a_stop": true,
+            "a_prompt": true,
+            "focus": "a",
+            "emit": ""
+          }
+        },
+        {
+          "action": {
+            "type": "agent",
+            "id": "b",
+            "stop": false,
+            "prompt": false
+          },
+          "expect": {
+            "b_state": "idle"
+          }
+        },
+        {
+          "action": {
+            "type": "question",
+            "id": "a"
+          },
+          "expect": {
+            "a_asking": true,
+            "a_unread": "question",
+            "screen": "question",
+            "badge": 1,
+            "emit": "agent.open a",
+            "sound": "beep",
+            "focus": "a"
+          }
+        },
+        {
+          "action": {
+            "type": "question",
+            "id": "b"
+          },
+          "expect": {
+            "b_asking": true,
+            "b_unread": "question",
+            "badge": 2,
+            "emit": "agent.open b",
+            "screen": "question",
+            "focus": "a"
+          }
+        },
+        {
+          "action": "answer",
+          "expect": {
+            "a_asking": false,
+            "a_unread": "none",
+            "screen": "agent",
+            "badge": 1,
+            "emit": "answer a",
+            "sound": "none"
+          }
+        },
+        {
+          "action": "swipe_down_top",
+          "expect": {
+            "screen": "drawer",
+            "emit": ""
+          }
+        },
+        {
+          "action": {
+            "type": "open_row",
+            "id": "b"
+          },
+          "expect": {
+            "screen": "question",
+            "focus": "b",
+            "emit": "agent.open b"
+          }
+        }
+      ]
+    },
+    {
+      "name": "question.close answered elsewhere returns to the tile",
+      "steps": [
+        {
+          "action": "welcome",
+          "expect": {
+            "connected": true
+          }
+        },
+        {
+          "action": {
+            "type": "agent",
+            "id": "a",
+            "stop": true,
+            "prompt": true
+          },
+          "expect": {
+            "a_state": "idle",
+            "a_stop": true,
+            "a_prompt": true,
+            "focus": "a",
+            "emit": ""
+          }
+        },
+        {
+          "action": {
+            "type": "question",
+            "id": "a"
+          },
+          "expect": {
+            "a_asking": true,
+            "a_unread": "question",
+            "screen": "question",
+            "badge": 1,
+            "emit": "agent.open a",
+            "sound": "beep"
+          }
+        },
+        {
+          "action": {
+            "type": "question_close",
+            "id": "a"
+          },
+          "expect": {
+            "a_asking": false,
+            "a_unread": "none",
+            "screen": "agent",
+            "badge": 0,
+            "emit": "",
+            "sound": "none"
+          }
+        }
+      ]
+    },
+    {
+      "name": "a done row never replaces a question row",
+      "steps": [
+        {
+          "action": "welcome",
+          "expect": {
+            "connected": true
+          }
+        },
+        {
+          "action": {
+            "type": "agent",
+            "id": "a",
+            "stop": true,
+            "prompt": true
+          },
+          "expect": {
+            "a_state": "idle",
+            "a_stop": true,
+            "a_prompt": true,
+            "focus": "a",
+            "emit": ""
+          }
+        },
+        {
+          "action": {
+            "type": "question",
+            "id": "a"
+          },
+          "expect": {
+            "a_asking": true,
+            "a_unread": "question",
+            "screen": "question",
+            "badge": 1,
+            "emit": "agent.open a",
+            "sound": "beep"
+          }
+        },
+        {
+          "action": "back",
+          "expect": {
+            "screen": "agent",
+            "emit": "",
+            "sound": "none"
+          }
+        },
+        {
+          "action": "swipe_up_bottom",
+          "expect": {
+            "screen": "overview"
+          }
+        },
+        {
+          "action": {
+            "type": "summary",
+            "id": "a",
+            "quiet": false
+          },
+          "expect": {
+            "sound": "beep",
+            "a_unread": "question",
+            "badge": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "stop asks first and needs the stop capability",
+      "steps": [
+        {
+          "action": "welcome",
+          "expect": {
+            "connected": true
+          }
+        },
+        {
+          "action": {
+            "type": "agent",
+            "id": "a",
+            "stop": true,
+            "prompt": true
+          },
+          "expect": {
+            "a_state": "idle",
+            "a_stop": true,
+            "a_prompt": true,
+            "focus": "a",
+            "emit": ""
+          }
+        },
+        {
+          "action": {
+            "type": "agent",
+            "id": "b",
+            "stop": false,
+            "prompt": false
+          },
+          "expect": {
+            "b_state": "idle"
+          }
+        },
+        {
+          "action": "right",
+          "expect": {
+            "screen": "agent",
+            "emit": "focus a",
+            "focus": "a"
+          }
+        },
+        {
+          "action": {
+            "type": "turn_started",
+            "id": "a"
+          },
+          "expect": {
+            "a_state": "working",
+            "emit": ""
+          }
+        },
+        {
+          "action": "back",
+          "expect": {
+            "screen": "confirm"
+          }
+        },
+        {
+          "action": "confirm_no",
+          "expect": {
+            "screen": "agent",
+            "a_state": "working"
+          }
+        },
+        {
+          "action": "back",
+          "expect": {
+            "screen": "confirm"
+          }
+        },
+        {
+          "action": "confirm_yes",
+          "expect": {
+            "a_state": "idle",
+            "screen": "agent",
+            "emit": "turn.stop a"
+          }
+        },
+        {
+          "action": "right",
+          "expect": {
+            "focus": "b",
+            "emit": "focus b"
+          }
+        },
+        {
+          "action": {
+            "type": "turn_started",
+            "id": "b"
+          },
+          "expect": {
+            "b_state": "working",
+            "emit": ""
+          }
+        },
+        {
+          "action": "back",
+          "expect": {
+            "toast": "Can't stop this from here",
+            "screen": "agent"
+          }
+        }
+      ]
+    },
+    {
+      "name": "voice records to the focused tile and routes after release",
+      "steps": [
+        {
+          "action": "welcome",
+          "expect": {
+            "connected": true
+          }
+        },
+        {
+          "action": {
+            "type": "agent",
+            "id": "a",
+            "stop": true,
+            "prompt": true
+          },
+          "expect": {
+            "a_state": "idle",
+            "a_stop": true,
+            "a_prompt": true,
+            "focus": "a",
+            "emit": ""
+          }
+        },
+        {
+          "action": "right",
+          "expect": {
+            "screen": "agent",
+            "emit": "focus a"
+          }
+        },
+        {
+          "action": "enter",
+          "expect": {
+            "screen": "voice",
+            "voice": "recording",
+            "voice_target": "a",
+            "emit": "voice.begin a"
+          }
+        },
+        {
+          "action": "enter",
+          "expect": {
+            "voice": "routing",
+            "emit": "voice.end"
+          }
+        },
+        {
+          "action": {
+            "type": "transcript",
+            "id": "a"
+          },
+          "expect": {
+            "emit": "",
+            "voice": "routing",
+            "focus": "a"
+          }
+        },
+        {
+          "action": {
+            "type": "turn_started",
+            "id": "a"
+          },
+          "expect": {
+            "a_state": "working",
+            "screen": "agent",
+            "voice": "off",
+            "voice_target": "none"
+          }
+        }
+      ]
+    },
+    {
+      "name": "a tap anywhere stops a recording",
+      "steps": [
+        {
+          "action": "welcome",
+          "expect": {
+            "connected": true
+          }
+        },
+        {
+          "action": {
+            "type": "agent",
+            "id": "a",
+            "stop": true,
+            "prompt": true
+          },
+          "expect": {
+            "a_state": "idle",
+            "a_stop": true,
+            "a_prompt": true,
+            "focus": "a",
+            "emit": ""
+          }
+        },
+        {
+          "action": "right",
+          "expect": {
+            "screen": "agent",
+            "emit": "focus a"
+          }
+        },
+        {
+          "action": "enter",
+          "expect": {
+            "screen": "voice",
+            "voice": "recording",
+            "voice_target": "a",
+            "emit": "voice.begin a"
+          }
+        },
+        {
+          "action": "tap",
+          "expect": {
+            "voice": "routing",
+            "emit": "voice.end"
+          }
+        }
+      ]
+    },
+    {
+      "name": "back aborts a recording",
+      "steps": [
+        {
+          "action": "welcome",
+          "expect": {
+            "connected": true
+          }
+        },
+        {
+          "action": {
+            "type": "agent",
+            "id": "a",
+            "stop": true,
+            "prompt": true
+          },
+          "expect": {
+            "a_state": "idle",
+            "a_stop": true,
+            "a_prompt": true,
+            "focus": "a",
+            "emit": ""
+          }
+        },
+        {
+          "action": "right",
+          "expect": {
+            "screen": "agent",
+            "emit": "focus a"
+          }
+        },
+        {
+          "action": "enter",
+          "expect": {
+            "screen": "voice",
+            "voice": "recording",
+            "voice_target": "a",
+            "emit": "voice.begin a"
+          }
+        },
+        {
+          "action": "back",
+          "expect": {
+            "screen": "agent",
+            "voice": "off",
+            "voice_target": "none",
+            "emit": "voice.abort"
+          }
+        }
+      ]
+    },
+    {
+      "name": "a routed take starts from the overview",
+      "steps": [
+        {
+          "action": "welcome",
+          "expect": {
+            "connected": true
+          }
+        },
+        {
+          "action": {
+            "type": "agent",
+            "id": "a",
+            "stop": true,
+            "prompt": true
+          },
+          "expect": {
+            "a_state": "idle",
+            "a_stop": true,
+            "a_prompt": true,
+            "focus": "a",
+            "emit": ""
+          }
+        },
+        {
+          "action": "enter",
+          "expect": {
+            "screen": "voice",
+            "voice": "recording",
+            "voice_target": "routed",
+            "emit": "voice.begin"
+          }
+        },
+        {
+          "action": "enter",
+          "expect": {
+            "voice": "routing",
+            "emit": "voice.end"
+          }
+        },
+        {
+          "action": "voice_error",
+          "expect": {
+            "screen": "agent",
+            "voice": "off",
+            "voice_target": "none",
+            "emit": "",
+            "toast": "voice error"
+          }
+        }
+      ]
+    },
+    {
+      "name": "routing gives up after a minute",
+      "steps": [
+        {
+          "action": "welcome",
+          "expect": {
+            "connected": true
+          }
+        },
+        {
+          "action": {
+            "type": "agent",
+            "id": "a",
+            "stop": true,
+            "prompt": true
+          },
+          "expect": {
+            "a_state": "idle",
+            "a_stop": true,
+            "a_prompt": true,
+            "focus": "a",
+            "emit": ""
+          }
+        },
+        {
+          "action": "enter",
+          "expect": {
+            "screen": "voice",
+            "voice": "recording",
+            "voice_target": "routed",
+            "emit": "voice.begin"
+          }
+        },
+        {
+          "action": "enter",
+          "expect": {
+            "voice": "routing",
+            "emit": "voice.end"
+          }
+        },
+        {
+          "action": "advance_60s",
+          "expect": {
+            "screen": "agent",
+            "voice": "off",
+            "voice_target": "none",
+            "emit": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "voice needs the prompt capability and a connection",
+      "steps": [
+        {
+          "action": "welcome",
+          "expect": {
+            "connected": true
+          }
+        },
+        {
+          "action": {
+            "type": "agent",
+            "id": "a",
+            "stop": true,
+            "prompt": true
+          },
+          "expect": {
+            "a_state": "idle",
+            "a_stop": true,
+            "a_prompt": true,
+            "focus": "a",
+            "emit": ""
+          }
+        },
+        {
+          "action": {
+            "type": "agent",
+            "id": "b",
+            "stop": false,
+            "prompt": false
+          },
+          "expect": {
+            "b_state": "idle"
+          }
+        },
+        {
+          "action": "right",
+          "expect": {
+            "screen": "agent",
+            "emit": "focus a"
+          }
+        },
+        {
+          "action": "right",
+          "expect": {
+            "focus": "b",
+            "emit": "focus b"
+          }
+        },
+        {
+          "action": "enter",
+          "expect": {
+            "emit": "",
+            "toast": "Can't send to this harness",
+            "voice": "off"
+          }
+        },
+        {
+          "action": "silence_15s",
+          "expect": {
+            "a_state": "none",
+            "a_stop": false,
+            "a_prompt": false,
+            "b_state": "none",
+            "connected": false,
+            "screen": "overview",
+            "focus": "none",
+            "toast": ""
+          }
+        },
+        {
+          "action": "enter",
+          "expect": {
+            "toast": "Not connected",
+            "voice": "off"
+          }
+        }
+      ]
+    },
+    {
+      "name": "no beep and no interruption while the mic runs",
+      "steps": [
+        {
+          "action": "welcome",
+          "expect": {
+            "connected": true
+          }
+        },
+        {
+          "action": {
+            "type": "agent",
+            "id": "a",
+            "stop": true,
+            "prompt": true
+          },
+          "expect": {
+            "a_state": "idle",
+            "a_stop": true,
+            "a_prompt": true,
+            "focus": "a",
+            "emit": ""
+          }
+        },
+        {
+          "action": {
+            "type": "agent",
+            "id": "b",
+            "stop": false,
+            "prompt": false
+          },
+          "expect": {
+            "b_state": "idle"
+          }
+        },
+        {
+          "action": "right",
+          "expect": {
+            "screen": "agent",
+            "emit": "focus a"
+          }
+        },
+        {
+          "action": "enter",
+          "expect": {
+            "screen": "voice",
+            "voice": "recording",
+            "voice_target": "a",
+            "emit": "voice.begin a"
+          }
+        },
+        {
+          "action": {
+            "type": "question",
+            "id": "b"
+          },
+          "expect": {
+            "b_asking": true,
+            "b_unread": "question",
+            "badge": 1,
+            "emit": "agent.open b",
+            "sound": "none",
+            "screen": "voice"
+          }
+        },
+        {
+          "action": {
+            "type": "summary",
+            "id": "a",
+            "quiet": false
+          },
+          "expect": {
+            "a_unread": "done",
+            "badge": 2,
+            "emit": "",
+            "sound": "none"
+          }
+        }
+      ]
+    },
+    {
+      "name": "silence clears everything, including a recording, without sending",
+      "steps": [
+        {
+          "action": "welcome",
+          "expect": {
+            "connected": true
+          }
+        },
+        {
+          "action": {
+            "type": "agent",
+            "id": "a",
+            "stop": true,
+            "prompt": true
+          },
+          "expect": {
+            "a_state": "idle",
+            "a_stop": true,
+            "a_prompt": true,
+            "focus": "a",
+            "emit": ""
+          }
+        },
+        {
+          "action": {
+            "type": "question",
+            "id": "a"
+          },
+          "expect": {
+            "a_asking": true,
+            "a_unread": "question",
+            "screen": "question",
+            "badge": 1,
+            "emit": "agent.open a",
+            "sound": "beep"
+          }
+        },
+        {
+          "action": "back",
+          "expect": {
+            "screen": "agent",
+            "emit": "",
+            "sound": "none"
+          }
+        },
+        {
+          "action": "enter",
+          "expect": {
+            "voice": "off"
+          }
+        },
+        {
+          "action": "silence_15s",
+          "expect": {
+            "a_state": "none",
+            "a_asking": false,
+            "a_unread": "none",
+            "a_stop": false,
+            "a_prompt": false,
+            "connected": false,
+            "screen": "overview",
+            "focus": "none",
+            "badge": 0,
+            "emit": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "a removed session moves focus and closes its question",
+      "steps": [
+        {
+          "action": "welcome",
+          "expect": {
+            "connected": true
+          }
+        },
+        {
+          "action": {
+            "type": "agent",
+            "id": "a",
+            "stop": true,
+            "prompt": true
+          },
+          "expect": {
+            "a_state": "idle",
+            "a_stop": true,
+            "a_prompt": true,
+            "focus": "a",
+            "emit": ""
+          }
+        },
+        {
+          "action": {
+            "type": "agent",
+            "id": "b",
+            "stop": false,
+            "prompt": false
+          },
+          "expect": {
+            "b_state": "idle"
+          }
+        },
+        {
+          "action": "right",
+          "expect": {
+            "screen": "agent",
+            "emit": "focus a"
+          }
+        },
+        {
+          "action": {
+            "type": "question",
+            "id": "a"
+          },
+          "expect": {
+            "a_asking": true,
+            "a_unread": "question",
+            "screen": "question",
+            "badge": 1,
+            "emit": "agent.open a",
+            "sound": "beep"
+          }
+        },
+        {
+          "action": {
+            "type": "gone",
+            "id": "a"
+          },
+          "expect": {
+            "a_state": "none",
+            "a_asking": false,
+            "a_unread": "none",
+            "a_stop": false,
+            "a_prompt": false,
+            "screen": "agent",
+            "focus": "b",
+            "badge": 0,
+            "emit": "",
+            "sound": "none"
+          }
+        },
+        {
+          "action": {
+            "type": "gone",
+            "id": "b"
+          },
+          "expect": {
+            "b_state": "none",
+            "focus": "none"
+          }
+        }
+      ]
+    },
+    {
+      "name": "a recording to a removed session is dropped",
+      "steps": [
+        {
+          "action": "welcome",
+          "expect": {
+            "connected": true
+          }
+        },
+        {
+          "action": {
+            "type": "agent",
+            "id": "a",
+            "stop": true,
+            "prompt": true
+          },
+          "expect": {
+            "a_state": "idle",
+            "a_stop": true,
+            "a_prompt": true,
+            "focus": "a",
+            "emit": ""
+          }
+        },
+        {
+          "action": {
+            "type": "agent",
+            "id": "b",
+            "stop": true,
+            "prompt": true
+          },
+          "expect": {
+            "b_state": "idle",
+            "b_stop": true,
+            "b_prompt": true
+          }
+        },
+        {
+          "action": "right",
+          "expect": {
+            "screen": "agent",
+            "emit": "focus a"
+          }
+        },
+        {
+          "action": "right",
+          "expect": {
+            "focus": "b",
+            "emit": "focus b"
+          }
+        },
+        {
+          "action": "enter",
+          "expect": {
+            "screen": "voice",
+            "voice": "recording",
+            "voice_target": "b",
+            "emit": "voice.begin b"
+          }
+        },
+        {
+          "action": {
+            "type": "gone",
+            "id": "b"
+          },
+          "expect": {
+            "b_state": "none",
+            "b_stop": false,
+            "b_prompt": false,
+            "screen": "agent",
+            "focus": "a",
+            "voice": "off",
+            "voice_target": "none",
+            "emit": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "reports for unknown sessions are ignored",
+      "steps": [
+        {
+          "action": "welcome",
+          "expect": {
+            "connected": true
+          }
+        },
+        {
+          "action": {
+            "type": "agent",
+            "id": "a",
+            "stop": true,
+            "prompt": true
+          },
+          "expect": {
+            "a_state": "idle",
+            "a_stop": true,
+            "a_prompt": true,
+            "focus": "a",
+            "emit": ""
+          }
+        },
+        {
+          "action": {
+            "type": "summary",
+            "id": "c",
+            "quiet": false
+          },
+          "expect": {
+            "sound": "none",
+            "badge": 0
+          }
+        },
+        {
+          "action": {
+            "type": "question",
+            "id": "c"
+          },
+          "expect": {
+            "screen": "overview",
+            "emit": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "settings open from the overview and close with back",
+      "steps": [
+        {
+          "action": "welcome",
+          "expect": {
+            "connected": true
+          }
+        },
+        {
+          "action": {
+            "type": "agent",
+            "id": "a",
+            "stop": true,
+            "prompt": true
+          },
+          "expect": {
+            "a_state": "idle",
+            "a_stop": true,
+            "a_prompt": true,
+            "focus": "a",
+            "emit": ""
+          }
+        },
+        {
+          "action": "open_settings",
+          "expect": {
+            "screen": "settings"
+          }
+        },
+        {
+          "action": "right",
+          "expect": {
+            "screen": "settings",
+            "emit": ""
+          }
+        },
+        {
+          "action": "back",
+          "expect": {
+            "screen": "overview"
+          }
+        }
+      ]
+    },
+    {
+      "name": "the drawer opens from the top and closes with back",
+      "steps": [
+        {
+          "action": "welcome",
+          "expect": {
+            "connected": true
+          }
+        },
+        {
+          "action": {
+            "type": "agent",
+            "id": "a",
+            "stop": true,
+            "prompt": true
+          },
+          "expect": {
+            "a_state": "idle",
+            "a_stop": true,
+            "a_prompt": true,
+            "focus": "a",
+            "emit": ""
+          }
+        },
+        {
+          "action": "swipe_down_top",
+          "expect": {
+            "screen": "drawer"
+          }
+        },
+        {
+          "action": "left",
+          "expect": {
+            "screen": "drawer",
+            "emit": ""
+          }
+        },
+        {
+          "action": "back",
+          "expect": {
+            "screen": "agent"
+          }
+        }
+      ]
+    },
+    {
+      "name": "removing the focused session moves to the next one",
+      "steps": [
+        {
+          "action": "welcome",
+          "expect": {
+            "connected": true
+          }
+        },
+        {
+          "action": {
+            "type": "agent",
+            "id": "a",
+            "stop": true,
+            "prompt": true
+          },
+          "expect": {
+            "a_state": "idle",
+            "a_stop": true,
+            "a_prompt": true,
+            "focus": "a",
+            "emit": ""
+          }
+        },
+        {
+          "action": {
+            "type": "agent",
+            "id": "b",
+            "stop": false,
+            "prompt": false
+          },
+          "expect": {
+            "b_state": "idle"
+          }
+        },
+        {
+          "action": {
+            "type": "agent",
+            "id": "c",
+            "stop": true,
+            "prompt": true
+          },
+          "expect": {
+            "c_state": "idle",
+            "c_stop": true,
+            "c_prompt": true
+          }
+        },
+        {
+          "action": "right",
+          "expect": {
+            "screen": "agent",
+            "emit": "focus a",
+            "focus": "a"
+          }
+        },
+        {
+          "action": "right",
+          "expect": {
+            "focus": "b",
+            "emit": "focus b"
+          }
+        },
+        {
+          "action": {
+            "type": "gone",
+            "id": "b"
+          },
+          "expect": {
+            "b_state": "none",
+            "focus": "c",
+            "emit": ""
+          }
+        },
+        {
+          "action": {
+            "type": "gone",
+            "id": "c"
+          },
+          "expect": {
+            "c_state": "none",
+            "c_stop": false,
+            "c_prompt": false,
+            "focus": "a"
+          }
+        }
+      ]
+    },
+    {
+      "name": "capabilities update in place",
+      "steps": [
+        {
+          "action": "welcome",
+          "expect": {
+            "connected": true
+          }
+        },
+        {
+          "action": {
+            "type": "agent",
+            "id": "a",
+            "stop": true,
+            "prompt": true
+          },
+          "expect": {
+            "a_state": "idle",
+            "a_stop": true,
+            "a_prompt": true,
+            "focus": "a",
+            "emit": ""
+          }
+        },
+        {
+          "action": {
+            "type": "agent",
+            "id": "a",
+            "stop": false,
+            "prompt": false
+          },
+          "expect": {
+            "a_stop": false,
+            "a_prompt": false,
+            "a_state": "idle"
+          }
+        },
+        {
+          "action": {
+            "type": "agent",
+            "id": "a",
+            "stop": true,
+            "prompt": true
+          },
+          "expect": {
+            "a_stop": true,
+            "a_prompt": true
+          }
+        }
+      ]
+    }
+  ],
+  "layout": {
+    "safe_radius": 226,
+    "focus_inset": 3,
+    "controls": [
+      {
+        "id": "overview_inbox",
+        "bounds": [
+          79,
+          308,
+          64,
+          64
+        ]
+      },
+      {
+        "id": "overview_voice",
+        "bounds": [
+          190,
+          346,
+          88,
+          88
+        ]
+      },
+      {
+        "id": "overview_settings",
+        "bounds": [
+          325,
+          308,
+          64,
+          64
+        ]
+      },
+      {
+        "id": "tile_name",
+        "bounds": [
+          74,
+          119,
+          320,
+          48
+        ]
+      },
+      {
+        "id": "recap_card",
+        "bounds": [
+          42,
+          188,
+          384,
+          100
+        ]
+      },
+      {
+        "id": "tile_voice",
+        "bounds": [
+          194,
+          353,
+          80,
+          80
+        ]
+      },
+      {
+        "id": "tile_previous",
+        "bounds": [
+          80,
+          322,
+          80,
+          80
+        ]
+      },
+      {
+        "id": "tile_next",
+        "bounds": [
+          308,
+          322,
+          80,
+          80
+        ]
+      },
+      {
+        "id": "connection_badge",
+        "bounds": [
+          164,
+          22,
+          140,
+          24
+        ]
+      },
+      {
+        "id": "confirm_yes",
+        "bounds": [
+          94,
+          250,
+          280,
+          64
+        ]
+      },
+      {
+        "id": "confirm_back",
+        "bounds": [
+          94,
+          326,
+          280,
+          64
+        ]
+      }
+    ]
+  },
+  "visual": {
+    "kind": "card",
+    "eyebrow": "AGENT DIAL",
+    "title": "esptember",
+    "lines": [
+      "Cooking… 34s",
+      "$ npm test"
+    ],
+    "accent": "#00FF2F",
+    "scenario": "stop asks first and needs the stop capability",
+    "evidence": "reference"
+  }
+}
