@@ -49,6 +49,8 @@ Calibration belongs to the device and changes at runtime. Never compile one devi
 
 Run its portable suite against independent disposable candidates when the prompt itself is under evaluation. Compile the selected candidate with the repository's pinned Arduino ESP32, M5Unified, and M5GFX versions.
 
+Treat the attached Stopwatch as an exclusive test fixture for the complete flash-and-verification window. Before writing, check that no other flasher or serial harness owns its port and atomically claim a shared temporary lock such as `/tmp/esptember-m5stopwatch.lock`. Keep the claim through reset, serial tests, framebuffer capture, and the final hand-review state; release it on success or failure. If an unrelated task already owns or repeatedly rewrites the board, wait for that task to finish and continue useful host work instead of competing for the port. A hash-verified flash is not device evidence when another process can replace it before or during the harness.
+
 When the user has authorized loading the attached device, use an app update that preserves NVS unless a fresh install is the explicit test. Emit concise serial evidence for hardware identity, 468 × 466 geometry, touch-map version and generation, screen transitions, stack headroom, input events, and final status.
 
 Exercise the largest-memory transition and the physical controls. Inspect every round-screen layout for clipped focus areas and bottom-edge artifacts. Record only the behavior actually observed.
