@@ -275,6 +275,42 @@ instead:
   `offset(delta = gap)` of the section. Don't `hull()` the shadow to a foot
   point: the hull bridges notches above the part and leaves stray slivers.
   Check that the fin's 2D outline is one piece.
+- **Wine-glass stands: one profile per line, a level waist.** For the desk
+  stand, each line round the tilted top's rim is one profile: a lip, a
+  cubic from the foot (tangent to the desk) to the waist (vertical), and a
+  cubic bloom from the waist to the rim. The bloom ends parallel to the
+  top's normal, then runs through a short rim band and a round-over onto
+  the top. Keep the waist a level circle at one height, so the foot stays
+  round while the bloom absorbs the tilt. When a tilted top would overhang
+  too far if printed standing (a thin plate at 26° is 64°), let the bloom
+  carry the whole top. Size its handles so the 6 o'clock side, where the
+  bloom is shortest, stays within 45°.
+- **Height constrains the form, so check proportions before styling.** The
+  user asked for the device's front edge 1/2" off the desk. That leaves no
+  room for a foot, a waist and a bloom, which all need height. The foot
+  shrank to a thin coaster, and the user preferred a thick stem: a base
+  chamfer straight into the bloom, like the Harness. Shorter cubic handles
+  (pulls of 0.2–0.35) keep a short bloom within 45°. Sweep them with `-D`
+  and read `mesh_check.py`'s 45° list. Work out a device's lowest point from
+  the posed `m5_body_true()` (here 9.9 mm below the top's centre) instead of
+  guessing.
+- **Design round a cable's path, not a plug box.** When the user names a
+  specific cable, model its path: plug centre, head, a stiff run, then a
+  bend of known inner radius onto the desk. Derive the part's height from
+  that path, as a function, so correcting one measured value moves
+  everything. Cut the channel as a loft of the ribbon's section plus
+  clearance, with a quarter-round flare at each mouth. Place the allowance
+  for a stiff joint (the collar between flat and braided) by path length
+  from the head, with some slack, and blend the channel into it. Model the
+  cable too, and require `intersection(part, cable)` to be empty. A
+  listing's photos give shapes but rarely numbers: mark every value read
+  from them "est." and ask for measurements. Ask which way a right-angle
+  plug's lead runs before routing it.
+- **Check a new loft's orientation before booleans.** If `mesh_check.py`
+  reports a negative volume, or a pocket turns up as its own shell, the
+  winding or a frame rotation is reversed. `rotate([t, 0, 0])` takes +y to
+  (0, cos t, sin t). Check which way a tilt goes with a single point before
+  trusting a render.
 - **Simplify after a physical print.** Once the user has held a print, act
   on what they liked and drop the rest. On the dock that meant one uniform
   rim instead of cheeks, dips and cuts; the ball's natural front; and seat
