@@ -1,5 +1,10 @@
 # Pi Pet behavior contract
 
+**Current hardware app:** [SINGLE-BLOB.md](SINGLE-BLOB.md) specifies the new
+standalone Grok Bot pet, including finger-poke smile and wiggle. The
+Pi-connected contract below documents the earlier experiment and does not
+describe the currently flashed app. Its host bridge and roster are absent.
+
 ## Objective
 
 Give every running [pi](https://github.com/badlogic/pi-mono) coding-agent session a small expressive pet on the M5Stack Stopwatch.

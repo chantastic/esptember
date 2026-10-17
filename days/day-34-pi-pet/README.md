@@ -1,13 +1,25 @@
 ---
 board: m5stack-stopwatch
 day: 34
-title: Pi Pet
+title: Grok Bot Pet
 toolchain: Arduino ESP32 3.3.10 + M5Unified 0.2.19 + M5GFX 0.2.26 + pi extension (TypeScript) + Node hub (USB serial + Wi-Fi)
-summary: "One Grok Bot–style pet per running pi coding-agent session: it thinks, works, gets blocked, celebrates, and waits for you."
-verification: "Contract, host bridge, and 16-scenario injected-device replay verified; device framebuffer and frame-sequence captures recorded; physical hand review pending"
+summary: "A standalone Grok Bot-style blob on the Stopwatch; poke him and he smiles with his eyes and wobbles like jelly."
+verification: "Standalone motion and touch-map host checks, app compile and flash, serial-triggered poke frames verified; physical finger tap pending"
 ---
 
 ## The assignment
+
+### Current app: one standalone blob
+
+The connected Stopwatch runs the [standalone blob pet](SINGLE-BLOB.md): one blue
+Grok Bot-style blob on black. He breathes, blinks, and responds to a finger tap
+with an eyes-only smile and a jelly wobble. There is no Pi connection. The left and right
+physical pushers are reserved for navigating between pets later; this app has
+only one pet and assigns neither pusher an action.
+
+The Pi-connected assignment below is retained as **history of the earlier
+experiment**. Its roster, bridge, states, and controls are not features of the
+currently flashed standalone app.
 
 Give every running [pi](https://github.com/badlogic/pi-mono) coding-agent session its own pet on the Stopwatch.
 

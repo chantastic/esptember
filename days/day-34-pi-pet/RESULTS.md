@@ -1,5 +1,39 @@
 # Pi Pet results
 
+## September 29, 2026: one-blob hardware baseline
+
+The user requested a single Grok Bot-style blob as the starting point for the
+final lesson. The old generated Pi Pet candidate was absent from this checkout,
+so a new disposable baseline was built under ignored `.build/`. It uses one
+blue blob, xAI-derived idle eye contours, subtle idle motion, blink, and five
+serial diagnostics. The roster, bridge, touch, and button interactions are not
+part of this baseline. [SINGLE-BLOB.md](SINGLE-BLOB.md) is its build prompt and
+behavior contract.
+
+- **Pre-flash preservation:** a private 16 MB byte-exact flash image of the
+  connected board was saved outside the repository, with SHA-256
+  `ec32f2e46f59e7e9589e14ff830ed67e8505b4a481d7b0665b345704392b4d76`.
+  The preexisting app was `StopWatch-UserDemo` in OTA slot 0 at `0x20000`.
+  The board's NVS contained no `espt-touch/record` calibration blob.
+- **Compile:** Arduino ESP32 3.3.10, M5Unified 0.2.19, and M5GFX 0.2.26
+  compiled a 573,168-byte app image with ESP32-S3 and OPI PSRAM. Image
+  checksum and hash validated. The locally downloaded Arduino `ctags` helper
+  was Intel-only; the build used a native Universal Ctags override.
+- **Host contract:** `tests/run-single-blob.sh` passed motion bounds, blink
+  timing, bounce lifetime, and gaze clamping against the portable candidate
+  core. This does not establish device rendering.
+- **Flash:** wrote only the app image at the board's actual OTA slot `0x20000`.
+  Esptool verified its written hash and hard-reset the board. The NVS metadata
+  retained its earlier `system/launch_count` entries; M5GFX added an
+  `AUTODETECT` entry on first boot. No NVS partition was erased.
+- **Injected device:** `GB_STATUS` reported `blob=1`, `468x466`, and increasing
+  frame count. `look -8 4`, `bounce`, and `reset` all acknowledged. `shot`
+  returned exactly 180,000 RGB565 bytes; the captured canvas shows one blue
+  blob and black eye contours on black. The first shot exposed a serial timeout
+  in bulk transfer, which was fixed and reflashed before this successful run.
+- **Physical review:** pending. No visual inspection of the physical panel,
+  touch, buttons, or battery behavior is claimed from the serial checks.
+
 ## Revision 7: centering, tilt axes, and bulk dumps
 
 September 25, 2026 (Pacific).
