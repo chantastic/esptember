@@ -311,6 +311,12 @@ instead:
   winding or a frame rotation is reversed. `rotate([t, 0, 0])` takes +y to
   (0, cos t, sin t). Check which way a tilt goes with a single point before
   trusting a render.
+- **Don't bolt a boxy feature onto an organic form.** A cable-holding nose
+  on the desk stand, after a notch in a reference video, was built from
+  hulled rectangular sections: two pillars and a window. The user rejected
+  it on sight, and it was removed. If a feature returns, grow it from the
+  form's own profile (the bloom's lines) instead of adding a separate solid,
+  and show a render before building the clearance tests round it.
 - **Simplify after a physical print.** Once the user has held a print, act
   on what they liked and drop the rest. On the dock that meant one uniform
   rim instead of cheeks, dips and cuts; the ball's natural front; and seat
